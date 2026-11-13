@@ -54,7 +54,7 @@ Same machine, same documents, one app at a time. Every number has a script and r
 
 ```bash
 docker run -d --name papiro -p 8000:8000 \
-  -v papiro-data:/data -v "$PWD/consume:/consume" \
+  -v papiro-data:/data -v papiro-consume:/consume \
   -e PAPIRO_ADMIN_USER=admin -e PAPIRO_ADMIN_PASSWORD=change-me-please \
   ghcr.io/elpablazo/papiro:latest
 ```
