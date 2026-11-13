@@ -1,0 +1,50 @@
+{
+ "login": 200,
+ "service_worker": {
+  "estado": "activated",
+  "alcance": "http://127.0.0.1:8031/",
+  "controla_la_pagina": true
+ },
+ "cache_de_interfaz": [
+  "/",
+  "/assets/app.css",
+  "/assets/preact.js",
+  "/assets/app.js",
+  "/assets/icon.svg"
+ ],
+ "manifiesto": {
+  "url": "http://127.0.0.1:8031/manifest.webmanifest",
+  "errores": [],
+  "nombre": "Papiro",
+  "iconos": 4,
+  "share_target": true
+ },
+ "errores_de_instalabilidad": [],
+ "iconos": {
+  "/assets/icon-192.png": "192x192",
+  "/assets/icon-512.png": "512x512",
+  "/assets/icon-maskable.png": "512x512",
+  "/assets/apple-touch-icon.png": "180x180"
+ },
+ "sin_conexion": {
+  "interfaz_cargada": true,
+  "aviso": null,
+  "mensaje": "Sin conexión con Papiro",
+  "cargando_sin_fin": false
+ },
+ "al_volver_la_conexion": "la app se recupera sola",
+ "compartir": {
+  "respuesta": 200,
+  "redirigido_a": "/",
+  "en_espera": 1
+ },
+ "compartido_subido": {
+  "documentos": 1,
+  "titulo": "nota-compartida",
+  "quedan_en_espera": 0
+ },
+ "assets_con_etag": {
+  "etag": "\"c4d2a2c9bbeecd12\"",
+  "revalidacion": 304
+ }
+}

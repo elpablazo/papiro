@@ -1,0 +1,40 @@
+{
+ "mismo_archivo_x10_documentos_creados": 1,
+ "etiquetas_simultaneas_aplicadas": "9/10",
+ "notas_simultaneas_guardadas": "10/10",
+ "carga_mixta": {
+  "usuarios": 8,
+  "segundos": 60,
+  "operaciones": {
+   "editar": {
+    "n": 7140,
+    "p50_ms": 6.5,
+    "p95_ms": 16.0
+   },
+   "buscar": {
+    "n": 36227,
+    "p50_ms": 7.7,
+    "p95_ms": 17.3
+   },
+   "leer": {
+    "n": 11925,
+    "p50_ms": 5.9,
+    "p95_ms": 15.4
+   },
+   "subir": {
+    "n": 40,
+    "p50_ms": 10.6,
+    "p95_ms": 32.4
+   },
+   "masiva": {
+    "n": 2446,
+    "p50_ms": 11.5,
+    "p95_ms": 22.8
+   }
+  },
+  "errores": {},
+  "subidas": 40,
+  "documentos_nuevos": 40,
+  "cola_vaciada_en_s": 0.0
+ }
+}

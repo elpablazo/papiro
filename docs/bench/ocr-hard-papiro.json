@@ -1,0 +1,147 @@
+{
+ "recto.pdf": {
+  "case": "control: escaneo derecho",
+  "s": 1.2,
+  "recall": 1.0,
+  "pdf": {
+   "kb": 429,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    true
+   ],
+   "text_layer_recall": 1.0,
+   "qpdf_check": null
+  }
+ },
+ "girado-90.pdf": {
+  "case": "página girada 90°",
+  "s": 4.0,
+  "recall": 1.0,
+  "pdf": {
+   "kb": 430,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    false
+   ],
+   "text_layer_recall": 1.0,
+   "qpdf_check": null
+  }
+ },
+ "girado-180.pdf": {
+  "case": "página de cabeza (180°)",
+  "s": 3.9,
+  "recall": 1.0,
+  "pdf": {
+   "kb": 430,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    true
+   ],
+   "text_layer_recall": 1.0,
+   "qpdf_check": null
+  }
+ },
+ "inclinado-4.pdf": {
+  "case": "inclinada 4°",
+  "s": 1.2,
+  "recall": 0.9667,
+  "pdf": {
+   "kb": 404,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    true
+   ],
+   "text_layer_recall": 0.75,
+   "qpdf_check": null
+  }
+ },
+ "aleman.pdf": {
+  "case": "alemán (no configurado en ninguno)",
+  "s": 1.5,
+  "recall": 0.7727,
+  "pdf": {
+   "kb": 429,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    true
+   ],
+   "text_layer_recall": 0.7727,
+   "qpdf_check": null
+  }
+ },
+ "frances.pdf": {
+  "case": "francés (no configurado en ninguno)",
+  "s": 1.4,
+  "recall": 0.9167,
+  "pdf": {
+   "kb": 428,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    true
+   ],
+   "text_layer_recall": 0.9167,
+   "qpdf_check": null
+  }
+ },
+ "baja-150dpi-9pt.pdf": {
+  "case": "150 dpi, letra de 9 pt",
+  "s": 1.2,
+  "recall": 1.0,
+  "pdf": {
+   "kb": 237,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    true
+   ],
+   "text_layer_recall": 1.0,
+   "qpdf_check": null
+  }
+ },
+ "foto-sombra.pdf": {
+  "case": "contraste bajo y sombra",
+  "s": 1.5,
+  "recall": 0.5333,
+  "pdf": {
+   "kb": 497,
+   "pdfa": null,
+   "producer": null,
+   "page_rot": [],
+   "portrait": [
+    true
+   ],
+   "text_layer_recall": 0.5333,
+   "qpdf_check": null
+  }
+ },
+ "mixto.pdf": {
+  "case": "pág. 1 digital (francés) + pág. 2 escaneada (español)",
+  "s": 1.1,
+  "recall": 1.0,
+  "pdf": {
+   "kb": 430,
+   "pdfa": null,
+   "producer": "pypdf",
+   "page_rot": [],
+   "portrait": [
+    true,
+    true
+   ],
+   "text_layer_recall": 1.0,
+   "qpdf_check": null
+  }
+ }
+}

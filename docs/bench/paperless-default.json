@@ -1,0 +1,267 @@
+{
+ "idle": {
+  "main_ws_avg": 562.8,
+  "main_ws_peak": 563.2,
+  "stack_ws_avg": 774.1,
+  "stack_ws_peak": 774.8,
+  "main_anon_avg": 517.7,
+  "main_anon_peak": 517.8,
+  "stack_anon_peak": 717.9,
+  "samples": 100
+ },
+ "batch": {
+  "docs": 28,
+  "pages": 53,
+  "upload_s": 1.25,
+  "total_s": 308.53,
+  "failed": [],
+  "mem": {
+   "main_ws_avg": 646.5,
+   "main_ws_peak": 805.3,
+   "stack_ws_avg": 986.7,
+   "stack_ws_peak": 1228.3,
+   "main_anon_avg": 608.5,
+   "main_anon_peak": 772.0,
+   "stack_anon_peak": 1145.0,
+   "samples": 1532
+  }
+ },
+ "seq": {
+  "digital": {
+   "n": 10,
+   "pages": 34,
+   "avg_s": 4.258,
+   "s_per_page": 1.252,
+   "failed": [],
+   "items": [
+    {
+     "file": "digital_01.pdf",
+     "pages": 5,
+     "s": 7.54,
+     "failed": []
+    },
+    {
+     "file": "digital_02.pdf",
+     "pages": 5,
+     "s": 2.194,
+     "failed": []
+    },
+    {
+     "file": "digital_03.pdf",
+     "pages": 3,
+     "s": 2.193,
+     "failed": []
+    },
+    {
+     "file": "digital_04.pdf",
+     "pages": 2,
+     "s": 5.042,
+     "failed": []
+    },
+    {
+     "file": "digital_05.pdf",
+     "pages": 5,
+     "s": 5.146,
+     "failed": []
+    },
+    {
+     "file": "digital_06.pdf",
+     "pages": 2,
+     "s": 4.974,
+     "failed": []
+    },
+    {
+     "file": "digital_07.pdf",
+     "pages": 3,
+     "s": 2.313,
+     "failed": []
+    },
+    {
+     "file": "digital_08.pdf",
+     "pages": 5,
+     "s": 3.041,
+     "failed": []
+    },
+    {
+     "file": "digital_09.pdf",
+     "pages": 1,
+     "s": 4.932,
+     "failed": []
+    },
+    {
+     "file": "digital_10.pdf",
+     "pages": 3,
+     "s": 5.202,
+     "failed": []
+    }
+   ]
+  },
+  "scan": {
+   "n": 10,
+   "pages": 16,
+   "avg_s": 14.402,
+   "s_per_page": 9.001,
+   "failed": [],
+   "items": [
+    {
+     "file": "scan_01.pdf",
+     "pages": 2,
+     "s": 14.581,
+     "failed": []
+    },
+    {
+     "file": "scan_02.pdf",
+     "pages": 1,
+     "s": 14.144,
+     "failed": []
+    },
+    {
+     "file": "scan_03.pdf",
+     "pages": 1,
+     "s": 16.783,
+     "failed": []
+    },
+    {
+     "file": "scan_04.pdf",
+     "pages": 2,
+     "s": 14.54,
+     "failed": []
+    },
+    {
+     "file": "scan_05.pdf",
+     "pages": 2,
+     "s": 17.521,
+     "failed": []
+    },
+    {
+     "file": "scan_06.pdf",
+     "pages": 1,
+     "s": 13.228,
+     "failed": []
+    },
+    {
+     "file": "scan_07.pdf",
+     "pages": 3,
+     "s": 13.939,
+     "failed": []
+    },
+    {
+     "file": "scan_08.pdf",
+     "pages": 1,
+     "s": 12.053,
+     "failed": []
+    },
+    {
+     "file": "scan_09.pdf",
+     "pages": 1,
+     "s": 12.464,
+     "failed": []
+    },
+    {
+     "file": "scan_10.pdf",
+     "pages": 2,
+     "s": 14.762,
+     "failed": []
+    }
+   ]
+  },
+  "image": {
+   "n": 5,
+   "pages": 5,
+   "avg_s": 13.978,
+   "s_per_page": 13.978,
+   "failed": [],
+   "items": [
+    {
+     "file": "img_01.png",
+     "pages": 1,
+     "s": 15.258,
+     "failed": []
+    },
+    {
+     "file": "img_02.jpg",
+     "pages": 1,
+     "s": 17.398,
+     "failed": []
+    },
+    {
+     "file": "img_03.png",
+     "pages": 1,
+     "s": 12.675,
+     "failed": []
+    },
+    {
+     "file": "img_04.jpg",
+     "pages": 1,
+     "s": 11.277,
+     "failed": []
+    },
+    {
+     "file": "img_05.png",
+     "pages": 1,
+     "s": 13.281,
+     "failed": []
+    }
+   ]
+  },
+  "office": {
+   "n": 3,
+   "pages": 3,
+   "avg_s": 5.495,
+   "s_per_page": 5.495,
+   "failed": [],
+   "items": [
+    {
+     "file": "office_01.docx",
+     "pages": 1,
+     "s": 6.657,
+     "failed": []
+    },
+    {
+     "file": "office_02.docx",
+     "pages": 1,
+     "s": 4.723,
+     "failed": []
+    },
+    {
+     "file": "office_03.docx",
+     "pages": 1,
+     "s": 5.104,
+     "failed": []
+    }
+   ]
+  }
+ },
+ "search": {
+  "ref_hits": 28,
+  "ref_total": 28,
+  "misses": [],
+  "queries": 570,
+  "p50_ms": 55.45,
+  "p95_ms": 68.27,
+  "mean_ms": 57.24,
+  "docs_in_index": 56
+ },
+ "big": {
+  "pages": 40,
+  "total_s": 108.08,
+  "s_per_page": 2.702,
+  "failed": [],
+  "searchable": true,
+  "mem": {
+   "main_ws_avg": 1042.0,
+   "main_ws_peak": 1334.4,
+   "stack_ws_avg": 1449.3,
+   "stack_ws_peak": 1741.4,
+   "main_anon_avg": 1016.6,
+   "main_anon_peak": 1309.3,
+   "stack_anon_peak": 1696.7,
+   "samples": 536
+  }
+ },
+ "restart_s": [
+  20.94,
+  20.86,
+  19.44
+ ]
+}

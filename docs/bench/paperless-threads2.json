@@ -1,0 +1,29 @@
+{
+ "idle": {
+  "main_ws_avg": 562.8,
+  "main_ws_peak": 563.1,
+  "stack_ws_avg": 777.1,
+  "stack_ws_peak": 777.8,
+  "main_anon_avg": 517.9,
+  "main_anon_peak": 517.9,
+  "stack_anon_peak": 722.3,
+  "samples": 100
+ },
+ "big": {
+  "pages": 40,
+  "total_s": 206.31,
+  "s_per_page": 5.158,
+  "failed": [],
+  "searchable": true,
+  "mem": {
+   "main_ws_avg": 740.9,
+   "main_ws_peak": 830.5,
+   "stack_ws_avg": 964.6,
+   "stack_ws_peak": 1054.2,
+   "main_anon_avg": 693.7,
+   "main_anon_peak": 788.7,
+   "stack_anon_peak": 996.2,
+   "samples": 1026
+  }
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "batch": {
+  "docs": 28,
+  "pages": 53,
+  "upload_s": 0.04,
+  "total_s": 30.62,
+  "failed": [],
+  "mem": {
+   "main_ws_avg": 110.1,
+   "main_ws_peak": 280.2,
+   "stack_ws_avg": 110.1,
+   "stack_ws_peak": 280.2,
+   "main_anon_avg": 105.8,
+   "main_anon_peak": 274.9,
+   "stack_anon_peak": 274.9,
+   "samples": 153
+  }
+ },
+ "big": {
+  "pages": 40,
+  "total_s": 23.44,
+  "s_per_page": 0.586,
+  "failed": [],
+  "searchable": true,
+  "mem": {
+   "main_ws_avg": 642.9,
+   "main_ws_peak": 839.3,
+   "stack_ws_avg": 642.9,
+   "stack_ws_peak": 839.3,
+   "main_anon_avg": 609.8,
+   "main_anon_peak": 831.1,
+   "stack_anon_peak": 831.1,
+   "samples": 117
+  }
+ }
+}

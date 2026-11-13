@@ -1,0 +1,86 @@
+{
+ "ingest:scan100": {
+  "files": 100,
+  "created": 100,
+  "failed": 0,
+  "upload_s": 0.1,
+  "total_s": 142.2,
+  "docs_per_min": 42.2,
+  "cpu_s": 140.2,
+  "avg_cores": 0.99,
+  "mem": {
+   "main_ws_avg": 78.4,
+   "main_ws_peak": 120.3,
+   "stack_ws_avg": 78.4,
+   "stack_ws_peak": 120.3,
+   "main_anon_avg": 64.4,
+   "main_anon_peak": 108.4,
+   "stack_anon_peak": 108.4,
+   "samples": 711
+  }
+ },
+ "probe:n100": {
+  "documents": 100,
+  "idle": {
+   "main_ws_avg": 16.2,
+   "main_ws_peak": 16.4,
+   "stack_ws_avg": 16.2,
+   "stack_ws_peak": 16.4,
+   "main_anon_avg": 2.6,
+   "main_anon_peak": 2.6,
+   "stack_anon_peak": 2.6,
+   "samples": 100
+  },
+  "folio_hits": "100/100",
+  "search_folio": {
+   "n": 150,
+   "p50_ms": 0.72,
+   "p95_ms": 1.07,
+   "max_ms": 1.3
+  },
+  "search_words": {
+   "n": 150,
+   "p50_ms": 1.12,
+   "p95_ms": 1.62,
+   "max_ms": 2.1
+  },
+  "list_first_page": {
+   "n": 50,
+   "p50_ms": 0.53,
+   "p95_ms": 0.85,
+   "max_ms": 0.9
+  },
+  "search_filtered": {
+   "n": 50,
+   "p50_ms": 0.64,
+   "p95_ms": 1.01,
+   "max_ms": 1.2
+  },
+  "list_deep_page": {
+   "n": 20,
+   "p50_ms": 0.49,
+   "p95_ms": 0.62,
+   "max_ms": 0.6
+  },
+  "load": {
+   "clients": 8,
+   "seconds": 20,
+   "requests": 38112,
+   "rps": 1905.6,
+   "p50_ms": 4.2,
+   "p95_ms": 6.7,
+   "errors": 0,
+   "avg_cores": 1.78,
+   "mem": {
+    "main_ws_avg": 18.4,
+    "main_ws_peak": 19.2,
+    "stack_ws_avg": 18.4,
+    "stack_ws_peak": 19.2,
+    "main_anon_avg": 3.7,
+    "main_anon_peak": 3.8,
+    "stack_anon_peak": 3.8,
+    "samples": 100
+   }
+  }
+ }
+}

@@ -1,0 +1,7 @@
+.secrets
+docs/
+docs2/
+export/
+results/
+tools/venv/
+__pycache__/

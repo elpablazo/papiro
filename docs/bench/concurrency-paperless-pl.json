@@ -1,0 +1,43 @@
+{
+ "mismo_archivo_x10_documentos_creados": 10,
+ "etiquetas_simultaneas_aplicadas": "10/10",
+ "notas_simultaneas_guardadas": "10/10",
+ "formulario_simultaneo_paperless": {
+  "titulo_de_A_se_conserva": false
+ },
+ "carga_mixta": {
+  "usuarios": 8,
+  "segundos": 60,
+  "operaciones": {
+   "leer": {
+    "n": 145,
+    "p50_ms": 174.9,
+    "p95_ms": 298.8
+   },
+   "subir": {
+    "n": 35,
+    "p50_ms": 505.3,
+    "p95_ms": 673.2
+   },
+   "editar": {
+    "n": 91,
+    "p50_ms": 698.5,
+    "p95_ms": 975.3
+   },
+   "buscar": {
+    "n": 453,
+    "p50_ms": 767.7,
+    "p95_ms": 937.5
+   },
+   "masiva": {
+    "n": 26,
+    "p50_ms": 815.8,
+    "p95_ms": 1030.5
+   }
+  },
+  "errores": {},
+  "subidas": 35,
+  "documentos_nuevos": 35,
+  "cola_vaciada_en_s": 264.3
+ }
+}

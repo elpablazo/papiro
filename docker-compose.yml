@@ -1,0 +1,23 @@
+services:
+  papiro:
+    image: ghcr.io/elpablazo/papiro:latest
+    # Or build it yourself: `docker compose build` (uses the Dockerfile in this folder)
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - papiro-data:/data
+      - ./consume:/consume
+      # Daily automatic backup. Ideally point this at ANOTHER disk (or a folder you sync off the
+      # server): a backup on the same disk won't save you if the disk dies.
+      - ./backup:/backup
+    env_file: .env
+    environment:
+      PAPIRO_BACKUP_DIR: /backup
+      TZ: UTC
+    # Belt and braces: memory is bounded by design, but the container can't exceed this either.
+    mem_limit: 768m
+
+volumes:
+  papiro-data:

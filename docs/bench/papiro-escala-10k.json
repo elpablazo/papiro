@@ -1,0 +1,10 @@
+{
+ "docs": 10055,
+ "ingest_s": 43.0,
+ "docs_per_s": 232,
+ "search_p50_ms": 3.82,
+ "search_p95_ms": 15.43,
+ "search_max_ms": 16.2,
+ "filtered_p50_ms": 15.5,
+ "filtered_p95_ms": 16.33
+}

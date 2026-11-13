@@ -1,0 +1,20 @@
+{
+ "doctype_id": {
+  "con_valor": 56,
+  "sugeridos": 14,
+  "sugeridos_bien": 11,
+  "aplicados_solos": 5,
+  "aplicados_bien": 5,
+  "sin_propuesta": 37
+ },
+ "correspondent_id": {
+  "con_valor": 56,
+  "sugeridos": 40,
+  "sugeridos_bien": 40,
+  "aplicados_solos": 7,
+  "aplicados_bien": 7,
+  "sin_propuesta": 9
+ },
+ "documentos": 65,
+ "ms_por_analisis": 12.1
+}
