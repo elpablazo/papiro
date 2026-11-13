@@ -10,8 +10,8 @@ pub fn start() {
             loop {
                 match fetch(c) {
                     Ok(0) => {}
-                    Ok(n) => println!("correo: {n} adjunto(s) encolado(s)"),
-                    Err(e) => eprintln!("correo: {e}"),
+                    Ok(n) => println!("mail: {n} attachment(s) queued"),
+                    Err(e) => eprintln!("mail: {e}"),
                 }
                 std::thread::sleep(Duration::from_secs(c.interval.max(30)));
             }

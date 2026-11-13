@@ -13,7 +13,7 @@ struct Each<'a>(&'a mut dyn FnMut(Value) -> Result<(), String>);
 impl<'de> Visitor<'de> for Each<'_> {
     type Value = ();
     fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("un arreglo JSON")
+        f.write_str("a JSON array")
     }
     fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<(), A::Error> {
         while let Some(v) = seq.next_element::<Value>()? {
@@ -66,7 +66,7 @@ pub fn run(dir: &Path) -> Result<String, String> {
     // El manifiesto principal primero: trae etiquetas y demás antes que los documentos.
     files.sort_by_key(|p| (p.file_name().is_some_and(|n| n != "manifest.json"), p.clone()));
     if files.is_empty() {
-        return Err(format!("no hay manifest.json en {}", dir.display()));
+        return Err(format!("no manifest.json in {}", dir.display()));
     }
     let (mut m, mut n, mut ignored) = (Maps::default(), BTreeMap::<&str, usize>::new(), BTreeMap::<String, usize>::new());
     let mut parents: Vec<(i64, i64)> = vec![];
@@ -98,7 +98,7 @@ pub fn run(dir: &Path) -> Result<String, String> {
             if let Some(parent) = f["tn_parent"].as_i64().or(f["parent"].as_i64()) {
                 parents.push((pk, parent));
             }
-            *n.entry(match kind { "tag" => "etiquetas", "correspondent" => "corresponsales", _ => "tipos de documento" }).or_default() += 1;
+            *n.entry(match kind { "tag" => "tags", "correspondent" => "correspondents", _ => "document types" }).or_default() += 1;
             return Ok(());
         }
         match model {
@@ -137,7 +137,7 @@ pub fn run(dir: &Path) -> Result<String, String> {
                     )
                 })
                 .map_err(e)?;
-                *n.entry("notas").or_default() += added;
+                *n.entry("notes").or_default() += added;
             }
             "documents.customfieldinstance" => {
                 let Some((name, opts)) = f["field"].as_i64().and_then(|pk| m.fields.get(&pk)) else { return Ok(()) };
@@ -146,19 +146,19 @@ pub fn run(dir: &Path) -> Result<String, String> {
                     .or_else(|| f["value_select"].as_str().map(|id| json!(opts.get(id).cloned().unwrap_or_else(|| id.to_string()))))
                     .unwrap_or(Value::Null);
                 db::with(|c| c.execute("UPDATE documents SET custom=json_patch(custom, ?) WHERE id=?", params![json!({name: value}).to_string(), doc])).map_err(e)?;
-                *n.entry("valores de campos personalizados").or_default() += 1;
+                *n.entry("custom field values").or_default() += 1;
             }
             _ => {}
         }
         Ok(())
     })?;
 
-    let mut out = String::from("Importación terminada\n");
+    let mut out = String::from("Import finished\n");
     for (k, v) in &n {
         out.push_str(&format!("  {v:>6}  {k}\n"));
     }
     if !ignored.is_empty() {
-        out.push_str("No migrado (no tiene equivalente en Papiro):\n");
+        out.push_str("Not migrated (no equivalent in Papiro):\n");
         for (k, v) in &ignored {
             out.push_str(&format!("  {v:>6}  {k}\n"));
         }
@@ -170,7 +170,7 @@ fn import_doc(dir: &Path, r: &Value, m: &mut Maps, n: &mut BTreeMap<&'static str
     let (pk, f) = (r["pk"].as_i64().unwrap_or(0), &r["fields"]);
     let e = |e: rusqlite::Error| e.to_string();
     let Some(src) = r["__exported_file_name__"].as_str().map(|p| dir.join(p)).filter(|p| p.is_file()) else {
-        *n.entry("documentos sin archivo en el export (omitidos)").or_default() += 1;
+        *n.entry("documents without a file in the export (skipped)").or_default() += 1;
         return Ok(());
     };
     let sha = ingest::sha256_file(&src).map_err(|e| e.to_string())?;
@@ -179,7 +179,7 @@ fn import_doc(dir: &Path, r: &Value, m: &mut Maps, n: &mut BTreeMap<&'static str
         // Ya estaba importado. Si su archivo falta o está dañado, se repone desde el export.
         let mut repaired = false;
         if !ingest::original_ok(id, &sha) {
-            ingest::restore_original(id, &src, &sha).map_err(|x| format!("no se pudo reponer el documento {id}: {x}"))?;
+            ingest::restore_original(id, &src, &sha).map_err(|x| format!("could not restore document {id}: {x}"))?;
             repaired = true;
         }
         if let Some(a) = archive.as_ref().filter(|_| !store::doc_dir(id).join("archive.pdf").is_file()) {
@@ -187,14 +187,14 @@ fn import_doc(dir: &Path, r: &Value, m: &mut Maps, n: &mut BTreeMap<&'static str
             repaired = true;
         }
         m.docs.insert(pk, id);
-        *n.entry(if repaired { "documentos reparados (les faltaba un archivo)" } else { "documentos que ya existían (omitidos)" }).or_default() += 1;
+        *n.entry(if repaired { "documents repaired (a file was missing)" } else { "documents that already existed (skipped)" }).or_default() += 1;
         return Ok(());
     }
     // Paperless guarda SHA-256 del original: sirve para comprobar que el export no se corrompió.
     if f["checksum"].as_str().is_some_and(|c| c.len() == 64 && !c.eq_ignore_ascii_case(&sha)) {
-        *n.entry("documentos con checksum distinto al del manifiesto (importados igual)").or_default() += 1;
+        *n.entry("documents whose checksum differs from the manifest (imported anyway)").or_default() += 1;
     }
-    let name = f["original_filename"].as_str().or(r["__exported_file_name__"].as_str()).unwrap_or("documento");
+    let name = f["original_filename"].as_str().or(r["__exported_file_name__"].as_str()).unwrap_or("document");
     let name = name.rsplit('/').next().unwrap_or(name);
     let ext = Path::new(name).extension().map(|x| x.to_string_lossy().to_lowercase()).unwrap_or_default();
     let label = |kind: &'static str, key: &str| f[key].as_i64().and_then(|pk| m.labels.get(&(kind, pk)).copied());
@@ -209,7 +209,7 @@ fn import_doc(dir: &Path, r: &Value, m: &mut Maps, n: &mut BTreeMap<&'static str
     }
     // Los archivos se copian y verifican en una carpeta temporal; la fila y la carpeta aparecen juntas.
     let stage = crate::cfg().data.join("tmp").join(format!("stage-import-{pk}"));
-    let io = |x: std::io::Error| format!("no se pudo copiar {}: {x}", src.display());
+    let io = |x: std::io::Error| format!("could not copy {}: {x}", src.display());
     let _ = fs::remove_dir_all(&stage);
     fs::create_dir_all(&stage).map_err(io)?;
     ingest::copy_verified(&src, &stage.join("original"), &sha).map_err(io)?;
@@ -239,10 +239,10 @@ fn import_doc(dir: &Path, r: &Value, m: &mut Maps, n: &mut BTreeMap<&'static str
     });
     let id = inserted.map_err(|x| {
         let _ = fs::remove_dir_all(&stage);
-        format!("documento «{name}»: {x}")
+        format!("document \"{name}\": {x}")
     })?;
     let _ = crate::suggest::analyze(id, false);
     m.docs.insert(pk, id);
-    *n.entry("documentos importados").or_default() += 1;
+    *n.entry("documents imported").or_default() += 1;
     Ok(())
 }

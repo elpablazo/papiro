@@ -19,7 +19,7 @@ fn tools() -> Value {
             "tags": names("Tag names; documents must have all of them"),
             "correspondent": s("Correspondent name (who issued/sent the document)"),
             "document_type": s("Document type name"),
-            "folder": s("Folder path, e.g. Casa/Recibos; includes its subfolders"),
+            "folder": s("Folder path, e.g. Home/Receipts; includes its subfolders"),
             "from": s("Earliest document date, YYYY-MM-DD"), "to": s("Latest document date, YYYY-MM-DD"),
             "inbox": {"type": "boolean", "description": "Only documents still in the inbox (not yet filed)"},
             "limit": {"type": "integer", "description": "Max results (default 20, max 100)"}}}},
@@ -38,7 +38,7 @@ fn tools() -> Value {
             "id": {"type": "integer"}, "title": s("New title"), "date": s("Document date, YYYY-MM-DD"),
             "correspondent": s("Correspondent name; empty string clears it"),
             "document_type": s("Document type name; empty string clears it"),
-            "folder": s("Folder path to move the document into, e.g. Casa/Recibos (created if missing); empty string removes it from its folder"),
+            "folder": s("Folder path to move the document into, e.g. Home/Receipts (created if missing); empty string removes it from its folder"),
             "add_tags": names("Tag names to add"), "remove_tags": names("Tag names to remove"),
             "summary": s("Short summary to store with the document"), "note": s("Text of a note to append")}}},
         {"name": "upload_document",
@@ -48,7 +48,7 @@ fn tools() -> Value {
             "content_base64": s("File bytes, base64-encoded"), "text": s("Plain-text content (alternative to content_base64)"),
             "title": s("Title (defaults to the file name)"), "tags": names("Tag names to assign"),
             "correspondent": s("Correspondent name"), "document_type": s("Document type name"),
-            "folder": s("Folder path to file it under, e.g. Casa/Recibos (created if missing)")}}}
+            "folder": s("Folder path to file it under, e.g. Home/Receipts (created if missing)")}}}
     ])
 }
 
@@ -150,7 +150,7 @@ async fn call_tool(u: &AuthUser, name: &str, a: &Value) -> Result<Value, String>
                 ..Default::default()
             };
             let d = store::update_doc(id, &patch).map_err(e)?;
-            store::audit(Some(u), "documento editado (MCP)", &format!("documento {id}"), &d.title);
+            store::audit(Some(u), "document edited (MCP)", &format!("document {id}"), &d.title);
             if let Some(note) = a["note"].as_str().filter(|n| !n.trim().is_empty()) {
                 store::add_note(id, note).map_err(e)?;
             }
@@ -170,7 +170,7 @@ async fn call_tool(u: &AuthUser, name: &str, a: &Value) -> Result<Value, String>
             let path = cfg().data.join("tmp").join(format!("up-{}", random_hex(8)));
             tokio::fs::write(&path, bytes).await.map_err(|e| e.to_string())?;
             let job = ingest::enqueue(&path, &filename, "mcp", &meta, Some(u.id)).map_err(e)?;
-            store::audit(Some(u), "documento subido (MCP)", &filename, "");
+            store::audit(Some(u), "document uploaded (MCP)", &filename, "");
             let deadline = tokio::time::Instant::now() + Duration::from_secs(cfg().cmd_timeout * 2);
             loop {
                 let j = ingest::job(job).map_err(e)?;

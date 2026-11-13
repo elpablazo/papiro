@@ -52,7 +52,7 @@ pub fn backup(dest: &Path) -> Result<String, String> {
     let e = |x: std::io::Error| format!("{}: {x}", dest.display());
     fs::create_dir_all(dest).map_err(e)?;
     let tmp = dest.join("papiro.db.nuevo");
-    db::snapshot(&tmp).map_err(|x| format!("no se pudo copiar la base: {x}"))?;
+    db::snapshot(&tmp).map_err(|x| format!("could not copy the database: {x}"))?;
     fs::File::open(&tmp).and_then(|f| f.sync_all()).map_err(e)?;
     fs::rename(&tmp, dest.join("papiro.db")).map_err(e)?;
     let keep = cfg().backup_keep as usize;
@@ -77,7 +77,7 @@ pub fn backup(dest: &Path) -> Result<String, String> {
     let info = json!({"created": at, "papiro": env!("CARGO_PKG_VERSION"), "schema": db::schema_version(), "documents": docs, "bytes": bytes, "history": days});
     fs::write(dest.join("RESPALDO.json"), serde_json::to_string_pretty(&info).unwrap_or_default()).map_err(e)?;
     store::meta_set("backup", &json!({"at": at, "dest": dest.to_string_lossy(), "documents": docs, "bytes": bytes, "ok": true, "history": days.len()}).to_string());
-    Ok(format!("respaldo en {}: {docs} documentos, {:.1} MB, {copied} archivos nuevos, {} copias diarias de la base", dest.display(), bytes as f64 / 1048576.0, days.len()))
+    Ok(format!("backup in {}: {docs} documents, {:.1} MB, {copied} new files, {} daily database copies", dest.display(), bytes as f64 / 1048576.0, days.len()))
 }
 
 /// Restaura un respaldo en una carpeta de datos vacía. Debe llamarse antes de abrir la base.
@@ -89,15 +89,15 @@ pub fn restore(src: &Path, data: &Path, day: Option<&str>) -> Result<String, Str
     };
     if !base.is_file() {
         return Err(match day {
-            Some(d) => format!("no hay copia del {d}. Días disponibles: {}", history(src).join(", ")),
-            None => format!("{} no contiene un respaldo de Papiro (falta papiro.db)", src.display()),
+            Some(d) => format!("there is no copy from {d}. Available days: {}", history(src).join(", ")),
+            None => format!("{} does not contain a Papiro backup (papiro.db is missing)", src.display()),
         });
     }
     if data.join("papiro.db").exists() {
-        return Err(format!("{} ya tiene una base de datos; restaura sobre una carpeta de datos vacía para no pisar nada", data.display()));
+        return Err(format!("{} already has a database; restore into an empty data directory so nothing is overwritten", data.display()));
     }
     let e = |x: std::io::Error| x.to_string();
-    let q = |x: rusqlite::Error| format!("la copia de la base no se puede leer: {x}");
+    let q = |x: rusqlite::Error| format!("the database copy cannot be read: {x}");
     fs::create_dir_all(data.join("docs")).map_err(e)?;
     fs::create_dir_all(data.join("tmp")).map_err(e)?;
     let staged = data.join("papiro.db.restaurando");
@@ -125,7 +125,7 @@ pub fn restore(src: &Path, data: &Path, day: Option<&str>) -> Result<String, Str
         let _ = fs::remove_file(data.join(side));
     }
     fs::rename(&staged, data.join("papiro.db")).map_err(e)?;
-    Ok(format!("restaurados {files} archivos ({:.1} MB), base de datos {}", bytes as f64 / 1048576.0, day.map(|d| format!("del {d}")).unwrap_or_else(|| "más reciente".into())))
+    Ok(format!("restored {files} files ({:.1} MB) and the {} database", bytes as f64 / 1048576.0, day.map(String::from).unwrap_or_else(|| "latest".into())))
 }
 
 /// Exportación portable: un `manifest.json` legible y los archivos con nombres humanos, para no
@@ -142,9 +142,9 @@ pub fn export(dest: &Path) -> Result<String, String> {
         let clean: String = d.title.chars().map(|c| if c.is_alphanumeric() || " ._-".contains(c) { c } else { '_' }).take(80).collect();
         let ext = Path::new(&d.original_name).extension().map(|x| format!(".{}", x.to_string_lossy())).unwrap_or_default();
         let (name, archive) = (format!("{id:06} {clean}{ext}"), format!("{id:06} {clean} (con texto).pdf"));
-        fs::copy(store::doc_dir(*id).join("original"), dest.join("documentos").join(&name)).map_err(|x| format!("documento {id}: {x}"))?;
+        fs::copy(store::doc_dir(*id).join("original"), dest.join("documentos").join(&name)).map_err(|x| format!("document {id}: {x}"))?;
         if d.has_archive {
-            fs::copy(store::doc_dir(*id).join("archive.pdf"), dest.join("documentos").join(&archive)).map_err(|x| format!("documento {id}: {x}"))?;
+            fs::copy(store::doc_dir(*id).join("archive.pdf"), dest.join("documentos").join(&archive)).map_err(|x| format!("document {id}: {x}"))?;
         }
         let name_of = |i: Option<i64>| i.and_then(|i| labels.get(&i).cloned());
         out.push(json!({
@@ -156,5 +156,5 @@ pub fn export(dest: &Path) -> Result<String, String> {
         }));
     }
     fs::write(dest.join("manifest.json"), serde_json::to_string_pretty(&out).unwrap_or_default()).map_err(e)?;
-    Ok(format!("exportados {} documentos a {}", ids.len(), dest.display()))
+    Ok(format!("exported {} documents to {}", ids.len(), dest.display()))
 }

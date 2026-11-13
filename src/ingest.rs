@@ -73,12 +73,12 @@ pub struct Job {
     /// queued | running | done | duplicate | failed
     pub status: String,
     pub error: Option<String>,
-    /// Documento resultante (o el original, si fue duplicado)
+    /// Resulting document (or the existing one, if it was a duplicate)
     pub doc_id: Option<i64>,
     pub created: String,
     pub finished: Option<String>,
     pub attempts: i64,
-    /// El archivo se conservó y el trabajo se puede reintentar con `POST /api/jobs/{id}/retry`
+    /// The file was kept and the job can be retried with `POST /api/jobs/{id}/retry`
     pub can_retry: bool,
     #[serde(skip)]
     pub user_id: Option<i64>,
@@ -126,7 +126,7 @@ fn notify_job(id: i64) {
 pub fn retry(id: i64) -> store::Result<Job> {
     let j = job(id)?;
     if !j.can_retry {
-        return Err(store::Error::Bad("este trabajo no se puede reintentar (no falló o su archivo ya no existe)".into()));
+        return Err(store::Error::Bad("this job cannot be retried (it did not fail, or its file no longer exists)".into()));
     }
     db::with(|c| c.execute("UPDATE jobs SET status='queued', error=NULL, attempts=0, finished=NULL WHERE id=?", [id]))?;
     notify_job(id);
@@ -138,7 +138,7 @@ pub fn retry(id: i64) -> store::Result<Job> {
 pub fn dismiss(id: i64) -> store::Result<()> {
     let j = job(id)?;
     if j.status == "queued" || j.status == "running" {
-        return Err(store::Error::Bad("el trabajo sigue en curso".into()));
+        return Err(store::Error::Bad("the job is still in progress".into()));
     }
     if j.status == "failed" && Path::new(&j.path).starts_with(cfg().data.join("failed")) {
         let _ = fs::remove_file(&j.path);
@@ -177,7 +177,7 @@ fn set_aside(dir: &Path, name: &str) {
     let dest = cfg().data.join("orphans");
     let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
     if fs::create_dir_all(&dest).and_then(|_| fs::rename(dir, dest.join(format!("{name}-{stamp}")))).is_ok() {
-        println!("integridad: la carpeta docs/{name} no corresponde a ningún documento; se apartó en orphans/");
+        println!("integrity: folder docs/{name} does not belong to any document; moved aside to orphans/");
     }
 }
 
@@ -244,7 +244,7 @@ fn worker() {
         let _ = fs::remove_dir_all(tmp().join(format!("stage-{}", j.id)));
         let (status, err, doc) = match &res {
             Ok(doc) => ("done", None, Some(*doc)),
-            Err(JobErr::Duplicate(doc)) => ("duplicate", Some(format!("duplicado del documento #{doc}")), Some(*doc)),
+            Err(JobErr::Duplicate(doc)) => ("duplicate", Some(format!("duplicate of document #{doc}")), Some(*doc)),
             Err(JobErr::Failed(e)) if j.attempts < MAX_ATTEMPTS && path.exists() => ("queued", Some(e.clone()), None),
             Err(JobErr::Failed(e)) | Err(JobErr::Unsupported(e)) => ("failed", Some(e.clone()), None),
         };
@@ -269,7 +269,7 @@ fn worker() {
         }
         if let (Ok(doc), true, None) = (&res, cfg().llm.as_ref().is_some_and(|l| l.auto), finished_before) {
             if let Err(e) = crate::llm::enrich(*doc) {
-                eprintln!("llm: documento {doc}: {e}");
+                eprintln!("llm: document {doc}: {e}");
             }
         }
         let _ = db::with(|c| {
@@ -280,12 +280,12 @@ fn worker() {
             )
         });
         println!(
-            "trabajo {} «{}» ({}): {} en {} ms{}",
+            "job {} \"{}\" ({}): {} in {} ms{}",
             j.id,
             j.filename,
             j.source,
             match status {
-                "queued" => "se reintentará",
+                "queued" => "will retry",
                 s => s,
             },
             t0.elapsed().as_millis(),
@@ -411,7 +411,7 @@ fn detect(path: &Path, filename: &str) -> R<(Kind, String, &'static str)> {
     if let Some((e, m)) = text.iter().find(|(e, _)| *e == ext) {
         return Ok((Kind::Text, e.to_string(), m));
     }
-    Err(JobErr::Unsupported(format!("tipo de archivo no soportado: {filename}")))
+    Err(JobErr::Unsupported(format!("unsupported file type: {filename}")))
 }
 
 /// Ejecuta un programa externo con tope de tiempo; devuelve stdout o el final de stderr como error.
@@ -424,7 +424,7 @@ fn run(prog: &str, args: &[&str]) -> R<String> {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| format!("no se pudo ejecutar {prog}: {e}"))?;
+        .map_err(|e| format!("could not run {prog}: {e}"))?;
     let drain = |mut pipe: Box<dyn Read + Send>| {
         std::thread::spawn(move || {
             let mut buf = Vec::new();
@@ -448,7 +448,7 @@ fn run(prog: &str, args: &[&str]) -> R<String> {
                 let _ = (out.join(), err.join());
                 return Err(JobErr::Failed(match other {
                     Err(e) => format!("{prog}: {e}"),
-                    _ => format!("{prog}: tiempo agotado ({} s)", cfg().cmd_timeout),
+                    _ => format!("{prog}: timed out ({} s)", cfg().cmd_timeout),
                 }));
             }
         }
@@ -682,7 +682,7 @@ fn process_office(src: &Path, filename: &str, ext: &str, work: &Path) -> R<Extra
         return Ok(ex);
     }
     if !["docx", "xlsx", "pptx", "odt", "ods", "odp"].contains(&ext) {
-        return Err(JobErr::Unsupported(format!(".{ext} requiere PAPIRO_GOTENBERG_URL para convertirse")));
+        return Err(JobErr::Unsupported(format!(".{ext} requires PAPIRO_GOTENBERG_URL to be converted")));
     }
     Ok(Extracted { content: office_text(src, ext)?, pages: 1, archive: None, thumb_src: None })
 }
@@ -699,7 +699,7 @@ pub fn copy_verified(src: &Path, dst: &Path, sha: &str) -> std::io::Result<()> {
     fs::File::open(dst)?.sync_all()?;
     if sha256_file(dst)? != sha {
         let _ = fs::remove_file(dst);
-        return Err(std::io::Error::other("la copia no coincide con el original (SHA-256 distinto)"));
+        return Err(std::io::Error::other("the copy does not match the original (different SHA-256)"));
     }
     Ok(())
 }
@@ -740,7 +740,7 @@ fn existing(sha: &str) -> R<Option<i64>> {
 
 fn process(j: &Claimed, path: &Path, meta: &Value, work: &Path) -> R<i64> {
     if !path.is_file() {
-        return Err(JobErr::Unsupported("el archivo ya no existe".into()));
+        return Err(JobErr::Unsupported("the file no longer exists".into()));
     }
     let filename = j.filename.as_str();
     let sha = sha256_file(path)?;
@@ -751,7 +751,7 @@ fn process(j: &Claimed, path: &Path, meta: &Value, work: &Path) -> R<i64> {
         // Ya está archivado. Si la copia guardada falta o está dañada, esta subida idéntica la repara.
         if !original_ok(id, &sha) {
             restore_original(id, path, &sha)?;
-            println!("integridad: el original del documento {id} faltaba o estaba dañado; se repuso con una subida idéntica");
+            println!("integrity: the original of document {id} was missing or damaged; restored from an identical upload");
         }
         return Err(JobErr::Duplicate(id));
     }
@@ -821,7 +821,7 @@ fn process(j: &Claimed, path: &Path, meta: &Value, work: &Path) -> R<i64> {
             sync_path(&cfg().data.join("docs"));
             // Análisis local (reglas y parecidos). Si falla, el documento ya está guardado igual.
             if let Err(e) = crate::suggest::analyze(id, true) {
-                eprintln!("análisis del documento {id}: {e}");
+                eprintln!("analysis of document {id}: {e}");
             }
             Ok(id)
         }

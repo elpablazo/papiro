@@ -1,9 +1,13 @@
 <p align="center">
-  <img src="docs/img/hero.svg" alt="Papiro: the Paperless alternative that's 182× lighter" width="900">
+  <img src="docs/img/logo.svg" alt="Papiro logo" width="128">
 </p>
 
+<h1 align="center">Papiro</h1>
+
 <p align="center">
-  <b>Self-hosted document archive with OCR and instant full-text search.<br>One binary. One container. One SQLite database.</b>
+  <b>The Paperless alternative that's 182× lighter.</b><br>
+  Self-hosted document archive with OCR and instant full-text search.<br>
+  One binary. One container. One SQLite database.
 </p>
 
 <p align="center">
@@ -11,6 +15,19 @@
   <img alt="Written in Rust" src="https://img.shields.io/badge/written%20in-Rust-f2b660">
   <a href="https://github.com/elpablazo/papiro/pkgs/container/papiro"><img alt="Docker image" src="https://img.shields.io/badge/ghcr.io-elpablazo%2Fpapiro-7aa7e8"></a>
   <img alt="amd64 and arm64" src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-b5ad9f">
+  <img alt="English and Spanish" src="https://img.shields.io/badge/UI-English%20%7C%20Espa%C3%B1ol-ea580c">
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="docs/BENCHMARKS.md">Benchmarks</a> ·
+  <a href="#coming-from-paperless-ngx">Migrate from Paperless</a> ·
+  <a href="docs/AUTO-FILING.md">Local auto-filing</a> ·
+  <a href="#api">API &amp; MCP</a>
+</p>
+
+<p align="center">
+  <img src="docs/img/desktop.jpg" alt="Papiro on the desktop: folders, the document list, a preview and suggestions" width="900">
 </p>
 
 ---
@@ -39,16 +56,13 @@ Same machine, same documents, one app at a time. Every number has a script and r
   <img src="docs/img/chart-speed.svg" alt="Speed: ingest, search and concurrent load" width="880">
 </p>
 
-## What it looks like
+## On your phone
 
 <p align="center">
-  <img src="docs/img/desktop-folders.jpg" alt="Papiro on the desktop: folders, list and preview" width="880">
-</p>
-<p align="center">
-  <img src="docs/img/mobile.jpg" alt="Papiro on a phone: a folder, the archive in dark mode, and a document with suggestions" width="880">
+  <img src="docs/img/mobile.jpg" alt="Papiro on a phone: the archive, the due-dates view in dark mode, and a document with suggestions" width="820">
 </p>
 
-> **Heads-up:** the interface is in **Spanish** for now. An English UI is the top item on the roadmap, and the most wanted contribution. The API, CLI and docs are in English.
+The interface speaks **English and Spanish** and picks yours from the browser (switch it in Settings → Account). More languages are a small, welcome PR: every string lives in one dictionary at the top of `web/app.js`.
 
 ## Quick start
 
@@ -135,14 +149,14 @@ Being honest is part of the pitch:
 - **Page cleaning and deskewing** before OCR. On a page skewed 4°, Paperless read 100 % of the words and Papiro 96.7 %; on a dim photo with a shadow, 62 % vs 53 %.
 - **Workflows** (triggers and actions), **mail rules**, **group permissions**, saved views, share links, barcodes and document splitting, MFA/SSO.
 - **A machine-learning classifier** trained on your archive. Papiro's local auto-filing is similarity-based and simpler.
-- **37 UI languages.** Papiro's UI is Spanish-only today.
+- **37 UI languages.** Papiro has two so far: English and Spanish.
 - **Years in production** and a big community. Papiro is young.
 
 ## Install on your phone
 
 Papiro is an installable web app. It needs HTTPS (or `localhost`).
 
-- **Android (Chrome):** menu → *Install app*, or **Más → Instalar Papiro** inside the app. It then shows up in every app's share sheet.
+- **Android (Chrome):** menu → *Install app*, or **More → Install Papiro** inside the app. It then shows up in every app's share sheet.
 - **iPhone / iPad (Safari):** Share → *Add to Home Screen*. iOS doesn't let web apps receive shared files; use the **+** button.
 
 Offline, the app opens and says so, but doesn't show documents: they live on your server and Papiro keeps no copies on the phone.
@@ -198,7 +212,7 @@ Everything is an environment variable. No secret lives in the code or the image.
 ## API
 
 - Spec: `GET /api/openapi.json` (OpenAPI 3.1, generated from the code), browsable in Settings → API.
-- Auth: `Authorization: Bearer ppr_…` (create tokens in Settings → Tokens and MCP).
+- Auth: `Authorization: Bearer ppr_…` (create tokens in Settings → Tokens & MCP).
 - Errors are always `{"error": "message"}` with the matching HTTP status.
 
 ```bash
@@ -250,7 +264,6 @@ Needs `tesseract`, poppler-utils (`pdftotext`, `pdftoppm`, `pdfinfo`, `pdfimages
 
 ## Roadmap
 
-- English UI (i18n)
 - Multi-page scanning from the phone camera into one PDF, with edge detection
 - Deskewing and contrast cleanup before OCR
 - Expiry reminders (calendar feed and push notifications)

@@ -94,17 +94,17 @@ pub fn init(path: PathBuf) -> Result<Vec<i64>, String> {
         with(|c| c.execute_batch("PRAGMA user_version=1")).map_err(e)?;
     }
     if version > latest {
-        return Err(format!("la base de datos es de una versión más nueva de Papiro (esquema {version}; este binario conoce hasta {latest}). Actualiza Papiro; no se tocó nada."));
+        return Err(format!("the database belongs to a newer version of Papiro (schema {version}; this binary knows up to {latest}). Update Papiro; nothing was changed."));
     }
     if version > 0 && version < latest {
         let backup = path.with_file_name(format!("papiro.db.antes-de-v{latest}"));
-        snapshot(&backup).map_err(|x| format!("no se pudo respaldar la base antes de migrar: {x}"))?;
-        println!("migración: copia de seguridad de la base en {}", backup.display());
+        snapshot(&backup).map_err(|x| format!("could not back up the database before migrating: {x}"))?;
+        println!("migration: database backed up to {}", backup.display());
     }
     let mut applied = vec![];
     for (n, sql) in MIGRATIONS.iter().filter(|m| m.0 > version) {
-        write(|c| c.execute_batch(&format!("{sql}\nPRAGMA user_version={n};"))).map_err(|x| format!("migración {n} fallida (no se aplicó nada de ella): {x}"))?;
-        println!("migración: esquema actualizado a la versión {n}");
+        write(|c| c.execute_batch(&format!("{sql}\nPRAGMA user_version={n};"))).map_err(|x| format!("migration {n} failed (none of it was applied): {x}"))?;
+        println!("migration: schema updated to version {n}");
         applied.push(*n);
     }
     Ok(applied)

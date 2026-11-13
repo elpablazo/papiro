@@ -52,7 +52,7 @@ fn forbidden(msg: &str) -> ApiError {
     ApiError(StatusCode::FORBIDDEN, msg.into())
 }
 
-/// Cuerpo de error común a toda la API.
+/// Error body shared by the whole API.
 #[derive(Serialize, ToSchema)]
 pub struct ErrorBody {
     pub error: String,
@@ -62,16 +62,16 @@ pub struct ErrorBody {
 #[openapi(
     info(
         title = "Papiro API",
-        description = "API REST de Papiro. Autenticación: cabecera `Authorization: Bearer <token>` con un token creado en Ajustes → Tokens de API (o `POST /api/tokens`). La interfaz web usa una cookie de sesión.\n\nRoles: `viewer` solo lee; `editor` sube y edita; `admin` además administra usuarios, webhooks y borra definitivamente. Un token puede ser de solo lectura.\n\nLos errores devuelven siempre `{\"error\": \"mensaje\"}` con el código HTTP correspondiente.\n\nPara agentes de IA existe además un servidor MCP (Streamable HTTP) en `/mcp` que acepta el mismo token."
+        description = "Papiro REST API. Authentication: an `Authorization: Bearer <token>` header with a token created in Settings → API tokens (or with `POST /api/tokens`). The web interface uses a session cookie.\n\nRoles: `viewer` can only read; `editor` uploads and edits; `admin` can also manage users and webhooks and delete permanently. A token can be read-only.\n\nErrors always return `{\"error\": \"message\"}` with the matching HTTP status code.\n\nFor AI agents there is also an MCP server (Streamable HTTP) at `/mcp` that accepts the same token."
     ),
     tags(
-        (name = "documentos", description = "Subir, buscar, leer y editar documentos"),
-        (name = "carpetas", description = "Carpetas anidadas para ordenar los documentos"),
-        (name = "etiquetas", description = "Etiquetas, corresponsales y tipos de documento"),
-        (name = "cola", description = "Estado de la ingesta y eventos en vivo"),
-        (name = "webhooks", description = "Avisos HTTP firmados cuando cambia un documento"),
-        (name = "cuenta", description = "Sesión, usuarios y tokens de API"),
-        (name = "sistema", description = "Salud, integridad y auditoría (administradores)")
+        (name = "documents", description = "Upload, search, read and edit documents"),
+        (name = "folders", description = "Nested folders to organize documents"),
+        (name = "labels", description = "Tags, correspondents and document types"),
+        (name = "queue", description = "Ingest status and live events"),
+        (name = "webhooks", description = "Signed HTTP notifications when a document changes"),
+        (name = "account", description = "Session, users and API tokens"),
+        (name = "system", description = "Health, integrity and audit log (administrators)")
     ),
     components(schemas(ErrorBody)),
     security(("token" = [])),
@@ -85,7 +85,7 @@ impl Modify for Security {
         use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
         api.components.get_or_insert_default().add_security_scheme(
             "token",
-            SecurityScheme::Http(HttpBuilder::new().scheme(HttpAuthScheme::Bearer).description(Some("Token de API (ppr_…)")).build()),
+            SecurityScheme::Http(HttpBuilder::new().scheme(HttpAuthScheme::Bearer).description(Some("API token (ppr_…)")).build()),
         );
     }
 }
@@ -134,22 +134,22 @@ pub fn router() -> (axum::Router, utoipa::openapi::OpenApi) {
         .split_for_parts()
 }
 
-/// Argon2 usa 19 MB por cálculo: se hacen como mucho dos a la vez y el resto espera su turno.
+/// Argon2 uses 19 MB per hash: at most two run at once and the rest wait their turn.
 async fn hashing<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> Res<T> {
     let _permit = tokio::time::timeout(Duration::from_secs(8), auth::HASHING.acquire())
         .await
-        .map_err(|_| ApiError(StatusCode::SERVICE_UNAVAILABLE, "servidor ocupado; intenta de nuevo en unos segundos".into()))?
+        .map_err(|_| ApiError(StatusCode::SERVICE_UNAVAILABLE, "server busy; try again in a few seconds".into()))?
         .map_err(bad)?;
     tokio::task::spawn_blocking(f).await.map_err(bad)
 }
 
 // ───────────────────────── documentos ─────────────────────────
 
-/// Buscar y listar documentos
+/// Search and list documents
 ///
-/// Búsqueda full-text (SQLite FTS5, ordenada por relevancia BM25) combinada con filtros.
-/// Sin `q` devuelve el listado ordenado por fecha. Solo incluye lo que el usuario puede ver.
-#[utoipa::path(get, path = "/api/documents", tag = "documentos", params(SearchParams),
+/// Full-text search (SQLite FTS5, ranked by BM25 relevance) combined with filters.
+/// Without `q` it returns the list sorted by date. Only includes what the user can see.
+#[utoipa::path(get, path = "/api/documents", tag = "documents", params(SearchParams),
     responses((status = 200, body = DocList), (status = 401, body = ErrorBody)))]
 async fn list_documents(u: AuthUser, Query(p): Query<SearchParams>) -> Res<Json<DocList>> {
     Ok(Json(store::search(&p, &u)?))
@@ -158,50 +158,50 @@ async fn list_documents(u: AuthUser, Query(p): Query<SearchParams>) -> Res<Json<
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
 struct UploadQuery {
-    /// Espera a que termine el procesamiento y devuelve los documentos ya creados
+    /// Wait until processing finishes and return the created documents
     wait: Option<bool>,
 }
 
-/// Formulario multipart de subida
+/// Multipart upload form
 #[derive(ToSchema)]
 #[allow(dead_code)]
 struct UploadForm {
-    /// Archivo a subir (se puede repetir el campo para subir varios)
+    /// File to upload (repeat the field to upload several)
     #[schema(value_type = String, format = Binary)]
     file: String,
-    /// Título (por defecto, el nombre del archivo)
+    /// Title (defaults to the file name)
     title: Option<String>,
-    /// Fecha del documento YYYY-MM-DD (por defecto se detecta del contenido)
+    /// Document date YYYY-MM-DD (detected from the content by default)
     created: Option<String>,
     correspondent_id: Option<i64>,
     doctype_id: Option<i64>,
-    /// IDs de etiquetas separados por coma
+    /// Comma-separated tag IDs
     tags: Option<String>,
-    /// `true` para que solo lo vean quien lo sube y los administradores
+    /// `true` so that only the uploader and administrators can see it
     private: Option<bool>,
-    /// Carpeta en la que se guarda
+    /// Folder to store it in
     folder_id: Option<i64>,
 }
 
 #[derive(Serialize, ToSchema)]
 struct UploadResult {
-    /// Un trabajo de ingesta por archivo
+    /// One ingest job per file
     jobs: Vec<Job>,
-    /// Con `wait=true`: los documentos resultantes (también los ya existentes si el archivo era duplicado)
+    /// With `wait=true`: the resulting documents (including existing ones if the file was a duplicate)
     documents: Vec<Document>,
 }
 
-/// Subir documentos
+/// Upload documents
 ///
-/// Guarda los archivos y los encola para extracción/OCR. Responde `202` de inmediato con los trabajos;
-/// con `?wait=true` espera el resultado y responde `201` con los documentos. Los duplicados (mismo
-/// SHA-256) no se vuelven a guardar: el trabajo termina en `duplicate` apuntando al documento existente.
-/// Un tipo de archivo no soportado se rechaza con `415` sin encolar nada. Si un trabajo falla, el
-/// archivo se conserva y se puede reintentar con `POST /api/jobs/{id}/retry`.
-#[utoipa::path(post, path = "/api/documents", tag = "documentos", params(UploadQuery),
+/// Stores the files and queues them for extraction/OCR. Responds `202` right away with the jobs;
+/// with `?wait=true` it waits for the result and responds `201` with the documents. Duplicates (same
+/// SHA-256) are not stored again: the job ends as `duplicate`, pointing at the existing document.
+/// An unsupported file type is rejected with `415` and nothing is queued. If a job fails, the
+/// file is kept and can be retried with `POST /api/jobs/{id}/retry`.
+#[utoipa::path(post, path = "/api/documents", tag = "documents", params(UploadQuery),
     request_body(content = UploadForm, content_type = "multipart/form-data"),
-    responses((status = 202, body = UploadResult, description = "Encolado"), (status = 201, body = UploadResult, description = "Procesado (wait=true)"),
-              (status = 400, body = ErrorBody), (status = 415, body = ErrorBody), (status = 507, body = ErrorBody, description = "Sin espacio en disco")))]
+    responses((status = 202, body = UploadResult, description = "Queued"), (status = 201, body = UploadResult, description = "Processed (wait=true)"),
+              (status = 400, body = ErrorBody), (status = 415, body = ErrorBody), (status = 507, body = ErrorBody, description = "Out of disk space")))]
 async fn upload_documents(Editor(u): Editor, Query(q): Query<UploadQuery>, mut mp: Multipart) -> Res<(StatusCode, Json<UploadResult>)> {
     let mut staged: Vec<(std::path::PathBuf, String)> = vec![];
     let received = receive_upload(&mut mp, &mut staged).await;
@@ -212,9 +212,9 @@ async fn upload_documents(Editor(u): Editor, Query(q): Query<UploadQuery>, mut m
             for (p, _) in &staged {
                 let _ = tokio::fs::remove_file(p).await;
             }
-            let err = other.err().unwrap_or_else(|| bad("falta el campo «file»"));
+            let err = other.err().unwrap_or_else(|| bad("missing \"file\" field"));
             // El motivo queda en el log: una subida cortada por el navegador solo se ve desde aquí.
-            println!("subida rechazada ({}): {}", err.0.as_u16(), err.1);
+            println!("upload rejected ({}): {}", err.0.as_u16(), err.1);
             return Err(err);
         }
     };
@@ -222,7 +222,7 @@ async fn upload_documents(Editor(u): Editor, Query(q): Query<UploadQuery>, mut m
     let mut ids = vec![];
     for (path, filename) in &staged {
         ids.push(ingest::enqueue(path, filename, "upload", &meta, Some(u.id))?);
-        store::audit(Some(&u), "documento subido", filename, "");
+        store::audit(Some(&u), "document uploaded", filename, "");
     }
     let load = |ids: &[i64]| ids.iter().map(|id| ingest::job(*id)).collect::<store::Result<Vec<Job>>>();
     let mut jobs = load(&ids)?;
@@ -240,14 +240,14 @@ async fn upload_documents(Editor(u): Editor, Query(q): Query<UploadQuery>, mut m
 
 async fn receive_upload(mp: &mut Multipart, staged: &mut Vec<(std::path::PathBuf, String)>) -> Res<Value> {
     let io = |e: std::io::Error| match e.kind() {
-        std::io::ErrorKind::StorageFull => ApiError(StatusCode::INSUFFICIENT_STORAGE, "no queda espacio en disco".into()),
+        std::io::ErrorKind::StorageFull => ApiError(StatusCode::INSUFFICIENT_STORAGE, "no disk space left".into()),
         _ => ApiError(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     };
     let mut meta = json!({});
     while let Some(mut field) = mp.next_field().await.map_err(bad)? {
         let name = field.name().unwrap_or_default().to_string();
         if name == "file" {
-            let filename = field.file_name().unwrap_or_default().rsplit(['/', '\\']).next().filter(|n| !n.trim().is_empty()).unwrap_or("documento").to_string();
+            let filename = field.file_name().unwrap_or_default().rsplit(['/', '\\']).next().filter(|n| !n.trim().is_empty()).unwrap_or("document").to_string();
             let path = cfg().data.join("tmp").join(format!("up-{}", random_hex(8)));
             staged.push((path.clone(), filename.clone()));
             let mut f = tokio::fs::File::create(&path).await.map_err(io)?;
@@ -265,7 +265,7 @@ async fn receive_upload(mp: &mut Multipart, staged: &mut Vec<(std::path::PathBuf
                 "tags" => meta["tags"] = v.split(',').filter_map(|t| t.trim().parse::<i64>().ok()).collect(),
                 "folder_id" => match v.trim().parse::<i64>() {
                     Ok(f) if store::folder_exists(f) => meta["folder_id"] = f.into(),
-                    _ => return Err(bad("esa carpeta no existe")),
+                    _ => return Err(bad("that folder does not exist")),
                 },
                 "correspondent_id" | "doctype_id" => meta[&name] = v.trim().parse::<i64>().map(Value::from).unwrap_or(Value::Null),
                 "private" => meta["is_private"] = Value::Bool(matches!(v.trim(), "true" | "1" | "on")),
@@ -276,10 +276,10 @@ async fn receive_upload(mp: &mut Multipart, staged: &mut Vec<(std::path::PathBuf
     Ok(meta)
 }
 
-/// Solo el dueño de un documento o un administrador puede hacerlo privado o público.
+/// Only a document's owner or an administrator can make it private or public.
 fn check_privacy(u: &AuthUser, id: i64, p: &DocPatch) -> Res<()> {
     if p.is_private.is_some() && u.role != "admin" && store::get_doc_brief(id)?.owner_id != Some(u.id) {
-        return Err(forbidden("solo quien subió el documento o un administrador puede cambiar su privacidad"));
+        return Err(forbidden("only the uploader or an administrator can change a document's privacy"));
     }
     Ok(())
 }
@@ -289,71 +289,71 @@ struct Affected {
     affected: usize,
 }
 
-/// Edición masiva
+/// Bulk edit
 ///
-/// Aplica los mismos campos que `PATCH /api/documents/{id}` a todos los `ids`, o una acción
-/// (`trash`, `restore`, `purge`; esta última solo administradores). Todo o nada.
-#[utoipa::path(post, path = "/api/documents/bulk", tag = "documentos", request_body = BulkEdit,
+/// Applies the same fields as `PATCH /api/documents/{id}` to all the `ids`, or runs an action
+/// (`trash`, `restore`, `purge`; the last one is for administrators only). All or nothing.
+#[utoipa::path(post, path = "/api/documents/bulk", tag = "documents", request_body = BulkEdit,
     responses((status = 200, body = Affected), (status = 403, body = ErrorBody), (status = 404, body = ErrorBody)))]
 async fn bulk_edit(Editor(u): Editor, Json(b): Json<BulkEdit>) -> Res<Json<Affected>> {
     if b.action.as_deref() == Some("purge") && !u.admin() {
-        return Err(forbidden("solo un administrador puede borrar definitivamente"));
+        return Err(forbidden("only an administrator can delete permanently"));
     }
     for id in &b.ids {
         store::authorize(&u, *id)?;
         check_privacy(&u, *id, &b.patch)?;
     }
     let n = store::bulk(&b)?;
-    store::audit(Some(&u), &format!("edición masiva{}", b.action.as_deref().map(|a| format!(" ({a})")).unwrap_or_default()), &format!("{n} documentos"), &format!("{:?}", b.ids));
+    store::audit(Some(&u), &format!("bulk edit{}", b.action.as_deref().map(|a| format!(" ({a})")).unwrap_or_default()), &format!("{n} documents"), &format!("{:?}", b.ids));
     Ok(Json(Affected { affected: n }))
 }
 
-/// Leer un documento (metadatos, texto completo y notas)
-#[utoipa::path(get, path = "/api/documents/{id}", tag = "documentos", params(("id" = i64, Path,)),
+/// Read a document (metadata, full text and notes)
+#[utoipa::path(get, path = "/api/documents/{id}", tag = "documents", params(("id" = i64, Path,)),
     responses((status = 200, body = Document), (status = 404, body = ErrorBody)))]
 async fn get_document(u: AuthUser, Path(id): Path<i64>) -> Res<Json<Document>> {
     store::authorize(&u, id)?;
     Ok(Json(store::get_doc(id)?))
 }
 
-/// Editar un documento
+/// Edit a document
 ///
-/// Solo cambia los campos enviados. `null` en `correspondent_id`, `doctype_id`, `asn` o `summary` los vacía.
-#[utoipa::path(patch, path = "/api/documents/{id}", tag = "documentos", params(("id" = i64, Path,)), request_body = DocPatch,
+/// Only the fields sent are changed. `null` in `correspondent_id`, `doctype_id`, `asn` or `summary` clears them.
+#[utoipa::path(patch, path = "/api/documents/{id}", tag = "documents", params(("id" = i64, Path,)), request_body = DocPatch,
     responses((status = 200, body = Document), (status = 403, body = ErrorBody), (status = 404, body = ErrorBody)))]
 async fn update_document(Editor(u): Editor, Path(id): Path<i64>, Json(p): Json<DocPatch>) -> Res<Json<Document>> {
     store::authorize(&u, id)?;
     check_privacy(&u, id, &p)?;
     let d = store::update_doc(id, &p)?;
-    store::audit(Some(&u), "documento editado", &format!("documento {id}"), &d.title);
+    store::audit(Some(&u), "document edited", &format!("document {id}"), &d.title);
     Ok(Json(d))
 }
 
 #[derive(Deserialize, ToSchema)]
 struct SuggestAction {
-    /// `accept` aplica las sugerencias pendientes, `dismiss` las descarta, `refresh` vuelve a analizar el documento
+    /// `accept` applies the pending suggestions, `dismiss` discards them, `refresh` analyzes the document again
     action: String,
-    /// Limita a ciertas sugerencias: `folder_id`, `doctype_id`, `correspondent_id`, `tag:<id>`. Sin él, todas
+    /// Limits the action to certain suggestions: `folder_id`, `doctype_id`, `correspondent_id`, `tag:<id>`. Without it, all of them
     fields: Option<Vec<String>>,
 }
 
-/// Sugerencias del análisis local
+/// Local analysis suggestions
 ///
-/// Papiro analiza cada documento sin salir del servidor: detecta por reglas el vencimiento, el importe,
-/// la CURP y el RFC, y propone carpeta, tipo, corresponsal y etiquetas por parecido con lo ya archivado.
-/// Aquí se aceptan o descartan las sugerencias pendientes, o se pide un análisis nuevo.
-#[utoipa::path(post, path = "/api/documents/{id}/suggest", tag = "documentos", params(("id" = i64, Path,)), request_body = SuggestAction,
+/// Papiro analyzes every document without anything leaving the server: rules detect the expiry date, the amount,
+/// the CURP and the RFC, and it proposes a folder, type, correspondent and tags by similarity to what is already filed.
+/// This endpoint accepts or dismisses the pending suggestions, or requests a fresh analysis.
+#[utoipa::path(post, path = "/api/documents/{id}/suggest", tag = "documents", params(("id" = i64, Path,)), request_body = SuggestAction,
     responses((status = 200, body = Document), (status = 400, body = ErrorBody), (status = 404, body = ErrorBody)))]
 async fn document_suggest(Editor(u): Editor, Path(id): Path<i64>, Json(a): Json<SuggestAction>) -> Res<Json<Document>> {
     store::authorize(&u, id)?;
     match a.action.as_str() {
         "accept" => {
             crate::suggest::resolve(id, true, a.fields.as_deref())?;
-            store::audit(Some(&u), "sugerencias aceptadas", &format!("documento {id}"), "");
+            store::audit(Some(&u), "suggestions accepted", &format!("document {id}"), "");
         }
         "dismiss" => crate::suggest::resolve(id, false, a.fields.as_deref())?,
         "refresh" => crate::suggest::analyze(id, true)?,
-        _ => return Err(bad("action debe ser accept, dismiss o refresh")),
+        _ => return Err(bad("action must be accept, dismiss or refresh")),
     }
     Ok(Json(store::get_doc(id)?))
 }
@@ -361,52 +361,52 @@ async fn document_suggest(Editor(u): Editor, Path(id): Path<i64>, Json(a): Json<
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
 struct DeleteQuery {
-    /// Borra definitivamente (fila y archivos) en lugar de mandar a la papelera. Solo administradores.
+    /// Delete permanently (row and files) instead of moving to the trash. Administrators only.
     permanent: Option<bool>,
 }
 
-/// Enviar a la papelera (o borrar definitivamente)
-#[utoipa::path(delete, path = "/api/documents/{id}", tag = "documentos", params(("id" = i64, Path,), DeleteQuery),
+/// Move to the trash (or delete permanently)
+#[utoipa::path(delete, path = "/api/documents/{id}", tag = "documents", params(("id" = i64, Path,), DeleteQuery),
     responses((status = 204), (status = 403, body = ErrorBody), (status = 404, body = ErrorBody)))]
 async fn delete_document(Editor(u): Editor, Path(id): Path<i64>, Query(q): Query<DeleteQuery>) -> Res<StatusCode> {
     store::authorize(&u, id)?;
     let title = store::get_doc_brief(id)?.title;
     if q.permanent == Some(true) {
         if !u.admin() {
-            return Err(forbidden("solo un administrador puede borrar definitivamente"));
+            return Err(forbidden("only an administrator can delete permanently"));
         }
         store::purge(id)?;
-        store::audit(Some(&u), "documento borrado definitivamente", &format!("documento {id}"), &title);
+        store::audit(Some(&u), "document permanently deleted", &format!("document {id}"), &title);
     } else {
         store::trash(id, true)?;
-        store::audit(Some(&u), "documento a la papelera", &format!("documento {id}"), &title);
+        store::audit(Some(&u), "document moved to trash", &format!("document {id}"), &title);
     }
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// Restaurar desde la papelera
-#[utoipa::path(post, path = "/api/documents/{id}/restore", tag = "documentos", params(("id" = i64, Path,)),
+/// Restore from the trash
+#[utoipa::path(post, path = "/api/documents/{id}/restore", tag = "documents", params(("id" = i64, Path,)),
     responses((status = 200, body = Document), (status = 404, body = ErrorBody)))]
 async fn restore_document(Editor(u): Editor, Path(id): Path<i64>) -> Res<Json<Document>> {
     store::authorize(&u, id)?;
     store::trash(id, false)?;
-    store::audit(Some(&u), "documento restaurado", &format!("documento {id}"), "");
+    store::audit(Some(&u), "document restored", &format!("document {id}"), "");
     Ok(Json(store::get_doc(id)?))
 }
 
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
 struct FileQuery {
-    /// `original` (lo que se subió) o `archive` (PDF con capa de texto). Por defecto: archive si existe.
+    /// `original` (what was uploaded) or `archive` (PDF with a text layer). Default: archive if it exists.
     variant: Option<String>,
-    /// Fuerza la descarga en lugar de mostrarlo en el navegador
+    /// Force a download instead of displaying it in the browser
     download: Option<bool>,
 }
 
 async fn serve_file(path: std::path::PathBuf, mime: &str, disposition: Option<String>, req: Request) -> Res<Response> {
     let mut res = tower_http::services::ServeFile::new(path).oneshot(req).await.map_err(bad)?.map(axum::body::Body::new);
     if res.status() == StatusCode::NOT_FOUND {
-        return Err(ApiError(StatusCode::NOT_FOUND, "el archivo de este documento no está en disco; revisa Ajustes → Salud".into()));
+        return Err(ApiError(StatusCode::NOT_FOUND, "this document's file is not on disk; check Settings → Health".into()));
     }
     let h = res.headers_mut();
     h.insert(header::CONTENT_TYPE, HeaderValue::from_str(mime).map_err(bad)?);
@@ -416,11 +416,11 @@ async fn serve_file(path: std::path::PathBuf, mime: &str, disposition: Option<St
     Ok(res)
 }
 
-/// Descargar el archivo
+/// Download the file
 ///
-/// Admite peticiones por rangos (`Range`).
-#[utoipa::path(get, path = "/api/documents/{id}/file", tag = "documentos", params(("id" = i64, Path,), FileQuery),
-    responses((status = 200, description = "Contenido del archivo", content_type = "application/octet-stream", body = Vec<u8>), (status = 404, body = ErrorBody)))]
+/// Supports range requests (`Range`).
+#[utoipa::path(get, path = "/api/documents/{id}/file", tag = "documents", params(("id" = i64, Path,), FileQuery),
+    responses((status = 200, description = "File contents", content_type = "application/octet-stream", body = Vec<u8>), (status = 404, body = ErrorBody)))]
 async fn document_file(u: AuthUser, Path(id): Path<i64>, Query(q): Query<FileQuery>, req: Request) -> Res<Response> {
     store::authorize(&u, id)?;
     let d = store::get_doc_brief(id)?;
@@ -440,11 +440,11 @@ async fn document_file(u: AuthUser, Path(id): Path<i64>, Query(q): Query<FileQue
 // Como mucho dos renders a la vez: abrir un PDF de 300 páginas no dispara ni CPU ni RAM.
 static RENDERS: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(2);
 
-/// Miniatura de la primera página (JPEG)
+/// Thumbnail of the first page (JPEG)
 ///
-/// Si aún no existe (documentos importados), se genera en la primera petición y se guarda.
-#[utoipa::path(get, path = "/api/documents/{id}/thumb", tag = "documentos", params(("id" = i64, Path,)),
-    responses((status = 200, description = "Imagen JPEG", content_type = "image/jpeg", body = Vec<u8>), (status = 404, body = ErrorBody)))]
+/// If it does not exist yet (imported documents), it is generated on the first request and stored.
+#[utoipa::path(get, path = "/api/documents/{id}/thumb", tag = "documents", params(("id" = i64, Path,)),
+    responses((status = 200, description = "JPEG image", content_type = "image/jpeg", body = Vec<u8>), (status = 404, body = ErrorBody)))]
 async fn document_thumb(u: AuthUser, Path(id): Path<i64>, req: Request) -> Res<Response> {
     store::authorize(&u, id)?;
     let d = store::get_doc_brief(id)?;
@@ -458,12 +458,12 @@ async fn document_thumb(u: AuthUser, Path(id): Path<i64>, req: Request) -> Res<R
     Ok(res)
 }
 
-/// Página renderizada como imagen (JPEG, 1400 px de ancho)
+/// Page rendered as an image (JPEG, 1400 px wide)
 ///
-/// Es lo que usa la vista previa: funciona igual en cualquier navegador, también en móviles.
-/// Disponible para PDF e imágenes (cualquier documento con PDF original o de archivo).
-#[utoipa::path(get, path = "/api/documents/{id}/pages/{page}", tag = "documentos", params(("id" = i64, Path,), ("page" = u32, Path, description = "Número de página, desde 1")),
-    responses((status = 200, description = "Imagen JPEG", content_type = "image/jpeg", body = Vec<u8>), (status = 404, body = ErrorBody)))]
+/// This is what the preview uses: it works the same in every browser, including on phones.
+/// Available for PDFs and images (any document with an original or archive PDF).
+#[utoipa::path(get, path = "/api/documents/{id}/pages/{page}", tag = "documents", params(("id" = i64, Path,), ("page" = u32, Path, description = "Page number, starting at 1")),
+    responses((status = 200, description = "JPEG image", content_type = "image/jpeg", body = Vec<u8>), (status = 404, body = ErrorBody)))]
 async fn document_page(u: AuthUser, Path((id, page)): Path<(i64, u32)>) -> Res<Response> {
     store::authorize(&u, id)?;
     let d = store::get_doc_brief(id)?;
@@ -472,7 +472,7 @@ async fn document_page(u: AuthUser, Path((id, page)): Path<(i64, u32)>) -> Res<R
         return Err(store::Error::NotFound.into());
     }
     if !file.is_file() {
-        return Err(ApiError(StatusCode::NOT_FOUND, "el archivo de este documento no está en disco; revisa Ajustes → Salud".into()));
+        return Err(ApiError(StatusCode::NOT_FOUND, "this document's file is not on disk; check Settings → Health".into()));
     }
     let _permit = RENDERS.acquire().await.map_err(bad)?;
     let out = tokio::task::spawn_blocking(move || {
@@ -486,27 +486,27 @@ async fn document_page(u: AuthUser, Path((id, page)): Path<(i64, u32)>) -> Res<R
     .map_err(bad)?
     .map_err(|e| store::Error::Other(e.to_string()))?;
     if !out.status.success() || out.stdout.is_empty() {
-        return Err(store::Error::Other("no se pudo renderizar la página".into()).into());
+        return Err(store::Error::Other("could not render the page".into()).into());
     }
     Ok(([(header::CONTENT_TYPE, "image/jpeg"), (header::CACHE_CONTROL, "private, max-age=604800")], out.stdout).into_response())
 }
 
-/// Clasificar y resumir con IA
+/// Classify and summarize with AI
 ///
-/// Envía el texto al LLM configurado (`PAPIRO_LLM_*`) y aplica título, resumen, corresponsal, tipo,
-/// etiquetas y fecha sugeridos. Responde `501` si no hay LLM configurado.
-#[utoipa::path(post, path = "/api/documents/{id}/ai", tag = "documentos", params(("id" = i64, Path,)),
+/// Sends the text to the configured LLM (`PAPIRO_LLM_*`) and applies the suggested title, summary, correspondent, type,
+/// tags and date. Responds `501` if no LLM is configured.
+#[utoipa::path(post, path = "/api/documents/{id}/ai", tag = "documents", params(("id" = i64, Path,)),
     responses((status = 200, body = Document), (status = 501, body = ErrorBody), (status = 502, body = ErrorBody)))]
 async fn document_ai(Editor(u): Editor, Path(id): Path<i64>) -> Res<Json<Document>> {
     if cfg().llm.is_none() {
-        return Err(ApiError(StatusCode::NOT_IMPLEMENTED, "no hay LLM configurado (PAPIRO_LLM_API_KEY)".into()));
+        return Err(ApiError(StatusCode::NOT_IMPLEMENTED, "no LLM is configured (PAPIRO_LLM_API_KEY)".into()));
     }
     store::authorize(&u, id)?;
     tokio::task::spawn_blocking(move || crate::llm::enrich(id))
         .await
         .map_err(bad)?
         .map_err(|e| ApiError(StatusCode::BAD_GATEWAY, e))?;
-    store::audit(Some(&u), "documento clasificado con IA", &format!("documento {id}"), "");
+    store::audit(Some(&u), "document classified with AI", &format!("document {id}"), "");
     Ok(Json(store::get_doc(id)?))
 }
 
@@ -515,16 +515,16 @@ struct NoteInput {
     text: String,
 }
 
-/// Añadir una nota
-#[utoipa::path(post, path = "/api/documents/{id}/notes", tag = "documentos", params(("id" = i64, Path,)), request_body = NoteInput,
+/// Add a note
+#[utoipa::path(post, path = "/api/documents/{id}/notes", tag = "documents", params(("id" = i64, Path,)), request_body = NoteInput,
     responses((status = 201, body = Note), (status = 404, body = ErrorBody)))]
 async fn add_note(Editor(u): Editor, Path(id): Path<i64>, Json(n): Json<NoteInput>) -> Res<(StatusCode, Json<Note>)> {
     store::authorize(&u, id)?;
     Ok((StatusCode::CREATED, Json(store::add_note(id, n.text.trim())?)))
 }
 
-/// Borrar una nota
-#[utoipa::path(delete, path = "/api/notes/{id}", tag = "documentos", params(("id" = i64, Path,)), responses((status = 204), (status = 404, body = ErrorBody)))]
+/// Delete a note
+#[utoipa::path(delete, path = "/api/notes/{id}", tag = "documents", params(("id" = i64, Path,)), responses((status = 204), (status = 404, body = ErrorBody)))]
 async fn delete_note(Editor(u): Editor, Path(id): Path<i64>) -> Res<StatusCode> {
     store::authorize(&u, store::note_doc(id)?)?;
     store::delete_note(id)?;
@@ -534,44 +534,44 @@ async fn delete_note(Editor(u): Editor, Path(id): Path<i64>) -> Res<StatusCode> 
 // ───────────────────────── etiquetas, corresponsales, tipos ─────────────────────────
 
 macro_rules! label_routes {
-    ($kind:literal, $path:literal, $path_id:literal, $what:literal, $list:ident, $create:ident, $update:ident, $delete:ident) => {
-        #[doc = concat!("Listar ", $what, " (con número de documentos)")]
-        #[utoipa::path(get, path = $path, tag = "etiquetas", responses((status = 200, body = Vec<Label>)))]
+    ($kind:literal, $path:literal, $path_id:literal, $what:literal, $one:literal, $list:ident, $create:ident, $update:ident, $delete:ident) => {
+        #[doc = concat!("List ", $what, " (with document counts)")]
+        #[utoipa::path(get, path = $path, tag = "labels", responses((status = 200, body = Vec<Label>)))]
         async fn $list(_u: AuthUser) -> Res<Json<Vec<Label>>> {
             Ok(Json(store::list_labels($kind)?))
         }
 
-        #[doc = concat!("Crear en ", $what)]
+        #[doc = concat!("Create a ", $one)]
         ///
-        /// `match` + `algo` definen la asignación automática al ingerir: `any` (alguna palabra),
-        /// `all` (todas), `literal` (frase exacta), `regex`; `none` la desactiva.
-        #[utoipa::path(post, path = $path, tag = "etiquetas", request_body = LabelInput,
+        /// `match` + `algo` define automatic assignment on ingest: `any` (any of the words),
+        /// `all` (all of them), `literal` (exact phrase), `regex`; `none` turns it off.
+        #[utoipa::path(post, path = $path, tag = "labels", request_body = LabelInput,
             responses((status = 201, body = Label), (status = 409, body = ErrorBody)))]
         async fn $create(_u: Editor, Json(i): Json<LabelInput>) -> Res<(StatusCode, Json<Label>)> {
             Ok((StatusCode::CREATED, Json(store::create_label($kind, &i)?)))
         }
 
-        #[doc = concat!("Editar en ", $what)]
-        #[utoipa::path(patch, path = $path_id, tag = "etiquetas", params(("id" = i64, Path,)), request_body = LabelInput,
+        #[doc = concat!("Edit a ", $one)]
+        #[utoipa::path(patch, path = $path_id, tag = "labels", params(("id" = i64, Path,)), request_body = LabelInput,
             responses((status = 200, body = Label), (status = 404, body = ErrorBody)))]
         async fn $update(_u: Editor, Path(id): Path<i64>, Json(i): Json<LabelInput>) -> Res<Json<Label>> {
             Ok(Json(store::update_label($kind, id, &i)?))
         }
 
-        #[doc = concat!("Borrar de ", $what, " (los documentos se conservan)")]
-        #[utoipa::path(delete, path = $path_id, tag = "etiquetas", params(("id" = i64, Path,)),
+        #[doc = concat!("Delete a ", $one, " (its documents are kept)")]
+        #[utoipa::path(delete, path = $path_id, tag = "labels", params(("id" = i64, Path,)),
             responses((status = 204), (status = 404, body = ErrorBody)))]
         async fn $delete(Editor(u): Editor, Path(id): Path<i64>) -> Res<StatusCode> {
             let name = store::get_label($kind, id)?.name;
             store::delete_label($kind, id)?;
-            store::audit(Some(&u), concat!("borrado en ", $what), &name, "");
+            store::audit(Some(&u), concat!($one, " deleted"), &name, "");
             Ok(StatusCode::NO_CONTENT)
         }
     };
 }
-label_routes!("tag", "/api/tags", "/api/tags/{id}", "etiquetas", list_tags, create_tag, update_tag, delete_tag);
-label_routes!("correspondent", "/api/correspondents", "/api/correspondents/{id}", "corresponsales", list_correspondents, create_correspondent, update_correspondent, delete_correspondent);
-label_routes!("doctype", "/api/doctypes", "/api/doctypes/{id}", "tipos de documento", list_doctypes, create_doctype, update_doctype, delete_doctype);
+label_routes!("tag", "/api/tags", "/api/tags/{id}", "tags", "tag", list_tags, create_tag, update_tag, delete_tag);
+label_routes!("correspondent", "/api/correspondents", "/api/correspondents/{id}", "correspondents", "correspondent", list_correspondents, create_correspondent, update_correspondent, delete_correspondent);
+label_routes!("doctype", "/api/doctypes", "/api/doctypes/{id}", "document types", "document type", list_doctypes, create_doctype, update_doctype, delete_doctype);
 
 // ───────────────────────── carpetas ─────────────────────────
 
@@ -579,26 +579,26 @@ fn folder(u: &AuthUser, id: i64) -> Res<Json<Folder>> {
     Ok(Json(store::list_folders(u)?.into_iter().find(|f| f.id == id).ok_or(store::Error::NotFound)?))
 }
 
-/// Listar carpetas
+/// List folders
 ///
-/// Todas las carpetas, ordenadas por ruta. `document_count` cuenta lo que hay en la carpeta y en sus subcarpetas.
-#[utoipa::path(get, path = "/api/folders", tag = "carpetas", responses((status = 200, body = Vec<Folder>)))]
+/// Every folder, sorted by path. `document_count` counts what is in the folder and in its subfolders.
+#[utoipa::path(get, path = "/api/folders", tag = "folders", responses((status = 200, body = Vec<Folder>)))]
 async fn list_folders(u: AuthUser) -> Res<Json<Vec<Folder>>> {
     Ok(Json(store::list_folders(&u)?))
 }
 
-/// Crear una carpeta
-#[utoipa::path(post, path = "/api/folders", tag = "carpetas", request_body = FolderInput,
+/// Create a folder
+#[utoipa::path(post, path = "/api/folders", tag = "folders", request_body = FolderInput,
     responses((status = 201, body = Folder), (status = 400, body = ErrorBody), (status = 409, body = ErrorBody)))]
 async fn create_folder(Editor(u): Editor, Json(i): Json<FolderInput>) -> Res<(StatusCode, Json<Folder>)> {
     let f = folder(&u, store::create_folder(&i)?)?;
-    store::audit(Some(&u), "carpeta creada", &f.path, "");
+    store::audit(Some(&u), "folder created", &f.path, "");
     store::notify(json!({"type": "folders"}));
     Ok((StatusCode::CREATED, f))
 }
 
-/// Renombrar o mover una carpeta
-#[utoipa::path(patch, path = "/api/folders/{id}", tag = "carpetas", params(("id" = i64, Path,)), request_body = FolderInput,
+/// Rename or move a folder
+#[utoipa::path(patch, path = "/api/folders/{id}", tag = "folders", params(("id" = i64, Path,)), request_body = FolderInput,
     responses((status = 200, body = Folder), (status = 400, body = ErrorBody), (status = 404, body = ErrorBody), (status = 409, body = ErrorBody)))]
 async fn update_folder(Editor(u): Editor, Path(id): Path<i64>, Json(i): Json<FolderInput>) -> Res<Json<Folder>> {
     store::update_folder(id, &i)?;
@@ -606,29 +606,29 @@ async fn update_folder(Editor(u): Editor, Path(id): Path<i64>, Json(i): Json<Fol
     folder(&u, id)
 }
 
-/// Borrar una carpeta
+/// Delete a folder
 ///
-/// Borra la carpeta y sus subcarpetas. Los documentos no se borran: pasan a la carpeta superior
-/// (o quedan sin carpeta si estaba en la raíz).
-#[utoipa::path(delete, path = "/api/folders/{id}", tag = "carpetas", params(("id" = i64, Path,)),
+/// Deletes the folder and its subfolders. Documents are not deleted: they move to the parent folder
+/// (or end up with no folder if it was at the root).
+#[utoipa::path(delete, path = "/api/folders/{id}", tag = "folders", params(("id" = i64, Path,)),
     responses((status = 204), (status = 404, body = ErrorBody)))]
 async fn delete_folder(Editor(u): Editor, Path(id): Path<i64>) -> Res<StatusCode> {
     let path = folder(&u, id)?.0.path;
     let moved = store::delete_folder(id)?;
-    store::audit(Some(&u), "carpeta borrada", &path, &format!("{moved} documento(s) pasaron a la carpeta superior"));
+    store::audit(Some(&u), "folder deleted", &path, &format!("{moved} document(s) moved to the parent folder"));
     store::notify(json!({"type": "folders"}));
     Ok(StatusCode::NO_CONTENT)
 }
 
 // ───────────────────────── cola, eventos, estadísticas ─────────────────────────
 
-/// Cada quien ve sus subidas y lo que entró por carpeta o correo; los administradores, todo.
+/// Everyone sees their own uploads and whatever came in by folder or mail; administrators see everything.
 fn job_visible(u: &AuthUser, j: &Job) -> bool {
     u.role == "admin" || j.user_id.is_none() || j.user_id == Some(u.id)
 }
 
-/// Últimos 100 trabajos de ingesta
-#[utoipa::path(get, path = "/api/jobs", tag = "cola", responses((status = 200, body = Vec<Job>)))]
+/// Last 100 ingest jobs
+#[utoipa::path(get, path = "/api/jobs", tag = "queue", responses((status = 200, body = Vec<Job>)))]
 async fn list_jobs(u: AuthUser) -> Res<Json<Vec<Job>>> {
     Ok(Json(ingest::jobs("id > ?", 0)?.into_iter().filter(|j| job_visible(&u, j)).collect()))
 }
@@ -637,41 +637,41 @@ fn own_job(u: &AuthUser, id: i64) -> Res<Job> {
     Some(ingest::job(id)?).filter(|j| job_visible(u, j)).ok_or_else(|| store::Error::NotFound.into())
 }
 
-/// Estado de un trabajo de ingesta
-#[utoipa::path(get, path = "/api/jobs/{id}", tag = "cola", params(("id" = i64, Path,)),
+/// Status of an ingest job
+#[utoipa::path(get, path = "/api/jobs/{id}", tag = "queue", params(("id" = i64, Path,)),
     responses((status = 200, body = Job), (status = 404, body = ErrorBody)))]
 async fn get_job(u: AuthUser, Path(id): Path<i64>) -> Res<Json<Job>> {
     Ok(Json(own_job(&u, id)?))
 }
 
-/// Reintentar un trabajo fallido
+/// Retry a failed job
 ///
-/// El archivo de un trabajo fallido se conserva (campo `can_retry`); esto lo vuelve a encolar.
-#[utoipa::path(post, path = "/api/jobs/{id}/retry", tag = "cola", params(("id" = i64, Path,)),
+/// The file of a failed job is kept (`can_retry` field); this queues it again.
+#[utoipa::path(post, path = "/api/jobs/{id}/retry", tag = "queue", params(("id" = i64, Path,)),
     responses((status = 200, body = Job), (status = 400, body = ErrorBody), (status = 404, body = ErrorBody)))]
 async fn retry_job(Editor(u): Editor, Path(id): Path<i64>) -> Res<Json<Job>> {
     own_job(&u, id)?;
     Ok(Json(ingest::retry(id)?))
 }
 
-/// Descartar un trabajo terminado
+/// Dismiss a finished job
 ///
-/// Si había fallado, borra también el archivo que se había conservado.
-#[utoipa::path(delete, path = "/api/jobs/{id}", tag = "cola", params(("id" = i64, Path,)),
+/// If it had failed, the file that was kept is deleted too.
+#[utoipa::path(delete, path = "/api/jobs/{id}", tag = "queue", params(("id" = i64, Path,)),
     responses((status = 204), (status = 400, body = ErrorBody), (status = 404, body = ErrorBody)))]
 async fn dismiss_job(Editor(u): Editor, Path(id): Path<i64>) -> Res<StatusCode> {
     let j = own_job(&u, id)?;
     ingest::dismiss(id)?;
     if j.status == "failed" {
-        store::audit(Some(&u), "trabajo fallido descartado", &j.filename, j.error.as_deref().unwrap_or(""));
+        store::audit(Some(&u), "failed job dismissed", &j.filename, j.error.as_deref().unwrap_or(""));
     }
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// Eventos en vivo (Server-Sent Events)
+/// Live events (Server-Sent Events)
 ///
-/// Cada mensaje es JSON: `{"type":"job","job":{…}}` o `{"type":"document.created|updated|deleted|purged","id":N}`.
-#[utoipa::path(get, path = "/api/events", tag = "cola", responses((status = 200, description = "Flujo SSE", content_type = "text/event-stream", body = String)))]
+/// Each message is JSON: `{"type":"job","job":{…}}` or `{"type":"document.created|updated|deleted|purged","id":N}`.
+#[utoipa::path(get, path = "/api/events", tag = "queue", responses((status = 200, description = "SSE stream", content_type = "text/event-stream", body = String)))]
 async fn events(u: AuthUser) -> impl IntoResponse {
     let stream = tokio_stream::wrappers::BroadcastStream::new(store::bus().subscribe()).filter_map(move |m| {
         let data = m.ok()?;
@@ -682,8 +682,8 @@ async fn events(u: AuthUser) -> impl IntoResponse {
     sse::Sse::new(stream).keep_alive(sse::KeepAlive::default())
 }
 
-/// Totales del archivo y de la cola
-#[utoipa::path(get, path = "/api/stats", tag = "cola", responses((status = 200, body = Stats)))]
+/// Archive and queue totals
+#[utoipa::path(get, path = "/api/stats", tag = "queue", responses((status = 200, body = Stats)))]
 async fn get_stats(u: AuthUser) -> Res<Json<Stats>> {
     Ok(Json(store::stats(&u)?))
 }
@@ -693,25 +693,25 @@ async fn get_stats(u: AuthUser) -> Res<Json<Stats>> {
 #[derive(Serialize, ToSchema)]
 struct Status {
     version: &'static str,
-    /// Versión del esquema de la base de datos
+    /// Database schema version
     schema: i64,
-    /// La corrección de páginas giradas está activa
+    /// Correction of rotated pages is enabled
     ocr_rotate: bool,
     ocr_langs: String,
     queued: i64,
     failed_jobs: i64,
-    /// Avisos de webhook pendientes de entregar
+    /// Webhook deliveries still waiting to be sent
     pending_webhooks: i64,
-    /// Última verificación de integridad (null si aún no ha corrido ninguna)
+    /// Last integrity check (null if none has run yet)
     last_verify: Option<VerifyReport>,
-    /// Último respaldo automático o manual (null si nunca se ha hecho)
+    /// Last automatic or manual backup (null if there has never been one)
     last_backup: Option<Value>,
-    /// Cada cuántas horas se respalda solo (null = desactivado: falta PAPIRO_BACKUP_DIR)
+    /// Hours between automatic backups (null = disabled: PAPIRO_BACKUP_DIR is not set)
     backup_every_hours: Option<u64>,
 }
 
-/// Estado del sistema (admin)
-#[utoipa::path(get, path = "/api/status", tag = "sistema", responses((status = 200, body = Status)))]
+/// System status (admin)
+#[utoipa::path(get, path = "/api/status", tag = "system", responses((status = 200, body = Status)))]
 async fn get_status(Admin(u): Admin) -> Res<Json<Status>> {
     let s = store::stats(&u)?;
     Ok(Json(Status {
@@ -731,18 +731,18 @@ async fn get_status(Admin(u): Admin) -> Res<Json<Status>> {
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
 struct VerifyQuery {
-    /// `false` para comprobar solo existencia y tamaño (rápido); por defecto recalcula cada SHA-256
+    /// `false` to check only existence and size (fast); by default every SHA-256 is recomputed
     deep: Option<bool>,
 }
 
-/// Verificar la integridad ahora (admin)
+/// Verify integrity now (admin)
 ///
-/// Comprueba que cada documento tiene sus archivos y que el original conserva su SHA-256, además
-/// de la integridad de la base de datos y del índice de búsqueda.
-#[utoipa::path(post, path = "/api/verify", tag = "sistema", params(VerifyQuery), responses((status = 200, body = VerifyReport)))]
+/// Checks that every document has its files and that the original still matches its SHA-256, as well
+/// as the integrity of the database and of the search index.
+#[utoipa::path(post, path = "/api/verify", tag = "system", params(VerifyQuery), responses((status = 200, body = VerifyReport)))]
 async fn run_verify(Admin(u): Admin, Query(q): Query<VerifyQuery>) -> Res<Json<VerifyReport>> {
     let report = tokio::task::spawn_blocking(move || store::verify(q.deep != Some(false))).await.map_err(bad)?;
-    store::audit(Some(&u), "verificación de integridad", &format!("{} documentos", report.documents), &format!("{} problemas", report.problems.len()));
+    store::audit(Some(&u), "integrity check", &format!("{} documents", report.documents), &format!("{} problems", report.problems.len()));
     Ok(Json(report))
 }
 
@@ -753,10 +753,10 @@ struct PageQuery {
     offset: Option<i64>,
 }
 
-/// Registro de auditoría (admin)
+/// Audit log (admin)
 ///
-/// Quién hizo qué y desde qué IP: inicios de sesión, subidas, ediciones, borrados y cambios de administración.
-#[utoipa::path(get, path = "/api/audit", tag = "sistema", params(PageQuery), responses((status = 200, body = Vec<AuditEntry>)))]
+/// Who did what and from which IP: logins, uploads, edits, deletions and administration changes.
+#[utoipa::path(get, path = "/api/audit", tag = "system", params(PageQuery), responses((status = 200, body = Vec<AuditEntry>)))]
 async fn list_audit(_a: Admin, Query(q): Query<PageQuery>) -> Res<Json<Vec<AuditEntry>>> {
     Ok(Json(store::list_audit(q.limit.unwrap_or(100), q.offset.unwrap_or(0))?))
 }
@@ -767,11 +767,11 @@ async fn list_audit(_a: Admin, Query(q): Query<PageQuery>) -> Res<Json<Vec<Audit
 struct Webhook {
     id: i64,
     url: String,
-    /// `*` o lista separada por comas: document.created, document.updated, document.deleted, document.purged
+    /// `*` or a comma-separated list: document.created, document.updated, document.deleted, document.purged
     events: String,
-    /// Indica si tiene secreto de firma (el secreto no se devuelve)
+    /// Whether it has a signing secret (the secret itself is never returned)
     signed: bool,
-    /// Código HTTP (o error) de la última entrega
+    /// HTTP status code (or error) of the last delivery
     last_status: Option<String>,
     last_at: Option<String>,
 }
@@ -780,7 +780,7 @@ struct Webhook {
 struct WebhookInput {
     url: String,
     events: Option<String>,
-    /// Si se indica, cada entrega lleva `X-Papiro-Signature: sha256=<HMAC-SHA256 del cuerpo>`
+    /// If set, every delivery carries `X-Papiro-Signature: sha256=<HMAC-SHA256 of the body>`
     secret: Option<String>,
 }
 
@@ -792,16 +792,16 @@ fn webhooks() -> store::Result<Vec<Webhook>> {
     })?)
 }
 
-/// Listar webhooks (admin)
+/// List webhooks (admin)
 #[utoipa::path(get, path = "/api/webhooks", tag = "webhooks", responses((status = 200, body = Vec<Webhook>)))]
 async fn list_webhooks(_a: Admin) -> Res<Json<Vec<Webhook>>> {
     Ok(Json(webhooks()?))
 }
 
-/// Crear un webhook (admin)
+/// Create a webhook (admin)
 ///
-/// En cada evento se hace `POST` a la URL con `{"event", "document_id", "document"}`. Las entregas se
-/// guardan en una cola persistente y se reintentan hasta 6 veces. No se admiten direcciones internas.
+/// On every event the URL receives a `POST` with `{"event", "document_id", "document"}`. Deliveries are
+/// stored in a persistent queue and retried up to 6 times. Internal addresses are not allowed.
 #[utoipa::path(post, path = "/api/webhooks", tag = "webhooks", request_body = WebhookInput,
     responses((status = 201, body = Webhook), (status = 400, body = ErrorBody)))]
 async fn create_webhook(Admin(u): Admin, Json(w): Json<WebhookInput>) -> Res<(StatusCode, Json<Webhook>)> {
@@ -813,25 +813,25 @@ async fn create_webhook(Admin(u): Admin, Json(w): Json<WebhookInput>) -> Res<(St
     })
     .map_err(store::Error::from)?;
     let hook = webhooks()?.into_iter().find(|h| h.id == id).ok_or(store::Error::NotFound)?;
-    store::audit(Some(&u), "webhook creado", &hook.url, &hook.events);
+    store::audit(Some(&u), "webhook created", &hook.url, &hook.events);
     Ok((StatusCode::CREATED, Json(hook)))
 }
 
-/// Borrar un webhook (admin)
+/// Delete a webhook (admin)
 #[utoipa::path(delete, path = "/api/webhooks/{id}", tag = "webhooks", params(("id" = i64, Path,)), responses((status = 204)))]
 async fn delete_webhook(Admin(u): Admin, Path(id): Path<i64>) -> Res<StatusCode> {
     db::with(|c| c.execute("DELETE FROM webhooks WHERE id=?", [id])).map_err(store::Error::from)?;
-    store::audit(Some(&u), "webhook borrado", &format!("webhook {id}"), "");
+    store::audit(Some(&u), "webhook deleted", &format!("webhook {id}"), "");
     Ok(StatusCode::NO_CONTENT)
 }
 
 #[derive(Serialize, ToSchema)]
 struct WebhookTest {
-    /// Código HTTP recibido o descripción del error
+    /// HTTP status code received, or a description of the error
     status: String,
 }
 
-/// Enviar un evento de prueba (`ping`) (admin)
+/// Send a test event (`ping`) (admin)
 #[utoipa::path(post, path = "/api/webhooks/{id}/test", tag = "webhooks", params(("id" = i64, Path,)),
     responses((status = 200, body = WebhookTest), (status = 404, body = ErrorBody)))]
 async fn test_webhook(_a: Admin, Path(id): Path<i64>) -> Res<Json<WebhookTest>> {
@@ -846,10 +846,10 @@ async fn test_webhook(_a: Admin, Path(id): Path<i64>) -> Res<Json<WebhookTest>> 
 
 #[derive(Serialize, ToSchema)]
 struct AuthStatus {
-    /// Aún no hay usuarios: hay que crear el administrador con `POST /api/auth/setup`
+    /// There are no users yet: the administrator must be created with `POST /api/auth/setup`
     setup_required: bool,
     user: Option<AuthUser>,
-    /// Hay un LLM configurado (habilita «Clasificar con IA»)
+    /// An LLM is configured (enables "Classify with AI")
     llm: bool,
 }
 
@@ -863,8 +863,8 @@ fn is_https(h: &HeaderMap) -> bool {
     h.get("x-forwarded-proto").is_some_and(|v| v == "https")
 }
 
-/// Estado de la sesión
-#[utoipa::path(get, path = "/api/auth/status", tag = "cuenta", security(()), responses((status = 200, body = AuthStatus)))]
+/// Session status
+#[utoipa::path(get, path = "/api/auth/status", tag = "account", security(()), responses((status = 200, body = AuthStatus)))]
 async fn auth_status(req: Request) -> Json<AuthStatus> {
     use axum::extract::FromRequestParts;
     let user = AuthUser::from_request_parts(&mut req.into_parts().0, &()).await.ok();
@@ -881,30 +881,30 @@ fn attempt(parts: &Parts) -> Res<String> {
     if auth::allow_attempt(&ip) {
         Ok(ip)
     } else {
-        Err(ApiError(StatusCode::TOO_MANY_REQUESTS, "demasiados intentos desde tu conexión; espera unos minutos".into()))
+        Err(ApiError(StatusCode::TOO_MANY_REQUESTS, "too many attempts from your connection; wait a few minutes".into()))
     }
 }
 
-/// Crear la cuenta de administrador inicial
+/// Create the initial administrator account
 ///
-/// Solo funciona mientras no exista ningún usuario.
-#[utoipa::path(post, path = "/api/auth/setup", tag = "cuenta", security(()), request_body = Credentials,
+/// Only works while no user exists.
+#[utoipa::path(post, path = "/api/auth/setup", tag = "account", security(()), request_body = Credentials,
     responses((status = 200, body = AuthUser), (status = 409, body = ErrorBody)))]
 async fn auth_setup(parts: Parts, Json(c): Json<Credentials>) -> Res<Response> {
     attempt(&parts)?;
     if auth::user_count() > 0 {
-        return Err(ApiError(StatusCode::CONFLICT, "la instalación ya tiene usuarios".into()));
+        return Err(ApiError(StatusCode::CONFLICT, "this installation already has users".into()));
     }
     let user = hashing(move || auth::create_user(&c.username, &c.password, "admin")).await??;
-    store::audit(Some(&user), "cuenta de administrador creada", &user.username, "");
+    store::audit(Some(&user), "administrator account created", &user.username, "");
     session_response(user, &parts.headers)
 }
 
-/// Iniciar sesión (cookie)
+/// Log in (cookie)
 ///
-/// Límite: 10 intentos cada 5 minutos por dirección IP (`429`). El límite es por conexión, no por
-/// usuario: nadie puede dejar fuera a otra persona fallando su contraseña.
-#[utoipa::path(post, path = "/api/auth/login", tag = "cuenta", security(()), request_body = Credentials,
+/// Limit: 10 attempts every 5 minutes per IP address (`429`). The limit is per connection, not per
+/// user: nobody can lock someone else out by getting their password wrong.
+#[utoipa::path(post, path = "/api/auth/login", tag = "account", security(()), request_body = Credentials,
     responses((status = 200, body = AuthUser), (status = 401, body = ErrorBody), (status = 429, body = ErrorBody), (status = 503, body = ErrorBody)))]
 async fn auth_login(parts: Parts, Json(c): Json<Credentials>) -> Res<Response> {
     let ip = attempt(&parts)?;
@@ -912,8 +912,8 @@ async fn auth_login(parts: Parts, Json(c): Json<Credentials>) -> Res<Response> {
     session_response(user, &parts.headers)
 }
 
-/// Cerrar sesión
-#[utoipa::path(post, path = "/api/auth/logout", tag = "cuenta", responses((status = 204)))]
+/// Log out
+#[utoipa::path(post, path = "/api/auth/logout", tag = "account", responses((status = 204)))]
 async fn auth_logout(_u: AuthUser, req: Request) -> Res<Response> {
     let (parts, _) = req.into_parts();
     if let Some(t) = auth::cookie_token(&parts) {
@@ -928,12 +928,12 @@ struct PasswordChange {
     new: String,
 }
 
-/// Cambiar la contraseña propia (cierra las demás sesiones)
-#[utoipa::path(post, path = "/api/auth/password", tag = "cuenta", request_body = PasswordChange,
+/// Change your own password (signs out your other sessions)
+#[utoipa::path(post, path = "/api/auth/password", tag = "account", request_body = PasswordChange,
     responses((status = 204), (status = 401, body = ErrorBody)))]
 async fn auth_password(u: AuthUser, parts: Parts, Json(p): Json<PasswordChange>) -> Res<StatusCode> {
     if u.read_only {
-        return Err(forbidden("un token de solo lectura no puede cambiar la contraseña"));
+        return Err(forbidden("a read-only token cannot change the password"));
     }
     let ip = attempt(&parts)?;
     let who = u.clone();
@@ -942,7 +942,7 @@ async fn auth_password(u: AuthUser, parts: Parts, Json(p): Json<PasswordChange>)
         Ok::<_, ApiError>(auth::set_password(&who.username, &p.new)?)
     })
     .await??;
-    store::audit(Some(&u), "contraseña cambiada", &u.username, "");
+    store::audit(Some(&u), "password changed", &u.username, "");
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -953,21 +953,21 @@ struct TokenInfo {
     created: String,
     last_used: Option<String>,
     read_only: bool,
-    /// Fecha de caducidad (null = no caduca)
+    /// Expiry date (null = never expires)
     expires: Option<String>,
-    /// Solo se devuelve una vez, al crearlo
+    /// Only returned once, when it is created
     #[serde(skip_serializing_if = "Option::is_none")]
     token: Option<String>,
 }
 
 #[derive(Deserialize, ToSchema)]
 struct TokenInput {
-    /// Para qué se usa (p. ej. «n8n», «Claude MCP»)
+    /// What it is used for (e.g. "n8n", "Claude MCP")
     name: String,
-    /// El token solo puede leer (buscar, ver, descargar)
+    /// The token can only read (search, view, download)
     #[serde(default)]
     read_only: bool,
-    /// Días hasta que caduca (omitir = no caduca)
+    /// Days until it expires (omit = never expires)
     expires_days: Option<i64>,
 }
 
@@ -981,36 +981,36 @@ fn tokens(user_id: i64) -> store::Result<Vec<TokenInfo>> {
     })?)
 }
 
-/// Listar los tokens de API propios
-#[utoipa::path(get, path = "/api/tokens", tag = "cuenta", responses((status = 200, body = Vec<TokenInfo>)))]
+/// List your own API tokens
+#[utoipa::path(get, path = "/api/tokens", tag = "account", responses((status = 200, body = Vec<TokenInfo>)))]
 async fn list_tokens(u: AuthUser) -> Res<Json<Vec<TokenInfo>>> {
     Ok(Json(tokens(u.id)?))
 }
 
-/// Crear un token de API
+/// Create an API token
 ///
-/// El valor del token (`ppr_…`) solo aparece en esta respuesta; en el servidor se guarda su hash.
-/// Un usuario lector solo puede crear tokens de solo lectura.
-#[utoipa::path(post, path = "/api/tokens", tag = "cuenta", request_body = TokenInput, responses((status = 201, body = TokenInfo), (status = 403, body = ErrorBody)))]
+/// The token value (`ppr_…`) only appears in this response; the server stores only its hash.
+/// A viewer can only create read-only tokens.
+#[utoipa::path(post, path = "/api/tokens", tag = "account", request_body = TokenInput, responses((status = 201, body = TokenInfo), (status = 403, body = ErrorBody)))]
 async fn create_token(u: AuthUser, Json(t): Json<TokenInput>) -> Res<(StatusCode, Json<TokenInfo>)> {
     if u.read_only {
-        return Err(forbidden("un token de solo lectura no puede crear otros tokens"));
+        return Err(forbidden("a read-only token cannot create other tokens"));
     }
     let (id, token) = auth::new_api_token(u.id, t.name.trim(), t.read_only || u.role == "viewer", t.expires_days)?;
-    store::audit(Some(&u), "token creado", t.name.trim(), if t.read_only { "solo lectura" } else { "" });
+    store::audit(Some(&u), "token created", t.name.trim(), if t.read_only { "read-only" } else { "" });
     let mut info = tokens(u.id)?.into_iter().find(|x| x.id == id).ok_or(store::Error::NotFound)?;
     info.token = Some(token);
     Ok((StatusCode::CREATED, Json(info)))
 }
 
-/// Revocar un token de API
-#[utoipa::path(delete, path = "/api/tokens/{id}", tag = "cuenta", params(("id" = i64, Path,)), responses((status = 204)))]
+/// Revoke an API token
+#[utoipa::path(delete, path = "/api/tokens/{id}", tag = "account", params(("id" = i64, Path,)), responses((status = 204)))]
 async fn delete_token(u: AuthUser, Path(id): Path<i64>) -> Res<StatusCode> {
     if u.read_only {
-        return Err(forbidden("un token de solo lectura no puede revocar tokens"));
+        return Err(forbidden("a read-only token cannot revoke tokens"));
     }
     db::with(|c| c.execute("DELETE FROM api_tokens WHERE id=? AND user_id=?", [id, u.id])).map_err(store::Error::from)?;
-    store::audit(Some(&u), "token revocado", &format!("token {id}"), "");
+    store::audit(Some(&u), "token revoked", &format!("token {id}"), "");
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -1018,7 +1018,7 @@ async fn delete_token(u: AuthUser, Path(id): Path<i64>) -> Res<StatusCode> {
 struct UserInput {
     username: String,
     password: String,
-    /// admin | editor | viewer (por defecto editor)
+    /// admin | editor | viewer (editor by default)
     role: Option<String>,
 }
 
@@ -1026,7 +1026,7 @@ struct UserInput {
 struct UserPatch {
     /// admin | editor | viewer
     role: Option<String>,
-    /// Nueva contraseña (cierra las sesiones de ese usuario)
+    /// New password (signs out that user's sessions)
     password: Option<String>,
 }
 
@@ -1034,62 +1034,62 @@ fn users() -> store::Result<Vec<AuthUser>> {
     Ok(db::with(|c| c.prepare_cached("SELECT id, username, role FROM users ORDER BY id")?.query_map([], |r| Ok(AuthUser::new(r.get(0)?, r.get(1)?, r.get(2)?)))?.collect())?)
 }
 
-/// Listar usuarios (admin)
-#[utoipa::path(get, path = "/api/users", tag = "cuenta", responses((status = 200, body = Vec<AuthUser>)))]
+/// List users (admin)
+#[utoipa::path(get, path = "/api/users", tag = "account", responses((status = 200, body = Vec<AuthUser>)))]
 async fn list_users(_a: Admin) -> Res<Json<Vec<AuthUser>>> {
     Ok(Json(users()?))
 }
 
-/// Crear un usuario (admin)
-#[utoipa::path(post, path = "/api/users", tag = "cuenta", request_body = UserInput,
+/// Create a user (admin)
+#[utoipa::path(post, path = "/api/users", tag = "account", request_body = UserInput,
     responses((status = 201, body = AuthUser), (status = 409, body = ErrorBody)))]
 async fn create_user(Admin(a): Admin, Json(i): Json<UserInput>) -> Res<(StatusCode, Json<AuthUser>)> {
     let user = hashing(move || auth::create_user(&i.username, &i.password, i.role.as_deref().unwrap_or("editor"))).await??;
-    store::audit(Some(&a), "usuario creado", &user.username, &user.role);
+    store::audit(Some(&a), "user created", &user.username, &user.role);
     Ok((StatusCode::CREATED, Json(user)))
 }
 
-/// Siempre debe quedar al menos un administrador.
+/// There must always be at least one administrator left.
 fn keep_an_admin(target: &AuthUser) -> Res<()> {
     if target.role == "admin" && users()?.iter().filter(|u| u.role == "admin").count() <= 1 {
-        return Err(bad("es el único administrador; nombra otro antes"));
+        return Err(bad("this is the only administrator; make someone else an administrator first"));
     }
     Ok(())
 }
 
-/// Cambiar el rol o la contraseña de un usuario (admin)
-#[utoipa::path(patch, path = "/api/users/{id}", tag = "cuenta", params(("id" = i64, Path,)), request_body = UserPatch,
+/// Change a user's role or password (admin)
+#[utoipa::path(patch, path = "/api/users/{id}", tag = "account", params(("id" = i64, Path,)), request_body = UserPatch,
     responses((status = 200, body = AuthUser), (status = 400, body = ErrorBody), (status = 404, body = ErrorBody)))]
 async fn update_user(Admin(a): Admin, Path(id): Path<i64>, Json(p): Json<UserPatch>) -> Res<Json<AuthUser>> {
     let target = users()?.into_iter().find(|u| u.id == id).ok_or(store::Error::NotFound)?;
     if let Some(role) = p.role.as_deref().filter(|r| *r != target.role) {
         if !auth::ROLES.contains(&role) {
-            return Err(bad("rol inválido (admin, editor o viewer)"));
+            return Err(bad("invalid role (admin, editor or viewer)"));
         }
         keep_an_admin(&target)?;
         db::with(|c| c.execute("UPDATE users SET role=?, is_admin=? WHERE id=?", params![role, role == "admin", id])).map_err(store::Error::from)?;
-        store::audit(Some(&a), "rol cambiado", &target.username, &format!("{} → {role}", target.role));
+        store::audit(Some(&a), "role changed", &target.username, &format!("{} → {role}", target.role));
     }
     if let Some(pw) = p.password {
         let name = target.username.clone();
         hashing(move || auth::set_password(&name, &pw)).await??;
-        store::audit(Some(&a), "contraseña restablecida", &target.username, "");
+        store::audit(Some(&a), "password reset", &target.username, "");
     }
     Ok(Json(users()?.into_iter().find(|u| u.id == id).ok_or(store::Error::NotFound)?))
 }
 
-/// Borrar un usuario (admin)
+/// Delete a user (admin)
 ///
-/// Sus documentos se conservan (quedan sin dueño; los privados pasan a verlos solo los administradores).
-#[utoipa::path(delete, path = "/api/users/{id}", tag = "cuenta", params(("id" = i64, Path,)),
+/// Their documents are kept (left without an owner; private ones become visible to administrators only).
+#[utoipa::path(delete, path = "/api/users/{id}", tag = "account", params(("id" = i64, Path,)),
     responses((status = 204), (status = 400, body = ErrorBody)))]
 async fn delete_user(Admin(a): Admin, Path(id): Path<i64>) -> Res<StatusCode> {
     if a.id == id {
-        return Err(bad("no puedes borrar tu propio usuario"));
+        return Err(bad("you cannot delete your own user"));
     }
     let target = users()?.into_iter().find(|u| u.id == id).ok_or(store::Error::NotFound)?;
     keep_an_admin(&target)?;
     db::with(|c| c.execute("DELETE FROM users WHERE id=?", [id])).map_err(store::Error::from)?;
-    store::audit(Some(&a), "usuario borrado", &target.username, "");
+    store::audit(Some(&a), "user deleted", &target.username, "");
     Ok(StatusCode::NO_CONTENT)
 }

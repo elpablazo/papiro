@@ -12,4 +12,4 @@ cargo test                       # unit tests
 PAPIRO_WEB_DIR=web cargo run     # serves the UI from disk: edit web/ and reload, no rebuild
 ```
 
-The UI is plain Preact + htm in `web/` with no build step. It is Spanish-only today; **an English UI (i18n) is the most wanted contribution.** Code comments are in Spanish for historical reasons; new ones can be in English.
+The UI is plain Preact + htm in `web/` with no build step. It ships in English and Spanish: English strings live in the code wrapped in `t()`, and each language is a dictionary keyed by the English text (see `ES` at the top of `web/app.js`). **New languages are very welcome.** Some code comments are still in Spanish; new ones should be in English.

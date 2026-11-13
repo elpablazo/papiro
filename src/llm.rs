@@ -27,7 +27,7 @@ fn schema() -> Value {
 }
 
 fn call(system: &str, user: &str) -> Result<Value, String> {
-    let l = cfg().llm.as_ref().ok_or("LLM no configurado")?;
+    let l = cfg().llm.as_ref().ok_or("no LLM is configured")?;
     let base = l.base_url.trim_end_matches('/');
     let text = if l.provider == "anthropic" {
         let mut body = json!({
@@ -48,10 +48,10 @@ fn call(system: &str, user: &str) -> Result<Value, String> {
         }
         let v = send(req, &body)?;
         if v["stop_reason"] == "refusal" {
-            return Err("el modelo declinó procesar este documento".into());
+            return Err("the model declined to process this document".into());
         }
         if v["stop_reason"] == "max_tokens" {
-            return Err("la respuesta del modelo quedó truncada (max_tokens)".into());
+            return Err("the model's response was truncated (max_tokens)".into());
         }
         v["content"].as_array().and_then(|c| c.iter().find(|b| b["type"] == "text")).and_then(|b| b["text"].as_str()).map(String::from)
     } else {
@@ -64,17 +64,17 @@ fn call(system: &str, user: &str) -> Result<Value, String> {
         let req = crate::http().post(&format!("{base}/chat/completions")).header("Authorization", &format!("Bearer {}", l.key));
         send(req, &body)?["choices"][0]["message"]["content"].as_str().map(String::from)
     }
-    .ok_or("respuesta del LLM sin texto")?;
-    serde_json::from_str(text.trim().trim_start_matches("```json").trim_matches('`').trim()).map_err(|e| format!("el LLM no devolvió JSON válido: {e}"))
+    .ok_or("the LLM response contains no text")?;
+    serde_json::from_str(text.trim().trim_start_matches("```json").trim_matches('`').trim()).map_err(|e| format!("the LLM did not return valid JSON: {e}"))
 }
 
 fn send(req: ureq::RequestBuilder<ureq::typestate::WithBody>, body: &Value) -> Result<Value, String> {
     // Los 4xx/5xx se leen como respuesta para poder mostrar el mensaje de error del proveedor.
-    let mut res = req.config().http_status_as_error(false).build().send_json(body).map_err(|e| format!("LLM inalcanzable: {e}"))?;
+    let mut res = req.config().http_status_as_error(false).build().send_json(body).map_err(|e| format!("LLM unreachable: {e}"))?;
     let status = res.status();
-    let v: Value = res.body_mut().read_json().map_err(|e| format!("respuesta ilegible del LLM ({status}): {e}"))?;
+    let v: Value = res.body_mut().read_json().map_err(|e| format!("unreadable LLM response ({status}): {e}"))?;
     if !status.is_success() {
-        return Err(format!("LLM respondió {status}: {}", v["error"]["message"].as_str().unwrap_or("sin detalle")));
+        return Err(format!("LLM responded {status}: {}", v["error"]["message"].as_str().unwrap_or("no details")));
     }
     Ok(v)
 }

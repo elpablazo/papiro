@@ -149,7 +149,7 @@ pub fn random_hex(bytes: usize) -> String {
 
 // ───────────────────────── interfaz web embebida ─────────────────────────
 
-const ASSETS: [(&str, &str, &[u8]); 11] = [
+const ASSETS: [(&str, &str, &[u8]); 12] = [
     ("index.html", "text/html; charset=utf-8", include_bytes!("../web/index.html")),
     ("app.js", "text/javascript; charset=utf-8", include_bytes!("../web/app.js")),
     ("app.css", "text/css; charset=utf-8", include_bytes!("../web/app.css")),
@@ -161,7 +161,23 @@ const ASSETS: [(&str, &str, &[u8]); 11] = [
     ("icon-512.png", "image/png", include_bytes!("../web/icon-512.png")),
     ("icon-maskable.png", "image/png", include_bytes!("../web/icon-maskable.png")),
     ("apple-touch-icon.png", "image/png", include_bytes!("../web/apple-touch-icon.png")),
+    ("og.png", "image/png", include_bytes!("../web/og.png")),
 ];
+
+/// Link previews need absolute URLs: `%ORIGIN%` in index.html becomes this server's public origin.
+/// Only a well-formed host is used, so a crafted `Host` header can't inject markup.
+fn with_origin(page: &[u8], headers: &axum::http::HeaderMap) -> Vec<u8> {
+    let get = |h: &str| headers.get(h).and_then(|v| v.to_str().ok()).map(str::trim);
+    let host = get("x-forwarded-host").or_else(|| get("host")).filter(|h| {
+        !h.is_empty() && h.len() <= 253 && h.chars().all(|c| c.is_ascii_alphanumeric() || ".-:[]".contains(c))
+    });
+    let proto = match get("x-forwarded-proto") {
+        Some("https") => "https",
+        _ => "http",
+    };
+    let origin = host.map(|h| format!("{proto}://{h}")).unwrap_or_default();
+    String::from_utf8_lossy(page).replace("%ORIGIN%", &origin).into_bytes()
+}
 
 async fn asset(uri: Uri, headers: axum::http::HeaderMap) -> Response {
     // /assets/app.js y /sw.js (el service worker tiene que vivir en la raíz para cubrir toda la app).
@@ -171,7 +187,12 @@ async fn asset(uri: Uri, headers: axum::http::HeaderMap) -> Response {
     let (name, mime, bytes) = ASSETS[i];
     // PAPIRO_WEB_DIR sirve la interfaz desde disco (para desarrollarla sin recompilar)
     if let Some(disk) = env("WEB_DIR").and_then(|d| std::fs::read(PathBuf::from(d).join(name)).ok()) {
-        return ([(header::CONTENT_TYPE, mime), (header::CACHE_CONTROL, "no-cache")], disk).into_response();
+        let body = if i == 0 { with_origin(&disk, &headers) } else { disk };
+        return ([(header::CONTENT_TYPE, mime), (header::CACHE_CONTROL, "no-cache")], body).into_response();
+    }
+    // The page depends on the host it's served from, so it gets no ETag (it's tiny anyway).
+    if i == 0 {
+        return ([(header::CONTENT_TYPE, mime), (header::CACHE_CONTROL, "no-cache")], with_origin(bytes, &headers)).into_response();
     }
     // El navegador revalida siempre, pero solo vuelve a descargar lo que cambió.
     static ETAGS: OnceLock<Vec<String>> = OnceLock::new();
@@ -200,7 +221,7 @@ async fn log_requests(req: Request, next: Next) -> Response {
     let (status, ms) = (res.status(), t0.elapsed().as_millis());
     let read = method == axum::http::Method::GET || method == axum::http::Method::HEAD;
     if path.starts_with("/api") && path != "/api/health" && (!read || status.is_server_error() || status == StatusCode::FORBIDDEN || ms > 2000) {
-        println!("{method} {path} → {} en {ms} ms", status.as_u16());
+        println!("{method} {path} → {} in {ms} ms", status.as_u16());
     }
     res
 }
@@ -209,7 +230,7 @@ async fn log_requests(req: Request, next: Next) -> Response {
 async fn health() -> Response {
     match db::with(|c| c.query_row("SELECT count(*) FROM users", [], |r| r.get::<_, i64>(0))) {
         Ok(_) => "ok".into_response(),
-        Err(e) => (StatusCode::SERVICE_UNAVAILABLE, format!("base de datos: {e}")).into_response(),
+        Err(e) => (StatusCode::SERVICE_UNAVAILABLE, format!("database: {e}")).into_response(),
     }
 }
 
@@ -255,17 +276,17 @@ fn main() {
         }
     }
     for d in ["docs", "tmp"] {
-        std::fs::create_dir_all(c.data.join(d)).unwrap_or_else(|e| fail(&format!("no se puede crear {}: {e}", c.data.join(d).display())));
+        std::fs::create_dir_all(c.data.join(d)).unwrap_or_else(|e| fail(&format!("cannot create {}: {e}", c.data.join(d).display())));
     }
-    let applied = db::init(c.data.join("papiro.db")).unwrap_or_else(|e| fail(&format!("no se puede abrir la base de datos: {e}")));
+    let applied = db::init(c.data.join("papiro.db")).unwrap_or_else(|e| fail(&format!("cannot open the database: {e}")));
     if applied.contains(&2) {
         let fixed = store::repair_layout();
         if fixed > 0 {
-            println!("migración: {fixed} originales renombrados para que se puedan abrir y descargar");
+            println!("migration: renamed {fixed} originals so they can be opened and downloaded");
         }
     }
     if applied.contains(&4) {
-        println!("migración: {} documentos analizados (vencimientos, importes e identificadores)", suggest::backfill());
+        println!("migration: analyzed {} documents (expiry dates, amounts and identifiers)", suggest::backfill());
     }
     // Las miniaturas hechas por versiones sin fuentes instaladas podían salir en blanco: se descartan
     // una vez y se regeneran solas la próxima vez que se piden.
@@ -273,7 +294,7 @@ fn main() {
         let n = std::fs::read_dir(c.data.join("docs")).into_iter().flatten().flatten().filter(|e| std::fs::remove_file(e.path().join("thumb.jpg")).is_ok()).count();
         store::meta_set("thumbs", "2");
         if n > 0 {
-            println!("migración: {n} miniaturas se regenerarán con las fuentes correctas");
+            println!("migration: {n} thumbnails will be regenerated with the correct fonts");
         }
     }
     let report = |r: Result<String, String>| match r {
@@ -294,25 +315,25 @@ fn main() {
             let docs: Vec<(i64, String)> =
                 db::with(|c| c.prepare("SELECT id, title FROM documents ORDER BY id")?.query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?.collect()).unwrap_or_else(|e| fail(&e.to_string()));
             for (id, title) in &docs {
-                store::purge(*id).unwrap_or_else(|e| fail(&format!("documento {id}: {e}")));
-                store::audit_raw(None, "consola", "borrado definitivo desde la consola", &format!("documento {id}"), title, "");
-                println!("borrado #{id} «{title}»");
+                store::purge(*id).unwrap_or_else(|e| fail(&format!("document {id}: {e}")));
+                store::audit_raw(None, "console", "permanently deleted from the console", &format!("document {id}"), title, "");
+                println!("deleted #{id} \"{title}\"");
             }
-            println!("{} documentos borrados; etiquetas, carpetas, usuarios y ajustes se conservan", docs.len());
+            println!("{} documents deleted; tags, folders, users and settings were kept", docs.len());
         }
         ("restore", _) | ("verify", _) => {
             let r = store::verify(!matches!(args.get(1).map(String::as_str), Some("--quick" | "--rapido")));
-            println!("{} documentos revisados en {} s · base de datos: {} · índice de búsqueda: {}", r.documents, r.seconds, r.database, if r.search_index_ok { "ok" } else { "DAÑADO" });
+            println!("{} documents checked in {} s · database: {} · search index: {}", r.documents, r.seconds, r.database, if r.search_index_ok { "ok" } else { "DAMAGED" });
             for p in &r.problems {
-                println!("  PROBLEMA documento {} «{}»: {}", p.document_id, p.title, p.problem);
+                println!("  PROBLEM document {} \"{}\": {}", p.document_id, p.title, p.problem);
             }
             if !r.problems.is_empty() || r.database != "ok" || !r.search_index_ok {
-                fail(&format!("{} problemas encontrados", r.problems.len()));
+                fail(&format!("{} problems found", r.problems.len()));
             }
-            println!("sin problemas");
+            println!("no problems");
         }
         ("passwd", Some(user)) => match env("NEW_PASSWORD") {
-            Some(pw) => report(auth::set_password(&user.to_string_lossy(), &pw).map(|_| "contraseña actualizada".into()).map_err(|e| e.to_string())),
+            Some(pw) => report(auth::set_password(&user.to_string_lossy(), &pw).map(|_| "password updated".into()).map_err(|e| e.to_string())),
             None => fail(USAGE),
         },
         _ => fail(USAGE),
@@ -348,7 +369,7 @@ fn maintenance() {
                 .unwrap_or_default();
                 for id in old {
                     if store::purge(id).is_ok() {
-                        store::audit(None, "papelera vaciada", &format!("documento {id}"), &format!("más de {} días en la papelera", c.trash_days));
+                        store::audit(None, "trash emptied", &format!("document {id}"), &format!("more than {} days in the trash", c.trash_days));
                     }
                 }
             }
@@ -356,9 +377,9 @@ fn maintenance() {
         if let Some(dir) = c.backup_dir.as_ref().filter(|_| last_backup.elapsed() > hours(c.backup_hours)) {
             last_backup = Instant::now();
             match backup::backup(dir) {
-                Ok(msg) => println!("respaldo automático: {msg}"),
+                Ok(msg) => println!("automatic backup: {msg}"),
                 Err(e) => {
-                    eprintln!("RESPALDO AUTOMÁTICO FALLIDO: {e}");
+                    eprintln!("AUTOMATIC BACKUP FAILED: {e}");
                     store::meta_set("backup", &serde_json::json!({"ok": false, "error": e, "dest": dir.to_string_lossy()}).to_string());
                 }
             }
@@ -367,11 +388,11 @@ fn maintenance() {
             last_verify = Instant::now();
             let r = store::verify(true);
             if r.problems.is_empty() && r.database == "ok" && r.search_index_ok {
-                println!("integridad: {} documentos verificados en {} s, sin problemas", r.documents, r.seconds);
+                println!("integrity: {} documents verified in {} s, no problems", r.documents, r.seconds);
             } else {
-                eprintln!("INTEGRIDAD: {} problemas (base: {}, índice ok: {})", r.problems.len(), r.database, r.search_index_ok);
+                eprintln!("INTEGRITY: {} problems (database: {}, search index ok: {})", r.problems.len(), r.database, r.search_index_ok);
                 for p in r.problems.iter().take(20) {
-                    eprintln!("  documento {} «{}»: {}", p.document_id, p.title, p.problem);
+                    eprintln!("  document {} \"{}\": {}", p.document_id, p.title, p.problem);
                 }
             }
         }
@@ -391,18 +412,18 @@ fn serve() {
         // [::] atiende IPv6 e IPv4 a la vez; si el host no tiene IPv6 se cae a 0.0.0.0.
         let listener = match tokio::net::TcpListener::bind(&c.listen).await {
             Ok(l) => l,
-            Err(_) if c.listen.starts_with("[::]") => tokio::net::TcpListener::bind(c.listen.replace("[::]", "0.0.0.0")).await.unwrap_or_else(|e| fail(&format!("no se pudo escuchar: {e}"))),
-            Err(e) => fail(&format!("no se pudo escuchar en {}: {e}", c.listen)),
+            Err(_) if c.listen.starts_with("[::]") => tokio::net::TcpListener::bind(c.listen.replace("[::]", "0.0.0.0")).await.unwrap_or_else(|e| fail(&format!("could not listen: {e}"))),
+            Err(e) => fail(&format!("could not listen on {}: {e}", c.listen)),
         };
         println!(
-            "papiro {} escuchando en http://{} · esquema {} · OCR {} ({} hilos, corrección de orientación {}) · respaldo automático {}",
+            "papiro {} listening on http://{} · schema {} · OCR {} ({} threads, orientation correction {}) · automatic backup {}",
             env!("CARGO_PKG_VERSION"),
             c.listen,
             db::schema_version(),
             c.ocr_langs,
             c.ocr_threads,
-            if ingest::rotate_on() { "activa" } else { "inactiva" },
-            c.backup_dir.as_ref().map(|d| format!("cada {} h en {}", c.backup_hours, d.display())).unwrap_or_else(|| "desactivado".into()),
+            if ingest::rotate_on() { "on" } else { "off" },
+            c.backup_dir.as_ref().map(|d| format!("every {} h to {}", c.backup_hours, d.display())).unwrap_or_else(|| "off".into()),
         );
         let shutdown = async {
             let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).expect("signal");

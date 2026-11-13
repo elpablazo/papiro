@@ -25,7 +25,7 @@ pub struct AuthUser {
     /// admin | editor | viewer
     pub role: String,
     pub is_admin: bool,
-    /// La petición llegó con un token de solo lectura
+    /// The request came with a read-only token
     #[serde(skip)]
     pub read_only: bool,
     #[serde(skip)]
@@ -50,7 +50,7 @@ pub fn sha(token: &str) -> String {
 
 pub fn hash_password(pw: &str) -> Result<String, store::Error> {
     if pw.chars().count() < 8 {
-        return Err(store::Error::Bad("la contraseña debe tener al menos 8 caracteres".into()));
+        return Err(store::Error::Bad("the password must be at least 8 characters long".into()));
     }
     Argon2::default().hash_password(pw.as_bytes()).map(|h| h.to_string()).map_err(|e| store::Error::Other(e.to_string()))
 }
@@ -62,10 +62,10 @@ fn verify_password(pw: &str, hash: &str) -> bool {
 pub fn create_user(username: &str, password: &str, role: &str) -> Result<AuthUser, store::Error> {
     let username = username.trim();
     if username.is_empty() {
-        return Err(store::Error::Bad("falta el nombre de usuario".into()));
+        return Err(store::Error::Bad("the username is required".into()));
     }
     if !ROLES.contains(&role) {
-        return Err(store::Error::Bad("rol inválido (admin, editor o viewer)".into()));
+        return Err(store::Error::Bad("invalid role (admin, editor or viewer)".into()));
     }
     let hash = hash_password(password)?;
     let id = db::with(|c| {
@@ -97,8 +97,8 @@ pub fn bootstrap_admin() {
     if user_count() == 0 {
         if let (Some(u), Some(p)) = (crate::env("ADMIN_USER"), crate::env("ADMIN_PASSWORD")) {
             match create_user(&u, &p, "admin") {
-                Ok(_) => println!("usuario administrador «{u}» creado"),
-                Err(e) => eprintln!("no se pudo crear el administrador: {e}"),
+                Ok(_) => println!("administrator user \"{u}\" created"),
+                Err(e) => eprintln!("could not create the administrator: {e}"),
             }
         }
     }
@@ -153,12 +153,12 @@ pub fn login(username: &str, password: &str, ip: &str) -> Result<AuthUser, ApiEr
         Some((mut user, _)) if ok => {
             fails(|m| m.remove(ip));
             user.ip = ip.to_string();
-            store::audit(Some(&user), "sesión iniciada", "", "");
+            store::audit(Some(&user), "logged in", "", "");
             Ok(user)
         }
         _ => {
-            store::audit_raw(None, username.trim(), "inicio de sesión fallido", "", "", ip);
-            Err(ApiError(StatusCode::UNAUTHORIZED, "usuario o contraseña incorrectos".into()))
+            store::audit_raw(None, username.trim(), "login failed", "", "", ip);
+            Err(ApiError(StatusCode::UNAUTHORIZED, "wrong username or password".into()))
         }
     }
 }
@@ -198,12 +198,12 @@ pub fn client_ip(parts: &Parts) -> String {
     match (behind_proxy, forwarded, peer) {
         (true, Some(f), _) if !f.is_empty() => f,
         (_, _, Some(p)) => p.to_canonical().to_string(),
-        _ => "desconocida".into(),
+        _ => "unknown".into(),
     }
 }
 
 fn unauthorized() -> ApiError {
-    ApiError(StatusCode::UNAUTHORIZED, "no autenticado".into())
+    ApiError(StatusCode::UNAUTHORIZED, "not authenticated".into())
 }
 
 impl<S: Send + Sync> FromRequestParts<S> for AuthUser {
@@ -249,7 +249,7 @@ impl<S: Send + Sync> FromRequestParts<S> for AuthUser {
                 _ => true,
             };
             if h("x-requested-with") != Some("papiro") || !same_origin {
-                return Err(ApiError(StatusCode::FORBIDDEN, "origen no permitido".into()));
+                return Err(ApiError(StatusCode::FORBIDDEN, "origin not allowed".into()));
             }
         }
         db::with(|c| {
@@ -277,7 +277,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Editor {
 
     async fn from_request_parts(parts: &mut Parts, s: &S) -> Result<Self, ApiError> {
         let u = AuthUser::from_request_parts(parts, s).await?;
-        if u.can_write() { Ok(Editor(u)) } else { Err(ApiError(StatusCode::FORBIDDEN, "tu usuario o token es de solo lectura".into())) }
+        if u.can_write() { Ok(Editor(u)) } else { Err(ApiError(StatusCode::FORBIDDEN, "your user or token is read-only".into())) }
     }
 }
 
@@ -289,6 +289,6 @@ impl<S: Send + Sync> FromRequestParts<S> for Admin {
 
     async fn from_request_parts(parts: &mut Parts, s: &S) -> Result<Self, ApiError> {
         let u = AuthUser::from_request_parts(parts, s).await?;
-        if u.admin() { Ok(Admin(u)) } else { Err(ApiError(StatusCode::FORBIDDEN, "requiere administrador".into())) }
+        if u.admin() { Ok(Admin(u)) } else { Err(ApiError(StatusCode::FORBIDDEN, "administrator required".into())) }
     }
 }

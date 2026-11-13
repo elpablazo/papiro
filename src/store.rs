@@ -20,7 +20,7 @@ impl From<rusqlite::Error> for Error {
         match &e {
             rusqlite::Error::QueryReturnedNoRows => Error::NotFound,
             rusqlite::Error::SqliteFailure(f, _) if f.code == rusqlite::ErrorCode::ConstraintViolation => {
-                Error::Conflict(format!("conflicto: {e}"))
+                Error::Conflict(format!("conflict: {e}"))
             }
             _ => Error::Other(e.to_string()),
         }
@@ -34,7 +34,7 @@ impl From<std::io::Error> for Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::NotFound => write!(f, "no encontrado"),
+            Error::NotFound => write!(f, "not found"),
             Error::Conflict(m) | Error::Bad(m) | Error::Other(m) => write!(f, "{m}"),
         }
     }
@@ -53,12 +53,12 @@ pub const KINDS: [&str; 3] = ["tag", "correspondent", "doctype"];
 pub struct Label {
     pub id: i64,
     pub name: String,
-    /// Color hex (#rrggbb)
+    /// Hex color (#rrggbb)
     pub color: String,
-    /// Solo etiquetas: se asigna a todo documento nuevo
+    /// Tags only: assigned to every new document
     pub is_inbox: bool,
     pub parent_id: Option<i64>,
-    /// Texto de la regla de asignación automática
+    /// Text of the automatic assignment rule
     #[serde(rename = "match")]
     pub matching: String,
     /// none | any | all | literal | regex | fuzzy | auto
@@ -119,7 +119,7 @@ const PALETTE: [&str; 10] =
     ["#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#06b6d4", "#3b82f6", "#8b5cf6", "#d946ef", "#ec4899"];
 
 pub fn create_label(kind: &str, i: &LabelInput) -> Result<Label> {
-    let name = i.name.as_deref().map(str::trim).filter(|n| !n.is_empty()).ok_or(Error::Bad("falta name".into()))?;
+    let name = i.name.as_deref().map(str::trim).filter(|n| !n.is_empty()).ok_or(Error::Bad("name is required".into()))?;
     let color = i.color.clone().unwrap_or_else(|| PALETTE[name.bytes().map(|b| b as usize).sum::<usize>() % 10].into());
     let id = db::with(|c| {
         c.execute(
@@ -138,7 +138,7 @@ pub fn create_label(kind: &str, i: &LabelInput) -> Result<Label> {
         Ok(c.last_insert_rowid())
     })
     .map_err(|e| match Error::from(e) {
-        Error::Conflict(_) => Error::Conflict(format!("ya existe «{name}»")),
+        Error::Conflict(_) => Error::Conflict(format!("\"{name}\" already exists")),
         e => e,
     })?;
     get_label(kind, id)
@@ -189,18 +189,18 @@ pub fn delete_label(kind: &str, id: i64) -> Result<()> {
 pub struct Folder {
     pub id: i64,
     pub name: String,
-    /// Carpeta que la contiene (null = raíz)
+    /// Containing folder (null = root)
     pub parent_id: Option<i64>,
-    /// Ruta completa, p. ej. `Casa/Recibos`
+    /// Full path, e.g. `Home/Receipts`
     pub path: String,
-    /// Documentos visibles dentro de la carpeta y de sus subcarpetas
+    /// Visible documents in the folder and its subfolders
     pub document_count: i64,
 }
 
 #[derive(Deserialize, ToSchema, Default)]
 pub struct FolderInput {
     pub name: Option<String>,
-    /// Carpeta que la contiene; null la deja en la raíz
+    /// Containing folder; null puts it at the root
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<i64>)]
     pub parent_id: Option<Option<i64>>,
@@ -239,13 +239,13 @@ pub fn list_folders(u: &AuthUser) -> Result<Vec<Folder>> {
 fn folder_name(name: Option<&str>) -> Result<&str> {
     match name.map(str::trim) {
         Some(n) if !n.is_empty() && n.chars().count() <= 80 && !n.contains('/') => Ok(n),
-        _ => Err(Error::Bad("el nombre de la carpeta debe tener entre 1 y 80 caracteres y no llevar «/»".into())),
+        _ => Err(Error::Bad("a folder name must be 1 to 80 characters long and cannot contain \"/\"".into())),
     }
 }
 
 fn folder_conflict(e: rusqlite::Error) -> Error {
     match Error::from(e) {
-        Error::Conflict(_) => Error::Conflict("ya hay una carpeta con ese nombre en ese lugar".into()),
+        Error::Conflict(_) => Error::Conflict("a folder with that name already exists here".into()),
         e => e,
     }
 }
@@ -254,7 +254,7 @@ pub fn create_folder(i: &FolderInput) -> Result<i64> {
     let name = folder_name(i.name.as_deref())?;
     let parent = i.parent_id.flatten();
     if parent.is_some_and(|p| !folder_exists(p)) {
-        return Err(Error::Bad("la carpeta superior no existe".into()));
+        return Err(Error::Bad("the parent folder does not exist".into()));
     }
     db::with(|c| {
         c.execute("INSERT INTO folders(name, parent_id) VALUES(?, ?)", params![name, parent])?;
@@ -279,7 +279,7 @@ pub fn update_folder(id: i64, i: &FolderInput) -> Result<()> {
                 let inside: bool = c.query_row(&format!("SELECT ?2 IN ({})", SUBTREE.replace('?', "?1")), params![id, p], |r| r.get(0)).unwrap_or(true);
                 let exists = c.query_row("SELECT 1 FROM folders WHERE id=?", [p], |_| Ok(())).optional()?.is_some();
                 if inside || !exists {
-                    return Err(rusqlite::Error::InvalidParameterName("destino".into()));
+                    return Err(rusqlite::Error::InvalidParameterName("target".into()));
                 }
             }
             c.execute("UPDATE folders SET parent_id=? WHERE id=?", params![parent, id])?;
@@ -290,7 +290,7 @@ pub fn update_folder(id: i64, i: &FolderInput) -> Result<()> {
         Ok(())
     })
     .map_err(|e| match e {
-        rusqlite::Error::InvalidParameterName(_) => Error::Bad("una carpeta no se puede mover dentro de sí misma, ni a una que no existe".into()),
+        rusqlite::Error::InvalidParameterName(_) => Error::Bad("a folder cannot be moved into itself or into a folder that does not exist".into()),
         e => folder_conflict(e),
     })
 }
@@ -333,45 +333,45 @@ pub struct Note {
 pub struct Document {
     pub id: i64,
     pub title: String,
-    /// Fecha del documento (YYYY-MM-DD)
+    /// Document date (YYYY-MM-DD)
     pub created: String,
     pub added: String,
     pub modified: String,
     pub correspondent_id: Option<i64>,
     pub doctype_id: Option<i64>,
     pub tags: Vec<i64>,
-    /// Número de archivo físico (ASN)
+    /// Archive serial number of the physical copy (ASN)
     pub asn: Option<i64>,
     pub original_name: String,
     pub mime: String,
     pub size: i64,
     pub pages: i64,
     pub sha256: String,
-    /// Existe un PDF con capa de texto generado por OCR
+    /// An OCR-generated PDF with a text layer exists
     pub has_archive: bool,
     pub has_thumb: bool,
     pub summary: Option<String>,
-    /// Campos personalizados (objeto libre nombre → valor)
+    /// Custom fields (free-form object, name → value)
     pub custom: Value,
     pub deleted_at: Option<String>,
-    /// Usuario que lo subió (null en documentos importados o llegados por carpeta/correo)
+    /// User who uploaded it (null for imported documents and those that came in by folder or mail)
     pub owner_id: Option<i64>,
-    /// Privado: solo lo ven su dueño y los administradores
+    /// Private: only its owner and administrators can see it
     pub is_private: bool,
-    /// Carpeta en la que está (null = sin carpeta)
+    /// Folder it is in (null = no folder)
     pub folder_id: Option<i64>,
-    /// Fecha de vencimiento (YYYY-MM-DD), detectada del texto o puesta a mano
+    /// Expiry date (YYYY-MM-DD), detected from the text or set by hand
     pub expires: Option<String>,
-    /// Importe total del documento, detectado del texto o puesto a mano
+    /// Total amount of the document, detected from the text or set by hand
     pub amount: Option<f64>,
-    /// Sugerencias del análisis local: `folder_id`, `doctype_id`, `correspondent_id` (cada una con
-    /// `value`, `confidence`, `similar` y `applied`) y `tags` (lista). Las que tienen `applied: true` ya se aplicaron solas.
+    /// Local analysis suggestions: `folder_id`, `doctype_id`, `correspondent_id` (each with
+    /// `value`, `confidence`, `similar` and `applied`) and `tags` (a list). Those with `applied: true` were already applied automatically.
     #[schema(value_type = Object)]
     pub suggest: Value,
-    /// Fragmento con coincidencias; \u0001 y \u0002 delimitan lo resaltado
+    /// Snippet with the matches; \u0001 and \u0002 delimit the highlighted parts
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snippet: Option<String>,
-    /// Texto completo (solo en el detalle)
+    /// Full text (only in the single-document response)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -471,29 +471,29 @@ pub fn get_doc(id: i64) -> Result<Document> {
 #[derive(Deserialize, IntoParams, Default, Debug)]
 #[into_params(parameter_in = Query)]
 pub struct SearchParams {
-    /// Texto a buscar (full-text). Admite "frases entre comillas"; la última palabra busca por prefijo.
+    /// Text to search for (full-text). Supports "quoted phrases"; the last word matches as a prefix.
     pub q: Option<String>,
-    /// IDs de etiquetas separados por coma; el documento debe tenerlas todas
+    /// Comma-separated tag IDs; the document must have all of them
     pub tags: Option<String>,
     pub correspondent: Option<i64>,
     pub doctype: Option<i64>,
-    /// Carpeta: incluye lo que hay en sus subcarpetas. `0` = documentos sin carpeta
+    /// Folder, including its subfolders. `0` = documents with no folder
     pub folder: Option<i64>,
-    /// Fecha mínima del documento (YYYY-MM-DD)
+    /// Earliest document date (YYYY-MM-DD)
     pub from: Option<String>,
-    /// Fecha máxima del documento (YYYY-MM-DD)
+    /// Latest document date (YYYY-MM-DD)
     pub to: Option<String>,
-    /// Solo documentos vencidos o que vencen en los próximos 60 días (ordenados por vencimiento)
+    /// Only documents that have expired or expire within the next 60 days (sorted by expiry date)
     pub expiring: Option<bool>,
-    /// Solo documentos con alguna etiqueta de bandeja de entrada
+    /// Only documents with an inbox tag
     pub inbox: Option<bool>,
-    /// Ver la papelera en lugar de los documentos activos
+    /// Show the trash instead of the active documents
     pub trash: Option<bool>,
     /// relevance | created | added | modified | title | asn | expires
     pub sort: Option<String>,
     /// asc | desc
     pub order: Option<String>,
-    /// Máximo 200 (por defecto 50)
+    /// At most 200 (default 50)
     pub limit: Option<i64>,
     pub offset: Option<i64>,
 }
@@ -501,7 +501,7 @@ pub struct SearchParams {
 #[derive(Serialize, ToSchema)]
 pub struct DocList {
     pub total: i64,
-    /// Suma de los importes de todos los documentos que coinciden (null si ninguno tiene importe)
+    /// Sum of the amounts of all matching documents (null if none has an amount)
     pub amount_total: Option<f64>,
     pub items: Vec<Document>,
 }
@@ -612,7 +612,7 @@ pub fn search(p: &SearchParams, u: &AuthUser) -> Result<DocList> {
 #[derive(Deserialize, ToSchema, Default, Debug)]
 pub struct DocPatch {
     pub title: Option<String>,
-    /// Fecha del documento (YYYY-MM-DD)
+    /// Document date (YYYY-MM-DD)
     pub created: Option<String>,
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<i64>)]
@@ -620,30 +620,30 @@ pub struct DocPatch {
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<i64>)]
     pub doctype_id: Option<Option<i64>>,
-    /// Reemplaza todas las etiquetas
+    /// Replaces all tags
     pub tags: Option<Vec<i64>>,
     pub add_tags: Option<Vec<i64>>,
     pub remove_tags: Option<Vec<i64>>,
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<i64>)]
     pub asn: Option<Option<i64>>,
-    /// Reemplaza los campos personalizados
+    /// Replaces the custom fields
     pub custom: Option<Value>,
     pub content: Option<String>,
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<String>)]
     pub summary: Option<Option<String>>,
-    /// Privado (solo dueño y administradores). Solo puede cambiarlo el dueño o un administrador.
+    /// Private (owner and administrators only). Only the owner or an administrator can change it.
     pub is_private: Option<bool>,
-    /// Carpeta de destino; null lo saca de su carpeta
+    /// Destination folder; null takes it out of its folder
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<i64>)]
     pub folder_id: Option<Option<i64>>,
-    /// Fecha de vencimiento (YYYY-MM-DD); null la quita
+    /// Expiry date (YYYY-MM-DD); null clears it
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<String>)]
     pub expires: Option<Option<String>>,
-    /// Importe total; null lo quita
+    /// Total amount; null clears it
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<f64>)]
     pub amount: Option<Option<f64>>,
@@ -687,13 +687,13 @@ fn apply_patch(c: &Connection, id: i64, p: &DocPatch) -> rusqlite::Result<()> {
 
 fn check_patch(p: &DocPatch) -> Result<()> {
     if p.folder_id.flatten().is_some_and(|f| !folder_exists(f)) {
-        return Err(Error::Bad("esa carpeta no existe".into()));
+        return Err(Error::Bad("that folder does not exist".into()));
     }
     if p.expires.as_ref().and_then(|e| e.as_deref()).is_some_and(|e| !valid_date(e)) {
-        return Err(Error::Bad("expires debe ser YYYY-MM-DD".into()));
+        return Err(Error::Bad("expires must be YYYY-MM-DD".into()));
     }
     match &p.created {
-        Some(d) if !valid_date(d) => Err(Error::Bad("created debe ser YYYY-MM-DD".into())),
+        Some(d) if !valid_date(d) => Err(Error::Bad("created must be YYYY-MM-DD".into())),
         _ => Ok(()),
     }
 }
@@ -713,7 +713,7 @@ pub fn valid_date(d: &str) -> bool {
 #[derive(Deserialize, ToSchema, Debug)]
 pub struct BulkEdit {
     pub ids: Vec<i64>,
-    /// Opcional: trash | restore | purge (purge solo administradores)
+    /// Optional: trash | restore | purge (purge is for administrators only)
     pub action: Option<String>,
     #[serde(flatten)]
     pub patch: DocPatch,
@@ -724,7 +724,7 @@ pub fn bulk(b: &BulkEdit) -> Result<usize> {
         Some("trash") => b.ids.iter().try_for_each(|id| trash(*id, true))?,
         Some("restore") => b.ids.iter().try_for_each(|id| trash(*id, false))?,
         Some("purge") => b.ids.iter().try_for_each(|id| purge(*id))?,
-        Some(a) => return Err(Error::Bad(format!("acción desconocida: {a}"))),
+        Some(a) => return Err(Error::Bad(format!("unknown action: {a}"))),
         None => {
             check_patch(&b.patch)?;
             db::write(|c| b.ids.iter().try_for_each(|id| apply_patch(c, *id, &b.patch)))?;
@@ -804,7 +804,7 @@ pub fn webhook_target_ok(url: &str) -> std::result::Result<(), String> {
     let (https, rest) = match (url.strip_prefix("https://"), url.strip_prefix("http://")) {
         (Some(r), _) => (true, r),
         (_, Some(r)) => (false, r),
-        _ => return Err("la URL debe empezar con http:// o https://".into()),
+        _ => return Err("the URL must start with http:// or https://".into()),
     };
     let authority = rest.split(['/', '?', '#']).next().unwrap_or("").rsplit('@').next().unwrap_or("");
     let (host, port) = match authority.strip_prefix('[').and_then(|a| a.split_once(']')) {
@@ -813,18 +813,18 @@ pub fn webhook_target_ok(url: &str) -> std::result::Result<(), String> {
     };
     let port = port.and_then(|p| p.parse::<u16>().ok()).unwrap_or(if https { 443 } else { 80 });
     if host.is_empty() {
-        return Err("URL sin host".into());
+        return Err("the URL has no host".into());
     }
     if cfg().webhook_private {
         return Ok(());
     }
-    let addrs: Vec<_> = (host, port).to_socket_addrs().map_err(|e| format!("no se pudo resolver {host}: {e}"))?.collect();
+    let addrs: Vec<_> = (host, port).to_socket_addrs().map_err(|e| format!("could not resolve {host}: {e}"))?.collect();
     let internal = |ip: IpAddr| match ip.to_canonical() {
         IpAddr::V4(v) => v.is_private() || v.is_loopback() || v.is_link_local() || v.is_unspecified() || v.is_broadcast() || v.octets()[0] == 100 && (v.octets()[1] & 0xc0) == 64,
         IpAddr::V6(v) => v.is_loopback() || v.is_unspecified() || (v.segments()[0] & 0xfe00) == 0xfc00 || (v.segments()[0] & 0xffc0) == 0xfe80,
     };
     if addrs.is_empty() || addrs.iter().any(|a| internal(a.ip())) {
-        return Err(format!("{host} apunta a una dirección interna; no se permite (PAPIRO_WEBHOOK_ALLOW_PRIVATE=true para permitirlo)"));
+        return Err(format!("{host} points to an internal address, which is not allowed (set PAPIRO_WEBHOOK_ALLOW_PRIVATE=true to allow it)"));
     }
     Ok(())
 }
@@ -833,7 +833,7 @@ pub fn webhook_target_ok(url: &str) -> std::result::Result<(), String> {
 pub fn deliver(id: i64, url: &str, secret: &str, body: &str) -> String {
     use hmac::{Hmac, KeyInit, Mac};
     let status = match webhook_target_ok(url) {
-        Err(e) => format!("bloqueado: {e}"),
+        Err(e) => format!("blocked: {e}"),
         Ok(()) => {
             let mut mac = Hmac::<sha2::Sha256>::new_from_slice(secret.as_bytes()).expect("hmac");
             mac.update(body.as_bytes());
@@ -893,7 +893,7 @@ pub struct AuditEntry {
     pub at: String,
     pub username: String,
     pub action: String,
-    /// A qué afectó (p. ej. «documento 12», «usuario ana»)
+    /// What it affected (e.g. "document 12", or a username)
     pub target: String,
     pub detail: String,
     pub ip: String,
@@ -909,7 +909,7 @@ pub fn audit_raw(user_id: Option<i64>, username: &str, action: &str, target: &st
 pub fn audit(user: Option<&AuthUser>, action: &str, target: &str, detail: &str) {
     match user {
         Some(u) => audit_raw(Some(u.id), &u.username, action, target, detail, &u.ip),
-        None => audit_raw(None, "sistema", action, target, detail, ""),
+        None => audit_raw(None, "system", action, target, detail, ""),
     }
 }
 
@@ -941,9 +941,9 @@ pub struct Stats {
     pub pages: i64,
     pub bytes: i64,
     pub queued: i64,
-    /// Trabajos de ingesta fallidos que siguen pendientes de revisar
+    /// Failed ingest jobs still waiting to be reviewed
     pub failed: i64,
-    /// Documentos vencidos o que vencen en los próximos 60 días
+    /// Documents that have expired or expire within the next 60 days
     pub expiring: i64,
     pub version: &'static str,
 }
@@ -988,10 +988,10 @@ pub struct Problem {
 #[derive(Serialize, Deserialize, ToSchema, Clone, Default)]
 pub struct VerifyReport {
     pub at: String,
-    /// Se recalculó el SHA-256 de cada original (false = solo existencia y tamaño)
+    /// The SHA-256 of every original was recomputed (false = existence and size only)
     pub deep: bool,
     pub documents: i64,
-    /// Resultado de `PRAGMA integrity_check` de SQLite
+    /// Result of SQLite's `PRAGMA integrity_check`
     pub database: String,
     pub search_index_ok: bool,
     pub problems: Vec<Problem>,
@@ -1009,10 +1009,10 @@ pub fn verify(deep: bool) -> VerifyReport {
         let dir = doc_dir(*id);
         let original = dir.join("original");
         let issue = match std::fs::metadata(&original) {
-            Err(_) => Some("falta el archivo original".to_string()),
-            Ok(m) if m.len() as i64 != *size => Some(format!("el original mide {} bytes y deberían ser {size}", m.len())),
-            Ok(_) if deep && !crate::ingest::original_ok(*id, sha) => Some("el original no coincide con su SHA-256".to_string()),
-            Ok(_) if *has_archive && !dir.join("archive.pdf").is_file() => Some("falta el PDF de archivo".to_string()),
+            Err(_) => Some("the original file is missing".to_string()),
+            Ok(m) if m.len() as i64 != *size => Some(format!("the original is {} bytes but should be {size}", m.len())),
+            Ok(_) if deep && !crate::ingest::original_ok(*id, sha) => Some("the original does not match its SHA-256".to_string()),
+            Ok(_) if *has_archive && !dir.join("archive.pdf").is_file() => Some("the archive PDF is missing".to_string()),
             Ok(_) => None,
         };
         if let Some(problem) = issue {

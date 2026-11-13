@@ -1,8 +1,8 @@
 {
   "name": "Papiro",
   "short_name": "Papiro",
-  "description": "Tu archivo de documentos: escanea, busca y encuentra.",
-  "lang": "es",
+  "description": "Your document archive: scan, search and find.",
+  "lang": "en",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -18,8 +18,8 @@
     { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "shortcuts": [
-    { "name": "Bandeja de entrada", "url": "/#/?view=inbox", "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Buscar", "url": "/#/?focus=1", "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Inbox", "url": "/#/?view=inbox", "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Search", "url": "/#/?focus=1", "icons": [{ "src": "/assets/icon-192.png", "sizes": "192x192" }] }
   ],
   "share_target": {
     "action": "/share",
