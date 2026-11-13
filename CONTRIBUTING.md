@@ -7,6 +7,8 @@ Issues and pull requests are welcome. A few things keep Papiro what it is:
 - **Schema changes** go in a new entry in `MIGRATIONS` (`src/db.rs`). Never edit a migration that has shipped.
 - **Measure, don't guess.** Performance claims in the README come from `bench/`. If you change them, include the numbers and how you got them.
 
+The website and live demo live in [`site/`](site/): `python3 site/build.py` builds them into `site/dist` (the demo is the real `web/` UI with a fake API in `site/demo.js`).
+
 ```bash
 cargo test                       # unit tests
 PAPIRO_WEB_DIR=web cargo run     # serves the UI from disk: edit web/ and reload, no rebuild

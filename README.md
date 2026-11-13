@@ -19,6 +19,8 @@
 </p>
 
 <p align="center">
+  <a href="https://getpapiro.pages.dev/demo/"><b>Live demo</b></a> ·
+  <a href="https://getpapiro.pages.dev">Website</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="docs/BENCHMARKS.md">Benchmarks</a> ·
   <a href="#coming-from-paperless-ngx">Migrate from Paperless</a> ·
@@ -73,7 +75,9 @@ docker run -d --name papiro -p 8000:8000 \
   ghcr.io/elpablazo/papiro:latest
 ```
 
-Open <http://localhost:8000>. Or with Compose:
+Open <http://localhost:8000>. Want to look around first? The [live demo](https://getpapiro.pages.dev/demo/) runs the real interface in your browser, read-only, with sample documents.
+
+Or with Compose:
 
 ```bash
 git clone https://github.com/elpablazo/papiro && cd papiro
