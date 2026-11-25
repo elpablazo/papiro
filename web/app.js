@@ -71,6 +71,9 @@ const ES = {
   '{n} document': '{n} documento', '{n} documents': '{n} documentos',
   '{n} document · total {amount}': '{n} documento · suman {amount}', '{n} documents · total {amount}': '{n} documentos · suman {amount}',
   'Sort': 'Ordenar', 'Change view (V)': 'Cambiar vista (V)',
+  'Subfolders': 'Subcarpetas', 'Also show the documents in its subfolders': 'Mostrar también los documentos de sus subcarpetas',
+  'No documents directly in this folder': 'No hay documentos directamente en esta carpeta',
+  'Turn on “Subfolders” to also see the documents in its subfolders.': 'Activa «Subcarpetas» para ver también los documentos de sus subcarpetas.',
   // detail
   'Couldn’t show page {n}': 'No se pudo mostrar la página {n}',
   'The extracted text is still available in the Text tab. If the problem continues, an admin can check it in Settings → Health.': 'El texto extraído sigue disponible en la pestaña Texto. Si el problema continúa, un administrador puede revisarlo en Ajustes → Salud.',
@@ -251,7 +254,7 @@ const HOME = { doc: null, tags: [], c: null, t: null, q: '', from: '', to: '', f
 const touch = matchMedia('(hover: none)').matches;
 const store = {
   state: { ready: false, setup: false, user: null, llm: false, labels: { tag: [], correspondent: [], doctype: [] }, folders: [], meta: false, stats: {}, route: parseHash(), docs: [], total: 0,
-    loading: false, amountTotal: null, cur: 0, picked: new Set(), jobs: [], toasts: [], modal: null, palette: false, grid: localStorage.grid === '1', menu: false, jobsOpen: false,
+    loading: false, amountTotal: null, cur: 0, picked: new Set(), jobs: [], toasts: [], modal: null, palette: false, grid: localStorage.grid === '1', subs: localStorage.subfolders !== '0', menu: false, jobsOpen: false,
     open: new Set(JSON.parse(localStorage.open || '[]')), dialog: null, sheet: null, install: null, online: navigator.onLine },
   subs: new Set(),
   set(patch) { Object.assign(this.state, typeof patch === 'function' ? patch(this.state) : patch); this.subs.forEach((f) => f()); },
@@ -305,7 +308,7 @@ async function loadDocs(more) {
   if (r.tags.length) p.set('tags', r.tags.join(','));
   if (r.c) p.set('correspondent', r.c);
   if (r.t) p.set('doctype', r.t);
-  if (r.f && r.view === 'all') p.set('folder', r.f);
+  if (r.f && r.view === 'all') { p.set('folder', r.f); if (!S().subs) p.set('subfolders', 'false'); }
   if (r.from) p.set('from', r.from);
   if (r.to) p.set('to', r.to);
   if (r.view === 'inbox') p.set('inbox', 'true');
@@ -698,13 +701,14 @@ function Main() {
   useEffect(() => { const io = new IntersectionObserver((e) => e[0].isIntersecting && !S().loading && S().docs.length < S().total && loadDocs(true)); more.current && io.observe(more.current); return () => io.disconnect(); });
   const title = folder ? folder.name : { inbox: t('Inbox'), all: t('All documents'), trash: t('Trash'), expiring: t('Due dates') }[r.view];
   const filtered = r.q || r.tags.length || r.c || r.t || r.from || r.to;
-  const browsing = r.view === 'all' && !filtered, tiles = browsing ? kids(r.f) : [];
+  const browsing = r.view === 'all' && !filtered, tiles = browsing ? kids(r.f) : [], hasSubs = !!folder && kids(folder.id).length > 0;
   const corr = labelOf('correspondent', r.c), type = labelOf('doctype', r.t);
   const sorts = [['', r.q ? t('Relevance') : r.view === 'expiring' ? t('Due soonest') : t('Newest')], ['created:asc', t('Oldest')], ['added:desc', t('Recently added')], ['title:asc', t('Title A–Z')]];
   const filter = (key, kind, icon, label, value, onChange, multi) => html`<span class="rel"><button class="chip" onClick=${() => setPop(pop === key ? null : key)}><${Icon} n=${icon} />${label}</button>
     ${pop === key && html`<${Picker} kind=${kind} multi=${multi} value=${value} onChange=${onChange} onClose=${() => setPop(null)} />`}</span>`;
   const empty = filtered ? ['search', t('Nothing matches your search'), t('Try other words or remove a filter.')]
-    : folder ? ['folder', t('This folder is empty'), canWrite() ? t('Anything you upload while here is saved in this folder. You can also move documents from their details.') : t('There are no documents here yet.')]
+    : folder && !s.subs && tiles.length ? ['folder', t('No documents directly in this folder'), t('Turn on “Subfolders” to also see the documents in its subfolders.')]
+    : folder ?['folder', t('This folder is empty'), canWrite() ? t('Anything you upload while here is saved in this folder. You can also move documents from their details.') : t('There are no documents here yet.')]
     : r.view === 'inbox' ? ['inbox', t('Inbox zero'), t('New items you haven’t reviewed yet will show up here.')]
     : r.view === 'expiring' ? ['clock', t('Nothing due soon'), t('Documents that are overdue or due in the next 60 days show up here.')]
     : r.view === 'trash' ? ['trash', t('The trash is empty'), t('What you delete stays here until you restore it or delete it for good.')]
@@ -731,9 +735,11 @@ function Main() {
     <div class=${cls('list scroll', s.picked.size && 'selecting')}>
       <div class="list-head">${folder && html`<${Crumbs} f=${folder} />`}
         <div class="row"><h1 class="grow">${title}</h1>${folder && canWrite() && html`<${MenuButton} items=${folderMenu(folder)} title=${t('Folder options')} right cls="btn icon ghost" />`}</div>
-        <div class="row"><span class="sub grow">${s.amountTotal != null ? tn(s.total, '{n} document · total {amount}', '{n} documents · total {amount}', { amount: fmtMoney(s.amountTotal) }) : tn(s.total, '{n} document', '{n} documents')}</span>
+        <div class=${cls('row', hasSubs && 'wrap')}><span class="sub grow">${s.amountTotal != null ? tn(s.total, '{n} document · total {amount}', '{n} documents · total {amount}', { amount: fmtMoney(s.amountTotal) }) : tn(s.total, '{n} document', '{n} documents')}</span>
+          <div class="row tools">${hasSubs && html`<label class="switch" title=${t('Also show the documents in its subfolders')}>
+            <input type="checkbox" role="switch" checked=${s.subs} onChange=${toggleSubs} /><i /><span>${t('Subfolders')}</span></label>`}
           <select title=${t('Sort')} value=${r.sort} onChange=${(e) => nav({ sort: e.target.value })}>${sorts.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select>
-          <button class="btn icon ghost sm" title=${t('Change view (V)')} onClick=${toggleGrid}><${Icon} n=${s.grid ? 'rows' : 'grid'} /></button></div></div>
+          <button class="btn icon ghost sm" title=${t('Change view (V)')} onClick=${toggleGrid}><${Icon} n=${s.grid ? 'rows' : 'grid'} /></button></div></div></div>
       ${browsing && (tiles.length > 0 || canWrite()) && html`<div class="tiles">
         ${tiles.map((f) => html`<button class="tile" key=${f.id} onClick=${() => nav({ f: f.id, doc: null })} ...${dropOn(f.id)}><${Icon} n="folder" /><span class="grow"><span class="name">${f.name}</span>
           <small>${tn(f.document_count, '{n} document', '{n} documents')}</small></span></button>`)}
@@ -744,6 +750,8 @@ function Main() {
     </div></main>`;
 }
 function toggleGrid() { localStorage.grid = S().grid ? '0' : '1'; store.set({ grid: !S().grid }); }
+/** Whether a folder also lists the documents of its subfolders; one choice for every folder, kept in the browser. */
+function toggleSubs() { localStorage.subfolders = S().subs ? '0' : '1'; store.set({ subs: !S().subs, picked: new Set(), cur: 0 }); loadDocs(); }
 
 // ───────────── detalle ─────────────
 function PageImg({ id, n }) {

@@ -477,8 +477,10 @@ pub struct SearchParams {
     pub tags: Option<String>,
     pub correspondent: Option<i64>,
     pub doctype: Option<i64>,
-    /// Folder, including its subfolders. `0` = documents with no folder
+    /// Folder, including its subfolders unless `subfolders=false`. `0` = documents with no folder
     pub folder: Option<i64>,
+    /// With `folder`: `false` = only the documents directly in that folder, not in its subfolders (default true)
+    pub subfolders: Option<bool>,
     /// Earliest document date (YYYY-MM-DD)
     pub from: Option<String>,
     /// Latest document date (YYYY-MM-DD)
@@ -559,7 +561,7 @@ pub fn search(p: &SearchParams, u: &AuthUser) -> Result<DocList> {
     match p.folder {
         Some(0) => wh.push("d.folder_id IS NULL".into()),
         Some(f) => {
-            wh.push(format!("d.folder_id IN ({SUBTREE})"));
+            wh.push(if p.subfolders == Some(false) { "d.folder_id=?".into() } else { format!("d.folder_id IN ({SUBTREE})") });
             args.push(f.into());
         }
         None => {}

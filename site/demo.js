@@ -45,7 +45,8 @@
     if (p.get('correspondent')) docs = docs.filter((d) => d.correspondent_id === Number(p.get('correspondent')));
     if (p.get('doctype')) docs = docs.filter((d) => d.doctype_id === Number(p.get('doctype')));
     const f = Number(p.get('folder'));
-    if (p.has('folder')) docs = docs.filter((d) => (f === 0 ? d.folder_id == null : subtree(f).includes(d.folder_id)));
+    const within = f && p.get('subfolders') === 'false' ? [f] : subtree(f);
+    if (p.has('folder')) docs = docs.filter((d) => (f === 0 ? d.folder_id == null : within.includes(d.folder_id)));
     if (p.get('from')) docs = docs.filter((d) => d.created >= p.get('from'));
     if (p.get('to')) docs = docs.filter((d) => d.created <= p.get('to'));
     if (p.get('inbox') === 'true') docs = docs.filter((d) => d.tags.some((t) => inboxIds(db).includes(t)));
