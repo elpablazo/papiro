@@ -3,7 +3,11 @@ use crate::{auth::AuthUser, cfg, db};
 use rusqlite::{Connection, OptionalExtension, Row, params, params_from_iter, types::Value as Sql};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
-use std::{collections::HashMap, path::PathBuf, sync::OnceLock};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+    sync::OnceLock,
+};
 use utoipa::{IntoParams, ToSchema};
 
 #[derive(Debug)]
@@ -195,6 +199,8 @@ pub struct Folder {
     pub path: String,
     /// Visible documents in the folder and its subfolders
     pub document_count: i64,
+    /// Up to 3 of the most recently added documents inside (for the folder's cover)
+    pub preview: Vec<i64>,
 }
 
 #[derive(Deserialize, ToSchema, Default)]
@@ -217,10 +223,34 @@ pub fn list_folders(u: &AuthUser) -> Result<Vec<Folder>> {
     );
     let mut fs: Vec<Folder> = db::with(|c| {
         c.prepare(&sql)?
-            .query_map([], |r| Ok(Folder { id: r.get(0)?, name: r.get(1)?, parent_id: r.get(2)?, path: String::new(), document_count: r.get(3)? }))?
+            .query_map([], |r| Ok(Folder { id: r.get(0)?, name: r.get(1)?, parent_id: r.get(2)?, path: String::new(), document_count: r.get(3)?, preview: vec![] }))?
             .collect()
     })?;
+    // Portada: los 3 documentos más recientes de cada carpeta (una sola consulta para todas).
+    let recent: Vec<(i64, i64, String)> = db::with(|c| {
+        c.prepare(&format!(
+            "SELECT folder_id, id, added FROM (SELECT d.folder_id, d.id, d.added, row_number() OVER (PARTITION BY d.folder_id ORDER BY d.added DESC, d.id DESC) rn
+             FROM documents d WHERE d.folder_id IS NOT NULL AND d.deleted_at IS NULL AND d.has_thumb AND {}) WHERE rn <= 3",
+            visible(u)
+        ))?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+        .collect()
+    })?;
     let at: HashMap<i64, usize> = fs.iter().enumerate().map(|(i, f)| (f.id, i)).collect();
+    let mut covers: Vec<Vec<(String, i64)>> = vec![vec![]; fs.len()];
+    for (folder, id, added) in recent {
+        // Cada documento cuenta para su carpeta y para todas las superiores.
+        let mut up = Some(folder);
+        for _ in 0..64 {
+            let Some(&j) = up.and_then(|f| at.get(&f)) else { break };
+            covers[j].push((added.clone(), id));
+            up = fs[j].parent_id;
+        }
+    }
+    for (f, mut c) in fs.iter_mut().zip(covers) {
+        c.sort_by(|a, b| b.cmp(a));
+        f.preview = c.into_iter().take(3).map(|x| x.1).collect();
+    }
     for i in 0..fs.len() {
         let (own, mut path, mut up) = (fs[i].document_count, fs[i].name.clone(), fs[i].parent_id);
         // El límite de profundidad evita un bucle si la base tuviera un ciclo.
@@ -233,6 +263,9 @@ pub fn list_folders(u: &AuthUser) -> Result<Vec<Folder>> {
         fs[i].path = path;
     }
     fs.sort_by_key(|f| f.path.to_lowercase());
+    if let Some(scope) = scope_ids(u) {
+        fs.retain(|f| scope.contains(&f.id));
+    }
     Ok(fs)
 }
 
@@ -439,8 +472,44 @@ pub fn exists(id: i64) -> bool {
 }
 
 /// Condición SQL de visibilidad: los documentos privados solo los ven su dueño y los administradores.
+/// Un token limitado a carpetas solo ve los documentos dentro de ellas (y de sus subcarpetas).
 fn visible(u: &AuthUser) -> String {
-    if u.role == "admin" { "1".into() } else { format!("(d.is_private=0 OR d.owner_id={})", u.id) }
+    let own = if u.role == "admin" { "1".into() } else { format!("(d.is_private=0 OR d.owner_id={})", u.id) };
+    match &u.folders {
+        None => own,
+        Some(f) if f.is_empty() => "0".into(),
+        Some(f) => format!(
+            "{own} AND d.folder_id IN (WITH RECURSIVE scope(id) AS (SELECT id FROM folders WHERE id IN ({}) UNION ALL SELECT sf.id FROM folders sf JOIN scope ON sf.parent_id=scope.id) SELECT id FROM scope)",
+            f.iter().map(i64::to_string).collect::<Vec<_>>().join(",")
+        ),
+    }
+}
+
+/// Carpetas que alcanza un token limitado: las elegidas y todas sus subcarpetas. None = sin límite.
+pub fn scope_ids(u: &AuthUser) -> Option<HashSet<i64>> {
+    let roots = u.folders.as_ref()?;
+    let all: Vec<(i64, Option<i64>)> =
+        db::with(|c| c.prepare_cached("SELECT id, parent_id FROM folders")?.query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?.collect()).unwrap_or_default();
+    let mut set: HashSet<i64> = roots.iter().copied().filter(|r| all.iter().any(|(id, _)| id == r)).collect();
+    loop {
+        let before = set.len();
+        set.extend(all.iter().filter(|(_, p)| p.is_some_and(|p| set.contains(&p))).map(|(id, _)| *id).collect::<Vec<_>>());
+        if set.len() == before {
+            return Some(set);
+        }
+    }
+}
+
+/// ¿Puede este usuario/token poner documentos en esa carpeta? (None = sin carpeta, solo sin límite)
+pub fn folder_allowed(u: &AuthUser, folder: Option<i64>) -> bool {
+    match scope_ids(u) {
+        None => true,
+        Some(set) => folder.is_some_and(|f| set.contains(&f)),
+    }
+}
+
+pub fn scope_error() -> Error {
+    Error::Bad("this token can only reach some folders; choose one of them".into())
 }
 
 /// Comprueba que el usuario puede ver el documento. Si no, responde igual que si no existiera.
@@ -479,6 +548,8 @@ pub struct SearchParams {
     pub doctype: Option<i64>,
     /// Folder, including its subfolders. `0` = documents with no folder
     pub folder: Option<i64>,
+    /// With `folder`: only documents directly in it, not in its subfolders
+    pub direct: Option<bool>,
     /// Earliest document date (YYYY-MM-DD)
     pub from: Option<String>,
     /// Latest document date (YYYY-MM-DD)
@@ -558,6 +629,10 @@ pub fn search(p: &SearchParams, u: &AuthUser) -> Result<DocList> {
     }
     match p.folder {
         Some(0) => wh.push("d.folder_id IS NULL".into()),
+        Some(f) if p.direct == Some(true) => {
+            wh.push("d.folder_id=?".into());
+            args.push(f.into());
+        }
         Some(f) => {
             wh.push(format!("d.folder_id IN ({SUBTREE})"));
             args.push(f.into());

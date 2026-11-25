@@ -68,7 +68,7 @@ pub fn enqueue(path: &Path, filename: &str, source: &str, meta: &Value, user_id:
 pub struct Job {
     pub id: i64,
     pub filename: String,
-    /// upload | consume | mail | mcp
+    /// upload (web) | api | consume | mail | mcp
     pub source: String,
     /// queued | running | done | duplicate | failed
     pub status: String,
@@ -120,6 +120,20 @@ fn notify_job(id: i64) {
     if let Ok(j) = job(id) {
         store::notify(json!({"type": "job", "user_id": j.user_id, "job": j}));
     }
+}
+
+/// Una página de un PDF como JPEG de `width` px de ancho.
+pub fn render_page(file: &Path, page: u32, width: u32) -> store::Result<Vec<u8>> {
+    let (n, w) = (page.to_string(), width.to_string());
+    let out = std::process::Command::new("pdftoppm")
+        .args(["-f", &n, "-l", &n, "-scale-to-x", &w, "-scale-to-y", "-1", "-jpeg", "-jpegopt", "quality=80"])
+        .arg(file)
+        .output()
+        .map_err(|e| store::Error::Other(e.to_string()))?;
+    if !out.status.success() || out.stdout.is_empty() {
+        return Err(store::Error::Other("could not render the page".into()));
+    }
+    Ok(out.stdout)
 }
 
 /// Vuelve a encolar un trabajo fallido cuyo archivo se conservó.
@@ -293,6 +307,7 @@ fn worker() {
         );
         if let (Ok(doc), None) = (res, finished_before) {
             store::emit("document.created", doc);
+            crate::push::document_created(doc, j.user_id, &j.source);
         }
         notify_job(j.id);
         if status == "queued" {

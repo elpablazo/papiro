@@ -70,6 +70,7 @@ pub struct ErrorBody {
         (name = "labels", description = "Tags, correspondents and document types"),
         (name = "queue", description = "Ingest status and live events"),
         (name = "webhooks", description = "Signed HTTP notifications when a document changes"),
+        (name = "notifications", description = "Push notifications to the browser or the installed app"),
         (name = "account", description = "Session, users and API tokens"),
         (name = "system", description = "Health, integrity and audit log (administrators)")
     ),
@@ -129,6 +130,10 @@ pub fn router() -> (axum::Router, utoipa::openapi::OpenApi) {
         .routes(routes!(auth_password))
         .routes(routes!(list_tokens, create_token))
         .routes(routes!(delete_token))
+        .routes(routes!(push_status))
+        .routes(routes!(push_subscribe))
+        .routes(routes!(push_unsubscribe))
+        .routes(routes!(push_test))
         .routes(routes!(list_users, create_user))
         .routes(routes!(update_user, delete_user))
         .split_for_parts()
@@ -205,7 +210,17 @@ struct UploadResult {
 async fn upload_documents(Editor(u): Editor, Query(q): Query<UploadQuery>, mut mp: Multipart) -> Res<(StatusCode, Json<UploadResult>)> {
     let mut staged: Vec<(std::path::PathBuf, String)> = vec![];
     let received = receive_upload(&mut mp, &mut staged).await;
-    let meta = match received {
+    let meta = match received.and_then(|mut meta| {
+        // Un token limitado a carpetas sube siempre dentro de ellas (por defecto, a la primera).
+        if let Some(roots) = &u.folders {
+            match meta["folder_id"].as_i64() {
+                None => meta["folder_id"] = roots.iter().copied().find(|f| store::folder_exists(*f)).ok_or_else(store::scope_error)?.into(),
+                Some(f) if !store::folder_allowed(&u, Some(f)) => return Err(store::scope_error().into()),
+                _ => {}
+            }
+        }
+        Ok(meta)
+    }) {
         Ok(meta) if !staged.is_empty() => meta,
         other => {
             // Nada queda a medias: si la subida falla, sus temporales se borran.
@@ -221,7 +236,7 @@ async fn upload_documents(Editor(u): Editor, Query(q): Query<UploadQuery>, mut m
     let mut rx = store::bus().subscribe();
     let mut ids = vec![];
     for (path, filename) in &staged {
-        ids.push(ingest::enqueue(path, filename, "upload", &meta, Some(u.id))?);
+        ids.push(ingest::enqueue(path, filename, if u.token { "api" } else { "upload" }, &meta, Some(u.id))?);
         store::audit(Some(&u), "document uploaded", filename, "");
     }
     let load = |ids: &[i64]| ids.iter().map(|id| ingest::job(*id)).collect::<store::Result<Vec<Job>>>();
@@ -276,6 +291,14 @@ async fn receive_upload(mp: &mut Multipart, staged: &mut Vec<(std::path::PathBuf
     Ok(meta)
 }
 
+/// A token limited to some folders can only move documents between them.
+fn check_scope(u: &AuthUser, p: &DocPatch) -> Res<()> {
+    match p.folder_id {
+        Some(f) if !store::folder_allowed(u, f) => Err(store::scope_error().into()),
+        _ => Ok(()),
+    }
+}
+
 /// Only a document's owner or an administrator can make it private or public.
 fn check_privacy(u: &AuthUser, id: i64, p: &DocPatch) -> Res<()> {
     if p.is_private.is_some() && u.role != "admin" && store::get_doc_brief(id)?.owner_id != Some(u.id) {
@@ -299,6 +322,7 @@ async fn bulk_edit(Editor(u): Editor, Json(b): Json<BulkEdit>) -> Res<Json<Affec
     if b.action.as_deref() == Some("purge") && !u.admin() {
         return Err(forbidden("only an administrator can delete permanently"));
     }
+    check_scope(&u, &b.patch)?;
     for id in &b.ids {
         store::authorize(&u, *id)?;
         check_privacy(&u, *id, &b.patch)?;
@@ -324,6 +348,7 @@ async fn get_document(u: AuthUser, Path(id): Path<i64>) -> Res<Json<Document>> {
 async fn update_document(Editor(u): Editor, Path(id): Path<i64>, Json(p): Json<DocPatch>) -> Res<Json<Document>> {
     store::authorize(&u, id)?;
     check_privacy(&u, id, &p)?;
+    check_scope(&u, &p)?;
     let d = store::update_doc(id, &p)?;
     store::audit(Some(&u), "document edited", &format!("document {id}"), &d.title);
     Ok(Json(d))
@@ -438,7 +463,7 @@ async fn document_file(u: AuthUser, Path(id): Path<i64>, Query(q): Query<FileQue
 }
 
 // Como mucho dos renders a la vez: abrir un PDF de 300 páginas no dispara ni CPU ni RAM.
-static RENDERS: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(2);
+pub static RENDERS: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(2);
 
 /// Thumbnail of the first page (JPEG)
 ///
@@ -475,20 +500,8 @@ async fn document_page(u: AuthUser, Path((id, page)): Path<(i64, u32)>) -> Res<R
         return Err(ApiError(StatusCode::NOT_FOUND, "this document's file is not on disk; check Settings → Health".into()));
     }
     let _permit = RENDERS.acquire().await.map_err(bad)?;
-    let out = tokio::task::spawn_blocking(move || {
-        let n = page.to_string();
-        std::process::Command::new("pdftoppm")
-            .args(["-f", &n, "-l", &n, "-scale-to-x", "1400", "-scale-to-y", "-1", "-jpeg", "-jpegopt", "quality=80"])
-            .arg(file)
-            .output()
-    })
-    .await
-    .map_err(bad)?
-    .map_err(|e| store::Error::Other(e.to_string()))?;
-    if !out.status.success() || out.stdout.is_empty() {
-        return Err(store::Error::Other("could not render the page".into()).into());
-    }
-    Ok(([(header::CONTENT_TYPE, "image/jpeg"), (header::CACHE_CONTROL, "private, max-age=604800")], out.stdout).into_response())
+    let jpeg = tokio::task::spawn_blocking(move || ingest::render_page(&file, page, 1400)).await.map_err(bad)??;
+    Ok(([(header::CONTENT_TYPE, "image/jpeg"), (header::CACHE_CONTROL, "private, max-age=604800")], jpeg).into_response())
 }
 
 /// Classify and summarize with AI
@@ -591,6 +604,9 @@ async fn list_folders(u: AuthUser) -> Res<Json<Vec<Folder>>> {
 #[utoipa::path(post, path = "/api/folders", tag = "folders", request_body = FolderInput,
     responses((status = 201, body = Folder), (status = 400, body = ErrorBody), (status = 409, body = ErrorBody)))]
 async fn create_folder(Editor(u): Editor, Json(i): Json<FolderInput>) -> Res<(StatusCode, Json<Folder>)> {
+    if !store::folder_allowed(&u, i.parent_id.flatten()) {
+        return Err(store::scope_error().into());
+    }
     let f = folder(&u, store::create_folder(&i)?)?;
     store::audit(Some(&u), "folder created", &f.path, "");
     store::notify(json!({"type": "folders"}));
@@ -601,6 +617,10 @@ async fn create_folder(Editor(u): Editor, Json(i): Json<FolderInput>) -> Res<(St
 #[utoipa::path(patch, path = "/api/folders/{id}", tag = "folders", params(("id" = i64, Path,)), request_body = FolderInput,
     responses((status = 200, body = Folder), (status = 400, body = ErrorBody), (status = 404, body = ErrorBody), (status = 409, body = ErrorBody)))]
 async fn update_folder(Editor(u): Editor, Path(id): Path<i64>, Json(i): Json<FolderInput>) -> Res<Json<Folder>> {
+    scoped_folder(&u, id)?;
+    if i.parent_id.is_some_and(|p| !store::folder_allowed(&u, p)) {
+        return Err(store::scope_error().into());
+    }
     store::update_folder(id, &i)?;
     store::notify(json!({"type": "folders"}));
     folder(&u, id)
@@ -613,11 +633,20 @@ async fn update_folder(Editor(u): Editor, Path(id): Path<i64>, Json(i): Json<Fol
 #[utoipa::path(delete, path = "/api/folders/{id}", tag = "folders", params(("id" = i64, Path,)),
     responses((status = 204), (status = 404, body = ErrorBody)))]
 async fn delete_folder(Editor(u): Editor, Path(id): Path<i64>) -> Res<StatusCode> {
+    scoped_folder(&u, id)?;
     let path = folder(&u, id)?.0.path;
     let moved = store::delete_folder(id)?;
     store::audit(Some(&u), "folder deleted", &path, &format!("{moved} document(s) moved to the parent folder"));
     store::notify(json!({"type": "folders"}));
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// A limited token can rename, move or delete the subfolders it reaches, but not the folders it was given.
+fn scoped_folder(u: &AuthUser, id: i64) -> Res<()> {
+    match &u.folders {
+        Some(roots) if roots.contains(&id) || !store::folder_allowed(u, Some(id)) => Err(store::scope_error().into()),
+        _ => Ok(()),
+    }
 }
 
 // ───────────────────────── cola, eventos, estadísticas ─────────────────────────
@@ -932,7 +961,7 @@ struct PasswordChange {
 #[utoipa::path(post, path = "/api/auth/password", tag = "account", request_body = PasswordChange,
     responses((status = 204), (status = 401, body = ErrorBody)))]
 async fn auth_password(u: AuthUser, parts: Parts, Json(p): Json<PasswordChange>) -> Res<StatusCode> {
-    if u.read_only {
+    if u.read_only || u.limited() {
         return Err(forbidden("a read-only token cannot change the password"));
     }
     let ip = attempt(&parts)?;
@@ -955,6 +984,8 @@ struct TokenInfo {
     read_only: bool,
     /// Expiry date (null = never expires)
     expires: Option<String>,
+    /// Folders it is limited to, with their subfolders (null = the whole archive)
+    folders: Option<Vec<i64>>,
     /// Only returned once, when it is created
     #[serde(skip_serializing_if = "Option::is_none")]
     token: Option<String>,
@@ -969,13 +1000,24 @@ struct TokenInput {
     read_only: bool,
     /// Days until it expires (omit = never expires)
     expires_days: Option<i64>,
+    /// Limit the token to these folders and their subfolders (omit = the whole archive)
+    folders: Option<Vec<i64>>,
 }
 
 fn tokens(user_id: i64) -> store::Result<Vec<TokenInfo>> {
     Ok(db::with(|c| {
-        c.prepare_cached("SELECT id, name, created, last_used, read_only, expires FROM api_tokens WHERE user_id=? ORDER BY id")?
+        c.prepare_cached("SELECT id, name, created, last_used, read_only, expires, folders FROM api_tokens WHERE user_id=? AND grant_id IS NULL ORDER BY id")?
             .query_map([user_id], |r| {
-                Ok(TokenInfo { id: r.get(0)?, name: r.get(1)?, created: r.get(2)?, last_used: r.get(3)?, read_only: r.get(4)?, expires: r.get(5)?, token: None })
+                Ok(TokenInfo {
+                    id: r.get(0)?,
+                    name: r.get(1)?,
+                    created: r.get(2)?,
+                    last_used: r.get(3)?,
+                    read_only: r.get(4)?,
+                    expires: r.get(5)?,
+                    folders: auth::parse_folders(r.get(6)?),
+                    token: None,
+                })
             })?
             .collect()
     })?)
@@ -993,10 +1035,14 @@ async fn list_tokens(u: AuthUser) -> Res<Json<Vec<TokenInfo>>> {
 /// A viewer can only create read-only tokens.
 #[utoipa::path(post, path = "/api/tokens", tag = "account", request_body = TokenInput, responses((status = 201, body = TokenInfo), (status = 403, body = ErrorBody)))]
 async fn create_token(u: AuthUser, Json(t): Json<TokenInput>) -> Res<(StatusCode, Json<TokenInfo>)> {
-    if u.read_only {
+    if u.read_only || u.limited() {
         return Err(forbidden("a read-only token cannot create other tokens"));
     }
-    let (id, token) = auth::new_api_token(u.id, t.name.trim(), t.read_only || u.role == "viewer", t.expires_days)?;
+    let folders = t.folders.map(|f| f.into_iter().filter(|id| store::folder_exists(*id)).collect::<Vec<_>>());
+    if folders.as_ref().is_some_and(|f| f.is_empty()) {
+        return Err(bad("choose at least one folder, or give the token access to the whole archive"));
+    }
+    let (id, token) = auth::new_api_token(u.id, t.name.trim(), t.read_only || u.role == "viewer", t.expires_days, folders.as_deref())?;
     store::audit(Some(&u), "token created", t.name.trim(), if t.read_only { "read-only" } else { "" });
     let mut info = tokens(u.id)?.into_iter().find(|x| x.id == id).ok_or(store::Error::NotFound)?;
     info.token = Some(token);
@@ -1006,7 +1052,7 @@ async fn create_token(u: AuthUser, Json(t): Json<TokenInput>) -> Res<(StatusCode
 /// Revoke an API token
 #[utoipa::path(delete, path = "/api/tokens/{id}", tag = "account", params(("id" = i64, Path,)), responses((status = 204)))]
 async fn delete_token(u: AuthUser, Path(id): Path<i64>) -> Res<StatusCode> {
-    if u.read_only {
+    if u.read_only || u.limited() {
         return Err(forbidden("a read-only token cannot revoke tokens"));
     }
     db::with(|c| c.execute("DELETE FROM api_tokens WHERE id=? AND user_id=?", [id, u.id])).map_err(store::Error::from)?;
@@ -1092,4 +1138,96 @@ async fn delete_user(Admin(a): Admin, Path(id): Path<i64>) -> Res<StatusCode> {
     db::with(|c| c.execute("DELETE FROM users WHERE id=?", [id])).map_err(store::Error::from)?;
     store::audit(Some(&a), "user deleted", &target.username, "");
     Ok(StatusCode::NO_CONTENT)
+}
+
+// ───────────────────────── notificaciones push ─────────────────────────
+
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+struct PushQuery {
+    /// Endpoint of this browser's subscription, to know whether it is already registered
+    endpoint: Option<String>,
+}
+
+#[derive(Serialize, ToSchema)]
+struct PushStatus {
+    /// VAPID public key (base64url) for `pushManager.subscribe`
+    public_key: String,
+    /// Devices of yours that receive notifications
+    devices: i64,
+    /// This device is subscribed
+    subscribed: bool,
+    /// Folders this device is limited to (null = everything)
+    folders: Option<Vec<i64>>,
+    /// Result of the last delivery to this device (HTTP status of the push service)
+    last_status: Option<String>,
+}
+
+/// Notification status
+#[utoipa::path(get, path = "/api/push", tag = "notifications", params(PushQuery), responses((status = 200, body = PushStatus)))]
+async fn push_status(u: AuthUser, Query(q): Query<PushQuery>) -> Res<Json<PushStatus>> {
+    let this = q.endpoint.as_deref().and_then(|e| crate::push::find(u.id, e));
+    Ok(Json(PushStatus {
+        public_key: crate::push::public_key(),
+        devices: crate::push::count(u.id),
+        subscribed: this.is_some(),
+        last_status: this.as_ref().map(|t| t.1.clone()).filter(|s| !s.is_empty()),
+        folders: this.and_then(|t| t.0),
+    }))
+}
+
+#[derive(Deserialize, ToSchema)]
+struct PushKeys {
+    p256dh: String,
+    auth: String,
+}
+
+#[derive(Deserialize, ToSchema)]
+struct PushSubscribe {
+    /// `PushSubscription.endpoint`
+    endpoint: String,
+    keys: PushKeys,
+    /// Only notify about documents in these folders and their subfolders (omit = everything)
+    folders: Option<Vec<i64>>,
+    /// Language of the notifications (`en` or `es`)
+    lang: Option<String>,
+}
+
+/// Subscribe this device to notifications
+///
+/// Sends a notification when a new document arrives (upload from another device or user, email, watched folder, API or MCP)
+/// that the user can see. Calling it again with the same endpoint updates the folders.
+#[utoipa::path(post, path = "/api/push/subscriptions", tag = "notifications", request_body = PushSubscribe, responses((status = 204), (status = 400, body = ErrorBody)))]
+async fn push_subscribe(u: AuthUser, Json(p): Json<PushSubscribe>) -> Res<StatusCode> {
+    if u.limited() {
+        return Err(forbidden("a token limited to some folders or apps cannot do this"));
+    }
+    let folders = p.folders.filter(|f| !f.is_empty());
+    let sub = crate::push::Subscription { endpoint: p.endpoint, p256dh: p.keys.p256dh, auth: p.keys.auth, folders, lang: p.lang.unwrap_or_else(|| "en".into()) };
+    tokio::task::spawn_blocking(move || crate::push::subscribe(u.id, &sub)).await.map_err(bad)??;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[derive(Deserialize, ToSchema)]
+struct PushEndpoint {
+    endpoint: String,
+}
+
+/// Stop notifications on this device
+#[utoipa::path(post, path = "/api/push/unsubscribe", tag = "notifications", request_body = PushEndpoint, responses((status = 204)))]
+async fn push_unsubscribe(u: AuthUser, Json(p): Json<PushEndpoint>) -> Res<StatusCode> {
+    crate::push::unsubscribe(u.id, &p.endpoint)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+#[derive(Serialize, ToSchema)]
+struct PushTest {
+    /// Devices the test notification was sent to
+    devices: usize,
+}
+
+/// Send a test notification to all your devices
+#[utoipa::path(post, path = "/api/push/test", tag = "notifications", responses((status = 200, body = PushTest)))]
+async fn push_test(u: AuthUser) -> Res<Json<PushTest>> {
+    Ok(Json(PushTest { devices: crate::push::test(u.id) }))
 }

@@ -180,6 +180,60 @@ const ES = {
   'Offline: you’re seeing what was last loaded': 'Sin conexión: verás lo último que se cargó',
   'Drop to add to Papiro': 'Suelta para añadir a Papiro', 'Drop to add to “{name}”': 'Suelta para añadir a «{name}»',
   'PDF, images, Word, Excel, PowerPoint, text': 'PDF, imágenes, Word, Excel, PowerPoint, texto',
+  // folders that look like folders, sign-in for apps, notifications
+  'The whole archive': 'Todo el archivo',
+  'Every folder, now and in the future': 'Todas las carpetas, ahora y en el futuro',
+  'Only some folders': 'Solo algunas carpetas',
+  'And everything inside them': 'Y todo lo que haya dentro',
+  'This connection can’t continue': 'Esta conexión no puede continuar',
+  '{app} wants to use your Papiro': '{app} quiere usar tu Papiro',
+  'Signed in as {user}. After you decide, you’ll go back to {host}.': 'Sesión de {user}. Cuando decidas, volverás a {host}.',
+  'What it can do': 'Qué puede hacer',
+  'Read only': 'Solo leer',
+  'Search, read and look at documents': 'Buscar, leer y ver documentos',
+  'Read and add': 'Leer y añadir',
+  'Also upload documents, create folders and edit tags. It can never delete.': 'También subir documentos, crear carpetas y editar etiquetas. Nunca puede borrar.',
+  'Where': 'Dónde',
+  'Deny': 'Rechazar',
+  'Allow': 'Permitir',
+  'You can disconnect it at any time in Settings → Tokens & MCP.': 'Puedes desconectarla cuando quieras en Ajustes → Tokens y MCP.',
+  'Notifications are blocked for Papiro in this browser’s settings.': 'Las notificaciones de Papiro están bloqueadas en los ajustes de este navegador.',
+  'Notifications turned on': 'Notificaciones activadas',
+  'Notifications turned off': 'Notificaciones desactivadas',
+  'No device has notifications on yet': 'Aún ningún dispositivo tiene las notificaciones activadas',
+  'Test sent: it should arrive in a few seconds': 'Prueba enviada: debería llegar en unos segundos',
+  'Notifications': 'Notificaciones',
+  'Get a notification when a new document arrives: by email, in the watched folder, from an AI agent, the API or another person. Not for what you upload yourself from here.': 'Recibe un aviso cuando llegue un documento nuevo: por correo, a la carpeta vigilada, desde un agente de IA, la API u otra persona. No por lo que subes tú desde aquí.',
+  'Not available here': 'No disponible aquí',
+  'On iPhone and iPad, add Papiro to your Home Screen first (Share → Add to Home Screen) and open it from there. Requires iOS 16.4 or later.': 'En iPhone y iPad, primero añade Papiro a la pantalla de inicio (Compartir → Añadir a pantalla de inicio) y ábrela desde ahí. Requiere iOS 16.4 o posterior.',
+  'This browser doesn’t support push notifications, or Papiro isn’t served over HTTPS.': 'Este navegador no admite notificaciones push, o Papiro no se sirve por HTTPS.',
+  'On for this device': 'Activadas en este dispositivo',
+  'Off for this device': 'Desactivadas en este dispositivo',
+  '{n} device of yours receives them': '{n} dispositivo tuyo las recibe',
+  '{n} devices of yours receive them': '{n} dispositivos tuyos las reciben',
+  'last delivery: {status}': 'última entrega: {status}',
+  'Turn off': 'Desactivar',
+  'Turn on': 'Activar',
+  'About which documents': 'Sobre qué documentos',
+  'Save folders': 'Guardar carpetas',
+  'Send a test': 'Enviar una prueba',
+  'Everything': 'Todo',
+  'Papiro includes an MCP server so an assistant can browse folders, search, read, look at pages, upload and organize documents. It never deletes anything.': 'Papiro incluye un servidor MCP para que un asistente pueda recorrer carpetas, buscar, leer, ver páginas, subir y organizar documentos. Nunca borra nada.',
+  'Claude, ChatGPT and other apps': 'Claude, ChatGPT y otras apps',
+  'Add a custom connector with this URL. The app opens Papiro so you sign in and choose what it can read and in which folders. No token to copy.': 'Añade un conector personalizado con esta URL. La app abre Papiro para que inicies sesión y elijas qué puede leer y en qué carpetas. Sin copiar tokens.',
+  'Same thing from the terminal; it opens the browser to sign in:': 'Lo mismo desde la terminal; abre el navegador para iniciar sesión:',
+  'With a token': 'Con un token',
+  'For scripts and clients without sign-in, use a token from above:': 'Para scripts y clientes sin inicio de sesión, usa un token de arriba:',
+  'Connected apps': 'Apps conectadas',
+  'Apps you allowed by signing in. Disconnecting one revokes its access immediately.': 'Apps a las que diste acceso iniciando sesión. Al desconectar una, pierde el acceso al instante.',
+  'last used {date}': 'último uso {date}',
+  'Disconnect {app}?': '¿Desconectar {app}?',
+  'It will lose access right away. You can connect it again later.': 'Perderá el acceso al instante. Puedes volver a conectarla después.',
+  'Disconnect': 'Desconectar',
+  'Disconnected': 'Desconectada',
+  'No apps connected yet.': 'Aún no hay apps conectadas.',
+  '{n} folder': '{n} carpeta',
+  '{n} folders': '{n} carpetas',
 };
 /** Translates `s` and fills `{name}` placeholders; if a value is a vnode, returns an array for html``. */
 function t(s, vars) {
@@ -192,7 +246,7 @@ const tn = (n, one, other, vars) => t(n === 1 ? one : other, { n, ...vars });
 const setLang = (l) => { localStorage.lang = l; location.reload(); };
 // Server messages arrive in English: [englishPattern, spanish] pairs, `{}` marks a dynamic part (substituted in order).
 // Filled from the server's message list.
-const SERVER_ES = [["{} points to an internal address, which is not allowed (set PAPIRO_WEBHOOK_ALLOW_PRIVATE=true to allow it)","{} apunta a una dirección interna; no se permite (PAPIRO_WEBHOOK_ALLOW_PRIVATE=true para permitirlo)"],["this job cannot be retried (it did not fail, or its file no longer exists)","este trabajo no se puede reintentar (no falló o su archivo ya no existe)"],["a folder cannot be moved into itself or into a folder that does not exist","una carpeta no se puede mover dentro de sí misma, ni a una que no existe"],["this is the only administrator; make someone else an administrator first","es el único administrador; nombra otro antes"],["only the uploader or an administrator can change a document's privacy","solo quien subió el documento o un administrador puede cambiar su privacidad"],["a folder name must be 1 to 80 characters long and cannot contain \"/\"","el nombre de la carpeta debe tener entre 1 y 80 caracteres y no llevar «/»"],["this document's file is not on disk; check Settings → Health","el archivo de este documento no está en disco; revisa Ajustes → Salud"],["too many attempts from your connection; wait a few minutes","demasiados intentos desde tu conexión; espera unos minutos"],["the copy does not match the original (different SHA-256)","la copia no coincide con el original (SHA-256 distinto)"],["a folder with that name already exists here","ya hay una carpeta con ese nombre en ese lugar"],["the password must be at least 8 characters long","la contraseña debe tener al menos 8 caracteres"],["the model's response was truncated (max_tokens)","la respuesta del modelo quedó truncada (max_tokens)"],[".{} requires PAPIRO_GOTENBERG_URL to be converted",".{} requiere PAPIRO_GOTENBERG_URL para convertirse"],["only an administrator can delete permanently","solo un administrador puede borrar definitivamente"],["a read-only token cannot change the password","un token de solo lectura no puede cambiar la contraseña"],["a read-only token cannot create other tokens","un token de solo lectura no puede crear otros tokens"],["the URL must start with http:// or https://","la URL debe empezar con http:// o https://"],["the model declined to process this document","el modelo declinó procesar este documento"],["action must be accept, dismiss or refresh","action debe ser accept, dismiss o refresh"],["no LLM is configured (PAPIRO_LLM_API_KEY)","no hay LLM configurado (PAPIRO_LLM_API_KEY)"],["server busy; try again in a few seconds","servidor ocupado; intenta de nuevo en unos segundos"],["{} document(s) moved to the parent folder","{} documento(s) pasaron a la carpeta superior"],["the original does not match its SHA-256","el original no coincide con su SHA-256"],["a read-only token cannot revoke tokens","un token de solo lectura no puede revocar tokens"],["invalid role (admin, editor or viewer)","rol inválido (admin, editor o viewer)"],["the original is {} bytes but should be {}","el original mide {} bytes y deberían ser {}"],["permanently deleted from the console","borrado definitivo desde la consola"],["this installation already has users","la instalación ya tiene usuarios"],["the LLM did not return valid JSON: {}","el LLM no devolvió JSON válido: {}"],["the LLM response contains no text","respuesta del LLM sin texto"],["the parent folder does not exist","la carpeta superior no existe"],["you cannot delete your own user","no puedes borrar tu propio usuario"],["your user or token is read-only","tu usuario o token es de solo lectura"],["administrator account created","cuenta de administrador creada"],["could not copy the database: {}","no se pudo copiar la base: {}"],["the job is still in progress","el trabajo sigue en curso"],["unreadable LLM response ({}): {}","respuesta ilegible del LLM ({}): {}"],["document permanently deleted","documento borrado definitivamente"],["more than {} days in the trash","más de {} días en la papelera"],["the original file is missing","falta el archivo original"],["document classified with AI","documento clasificado con IA"],["that folder does not exist","esa carpeta no existe"],["expires must be YYYY-MM-DD","expires debe ser YYYY-MM-DD"],["created must be YYYY-MM-DD","created debe ser YYYY-MM-DD"],["wrong username or password","usuario o contraseña incorrectos"],["the archive PDF is missing","falta el PDF de archivo"],["could not render the page","no se pudo renderizar la página"],["the file no longer exists","el archivo ya no existe"],["the username is required","falta el nombre de usuario"],["duplicate of document #{}","duplicado del documento #{}"],["unsupported file type: {}","tipo de archivo no soportado: {}"],["document moved to trash","documento a la papelera"],["document uploaded (MCP)","documento subido (MCP)"],["administrator required","requiere administrador"],["correspondent deleted","borrado en corresponsales"],["document type deleted","borrado en tipos de documento"],["document edited (MCP)","documento editado (MCP)"],["missing \"file\" field","falta el campo «file»"],["could not resolve {}: {}","no se pudo resolver {}: {}"],["no LLM is configured","LLM no configurado"],["suggestions accepted","sugerencias aceptadas"],["failed job dismissed","trabajo fallido descartado"],["the URL has no host","URL sin host"],["no disk space left","no queda espacio en disco"],["origin not allowed","origen no permitido"],["\"{}\" already exists","ya existe «{}»"],["not authenticated","no autenticado"],["LLM unreachable: {}","LLM inalcanzable: {}"],["document uploaded","documento subido"],["document restored","documento restaurado"],["name is required","falta name"],["unknown action: {}","acción desconocida: {}"],["LLM responded {}: {}","LLM respondió {}: {}"],["could not run {}: {}","no se pudo ejecutar {}: {}"],["{}: timed out ({} s)","{}: tiempo agotado ({} s)"],["password changed","contraseña cambiada"],["document edited","documento editado"],["integrity check","verificación de integridad"],["webhook created","webhook creado"],["webhook deleted","webhook borrado"],["folder created","carpeta creada"],["folder deleted","carpeta borrada"],["password reset","contraseña restablecida"],["token created","token creado"],["token revoked","token revocado"],["trash emptied","papelera vaciada"],["bulk edit ({})","edición masiva ({})"],["user created","usuario creado"],["role changed","rol cambiado"],["user deleted","usuario borrado"],["login failed","inicio de sesión fallido"],["tag deleted","borrado en etiquetas"],["conflict: {}","conflicto: {}"],["no details","sin detalle"],["{} documents","{} documentos"],["not found","no encontrado"],["bulk edit","edición masiva"],["logged in","sesión iniciada"],["document {}","documento {}"],["{} problems","{} problemas"],["read-only","solo lectura"],["blocked: {}","bloqueado: {}"],["console","consola"],["unknown","desconocida"],["system","sistema"]];
+const SERVER_ES = [["this token can only reach some folders; choose one of them", "este token solo llega a algunas carpetas; elige una de ellas"],["choose at least one folder, or give the token access to the whole archive", "elige al menos una carpeta, o da acceso a todo el archivo"],["this app is not registered with Papiro; connect it again from the app", "esta app no está registrada en Papiro; vuelve a conectarla desde la app"],["the return address does not match the one the app registered", "la dirección de retorno no coincide con la que registró la app"],["unsupported response_type (only code)", "response_type no admitido (solo code)"],["the app must use PKCE with S256", "la app debe usar PKCE con S256"],["the push endpoint must use https", "el endpoint push debe usar https"],["invalid push subscription keys", "claves de suscripción push inválidas"],["a token limited to some folders or apps cannot do this", "un token limitado a carpetas o de una app no puede hacer esto"],["app registered (OAuth)", "app registrada (OAuth)"],["app connected (OAuth)", "app conectada (OAuth)"],["app disconnected (OAuth)", "app desconectada (OAuth)"],["app connection denied (OAuth)", "conexión de app rechazada (OAuth)"],["{} points to an internal address, which is not allowed (set PAPIRO_WEBHOOK_ALLOW_PRIVATE=true to allow it)","{} apunta a una dirección interna; no se permite (PAPIRO_WEBHOOK_ALLOW_PRIVATE=true para permitirlo)"],["this job cannot be retried (it did not fail, or its file no longer exists)","este trabajo no se puede reintentar (no falló o su archivo ya no existe)"],["a folder cannot be moved into itself or into a folder that does not exist","una carpeta no se puede mover dentro de sí misma, ni a una que no existe"],["this is the only administrator; make someone else an administrator first","es el único administrador; nombra otro antes"],["only the uploader or an administrator can change a document's privacy","solo quien subió el documento o un administrador puede cambiar su privacidad"],["a folder name must be 1 to 80 characters long and cannot contain \"/\"","el nombre de la carpeta debe tener entre 1 y 80 caracteres y no llevar «/»"],["this document's file is not on disk; check Settings → Health","el archivo de este documento no está en disco; revisa Ajustes → Salud"],["too many attempts from your connection; wait a few minutes","demasiados intentos desde tu conexión; espera unos minutos"],["the copy does not match the original (different SHA-256)","la copia no coincide con el original (SHA-256 distinto)"],["a folder with that name already exists here","ya hay una carpeta con ese nombre en ese lugar"],["the password must be at least 8 characters long","la contraseña debe tener al menos 8 caracteres"],["the model's response was truncated (max_tokens)","la respuesta del modelo quedó truncada (max_tokens)"],[".{} requires PAPIRO_GOTENBERG_URL to be converted",".{} requiere PAPIRO_GOTENBERG_URL para convertirse"],["only an administrator can delete permanently","solo un administrador puede borrar definitivamente"],["a read-only token cannot change the password","un token de solo lectura no puede cambiar la contraseña"],["a read-only token cannot create other tokens","un token de solo lectura no puede crear otros tokens"],["the URL must start with http:// or https://","la URL debe empezar con http:// o https://"],["the model declined to process this document","el modelo declinó procesar este documento"],["action must be accept, dismiss or refresh","action debe ser accept, dismiss o refresh"],["no LLM is configured (PAPIRO_LLM_API_KEY)","no hay LLM configurado (PAPIRO_LLM_API_KEY)"],["server busy; try again in a few seconds","servidor ocupado; intenta de nuevo en unos segundos"],["{} document(s) moved to the parent folder","{} documento(s) pasaron a la carpeta superior"],["the original does not match its SHA-256","el original no coincide con su SHA-256"],["a read-only token cannot revoke tokens","un token de solo lectura no puede revocar tokens"],["invalid role (admin, editor or viewer)","rol inválido (admin, editor o viewer)"],["the original is {} bytes but should be {}","el original mide {} bytes y deberían ser {}"],["permanently deleted from the console","borrado definitivo desde la consola"],["this installation already has users","la instalación ya tiene usuarios"],["the LLM did not return valid JSON: {}","el LLM no devolvió JSON válido: {}"],["the LLM response contains no text","respuesta del LLM sin texto"],["the parent folder does not exist","la carpeta superior no existe"],["you cannot delete your own user","no puedes borrar tu propio usuario"],["your user or token is read-only","tu usuario o token es de solo lectura"],["administrator account created","cuenta de administrador creada"],["could not copy the database: {}","no se pudo copiar la base: {}"],["the job is still in progress","el trabajo sigue en curso"],["unreadable LLM response ({}): {}","respuesta ilegible del LLM ({}): {}"],["document permanently deleted","documento borrado definitivamente"],["more than {} days in the trash","más de {} días en la papelera"],["the original file is missing","falta el archivo original"],["document classified with AI","documento clasificado con IA"],["that folder does not exist","esa carpeta no existe"],["expires must be YYYY-MM-DD","expires debe ser YYYY-MM-DD"],["created must be YYYY-MM-DD","created debe ser YYYY-MM-DD"],["wrong username or password","usuario o contraseña incorrectos"],["the archive PDF is missing","falta el PDF de archivo"],["could not render the page","no se pudo renderizar la página"],["the file no longer exists","el archivo ya no existe"],["the username is required","falta el nombre de usuario"],["duplicate of document #{}","duplicado del documento #{}"],["unsupported file type: {}","tipo de archivo no soportado: {}"],["document moved to trash","documento a la papelera"],["document uploaded (MCP)","documento subido (MCP)"],["administrator required","requiere administrador"],["correspondent deleted","borrado en corresponsales"],["document type deleted","borrado en tipos de documento"],["document edited (MCP)","documento editado (MCP)"],["missing \"file\" field","falta el campo «file»"],["could not resolve {}: {}","no se pudo resolver {}: {}"],["no LLM is configured","LLM no configurado"],["suggestions accepted","sugerencias aceptadas"],["failed job dismissed","trabajo fallido descartado"],["the URL has no host","URL sin host"],["no disk space left","no queda espacio en disco"],["origin not allowed","origen no permitido"],["\"{}\" already exists","ya existe «{}»"],["not authenticated","no autenticado"],["LLM unreachable: {}","LLM inalcanzable: {}"],["document uploaded","documento subido"],["document restored","documento restaurado"],["name is required","falta name"],["unknown action: {}","acción desconocida: {}"],["LLM responded {}: {}","LLM respondió {}: {}"],["could not run {}: {}","no se pudo ejecutar {}: {}"],["{}: timed out ({} s)","{}: tiempo agotado ({} s)"],["password changed","contraseña cambiada"],["document edited","documento editado"],["integrity check","verificación de integridad"],["webhook created","webhook creado"],["webhook deleted","webhook borrado"],["folder created","carpeta creada"],["folder deleted","carpeta borrada"],["password reset","contraseña restablecida"],["token created","token creado"],["token revoked","token revocado"],["trash emptied","papelera vaciada"],["bulk edit ({})","edición masiva ({})"],["user created","usuario creado"],["role changed","rol cambiado"],["user deleted","usuario borrado"],["login failed","inicio de sesión fallido"],["tag deleted","borrado en etiquetas"],["conflict: {}","conflicto: {}"],["no details","sin detalle"],["{} documents","{} documentos"],["not found","no encontrado"],["bulk edit","edición masiva"],["logged in","sesión iniciada"],["document {}","documento {}"],["{} problems","{} problemas"],["read-only","solo lectura"],["blocked: {}","bloqueado: {}"],["console","consola"],["unknown","desconocida"],["system","sistema"]];
 const SERVER_RE = SERVER_ES.map(([pat, es]) => [new RegExp(`^${pat.split('{}').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.+?)')}$`, 's'), es]);
 function srv(m) {
   if (LANG !== 'es' || typeof m !== 'string') return m;
@@ -224,6 +278,8 @@ const ICONS = {
   lock: 'M7 11V7a5 5 0 0 1 10 0v4M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z', cal: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
   install: 'M12 3v12M7 10l5 5 5-5M5 21h14', clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2', cash: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
   restore: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5', logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9', activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0', plug: 'M12 22v-5M9 8V2M15 8V2M18 8v5a6 6 0 0 1-12 0V8z',
+  shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
   globe: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
 };
 const Icon = ({ n }) => html`<svg class="i" viewBox="0 0 24 24"><path d=${ICONS[n]} /></svg>`;
@@ -251,7 +307,7 @@ const HOME = { doc: null, tags: [], c: null, t: null, q: '', from: '', to: '', f
 const touch = matchMedia('(hover: none)').matches;
 const store = {
   state: { ready: false, setup: false, user: null, llm: false, labels: { tag: [], correspondent: [], doctype: [] }, folders: [], meta: false, stats: {}, route: parseHash(), docs: [], total: 0,
-    loading: false, amountTotal: null, cur: 0, picked: new Set(), jobs: [], toasts: [], modal: null, palette: false, grid: localStorage.grid === '1', menu: false, jobsOpen: false,
+    loading: false, amountTotal: null, cur: 0, picked: new Set(), fresh: new Set(), jobs: [], toasts: [], modal: null, palette: false, grid: localStorage.grid === '1', menu: false, jobsOpen: false,
     open: new Set(JSON.parse(localStorage.open || '[]')), dialog: null, sheet: null, install: null, online: navigator.onLine },
   subs: new Set(),
   set(patch) { Object.assign(this.state, typeof patch === 'function' ? patch(this.state) : patch); this.subs.forEach((f) => f()); },
@@ -262,21 +318,164 @@ function useStore() {
   useEffect(() => { const f = () => tick((x) => x + 1); store.subs.add(f); return () => store.subs.delete(f); }, []);
   return store.state;
 }
-function nav(patch, replace) {
-  const r = { ...S().route, ...patch }, p = new URLSearchParams();
+/** `still`: cambia de ruta sin transición (el gesto ya hizo la animación). */
+function nav(patch, replace, still) {
+  const prev = S().route, r = { ...prev, ...patch }, p = new URLSearchParams();
   if (r.view !== 'all') { p.set('view', r.view); r.f = null; }
   for (const k of ['q', 'c', 't', 'f', 'from', 'to', 'doc', 'sort']) if (r[k]) p.set(k, r[k]);
   if (r.tags.length) p.set('tags', r.tags.join(','));
   const h = '#/' + (p.toString() ? '?' + p : '');
   replace ? history.replaceState(null, '', h) : history.pushState(null, '', h);
-  onRoute();
+  return still ? routeAndPlace(prev, parseHash()) : go(prev, parseHash());
 }
 function onRoute() {
   const prev = S().route, route = parseHash();
   store.set({ route, menu: false });
-  if (['view', 'q', 'tags', 'c', 't', 'f', 'from', 'to', 'sort'].some((k) => String(prev[k]) !== String(route[k]))) { store.set({ picked: new Set(), cur: 0 }); loadDocs(); }
+  if (['view', 'q', 'tags', 'c', 't', 'f', 'from', 'to', 'sort'].some((k) => String(prev[k]) !== String(route[k]))) { store.set({ picked: new Set(), cur: 0, fresh: new Set() }); return loadDocs(); }
+  return Promise.resolve();
 }
-addEventListener('hashchange', onRoute); addEventListener('popstate', onRoute);
+
+// ───────────── movimiento ─────────────
+// Las transiciones son del navegador (View Transitions) y de CSS: solo transform y opacity, en la GPU.
+// La página nueva se pinta ya con sus documentos: el cambio espera a la API (como mucho 450 ms).
+const narrow = matchMedia('(max-width: 760px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
+const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+const buzz = (ms = 8) => navigator.vibrate?.(ms);
+const depth = (id) => { let n = 0; for (let x = folderOf(id); x && n < 64; x = folderOf(x.parent_id)) n++; return n; };
+/** push (entrar en una carpeta), pop (salir), fade (otra vista) o null (filtros, búsqueda: sin animación). */
+function motion(a, b) {
+  if (a.view !== b.view) return 'fade';
+  if ((a.f || null) === (b.f || null)) return null;
+  const da = depth(a.f), db = depth(b.f);
+  return db > da ? 'push' : db < da ? 'pop' : 'fade';
+}
+let moving = false, hero = null;
+// Cada carpeta recuerda hasta dónde bajaste: al volver, la lista está donde la dejaste.
+const scrolls = new Map(), placeKey = (r) => `${r.view}:${r.f || ''}`;
+async function routeAndPlace(prev, next) {
+  const list = document.querySelector('.list'), moved = placeKey(prev) !== placeKey(next);
+  if (list && moved) scrolls.set(placeKey(prev), list.scrollTop);
+  await onRoute();
+  if (!moved) return;
+  await tick();
+  const now = document.querySelector('.list');
+  if (now) now.scrollTop = scrolls.get(placeKey(next)) || 0;
+}
+const heroName = (el) => el && (el.style.viewTransitionName = 'hero');
+async function go(prev, next) {
+  moving = true;
+  // Cerrar un documento en el móvil: primero se desliza fuera y luego cambia la ruta.
+  if (prev.doc && !next.doc && narrow.matches && !calm.matches && document.querySelector('.detail:not(.leaving):not(.gone)')) await leaveDoc();
+  const kind = motion(prev, next);
+  if (!kind || !document.startViewTransition || calm.matches || document.hidden) { moving = false; return routeAndPlace(prev, next); }
+  const root = document.documentElement;
+  root.dataset.motion = kind;
+  // Elemento compartido: el nombre de la carpeta vuela de su tarjeta al título (y de vuelta).
+  if (kind === 'push' && hero) heroName(document.querySelector(`[data-folder="${hero}"] .name`));
+  if (kind === 'pop') heroName(document.querySelector('.list-head h1'));
+  const vt = document.startViewTransition(async () => {
+    await Promise.race([routeAndPlace(prev, next), tick(450)]);
+    await tick();
+    document.querySelectorAll('[style*="view-transition-name"]').forEach((e) => (e.style.viewTransitionName = ''));
+    if (kind === 'push') heroName(document.querySelector('.list-head h1'));
+    if (kind === 'pop' && prev.f) heroName(document.querySelector(`[data-folder="${prev.f}"] .name`));
+  });
+  vt.finished.finally(() => { delete root.dataset.motion; moving = false; hero = null; document.querySelectorAll('[style*="view-transition-name"]').forEach((e) => (e.style.viewTransitionName = '')); });
+}
+/** El documento abierto sale deslizándose hacia la derecha (y la lista vuelve a su sitio). */
+function leaveDoc() {
+  const d = document.querySelector('.detail'); if (!d) return Promise.resolve();
+  d.classList.add('leaving'); document.querySelector('.shell')?.classList.add('closing');
+  return new Promise((r) => { d.addEventListener('animationend', r, { once: true }); setTimeout(r, 400); });
+}
+const openFolder = (id) => { hero = id; buzz(); nav({ f: id, doc: null }); };
+/** Volver: cerrar el documento o subir a la carpeta superior. */
+const back = () => { const r = S().route; r.doc ? nav({ doc: null }) : r.f && nav({ f: folderOf(r.f)?.parent_id || null, doc: null }); };
+const filteredRoute = (r) => r.q || r.tags.length || r.c || r.t || r.from || r.to;
+
+/** Gestos táctiles del móvil. Todo se mueve con transform dentro de requestAnimationFrame: nada de layout. */
+function gestures() {
+  // En Safari (no instalada), el borde izquierdo ya es el «atrás» del navegador: no se le hace competencia.
+  const browserEdge = /iP(hone|ad|od)/.test(navigator.userAgent) && !navigator.standalone && !matchMedia('(display-mode: standalone)').matches;
+  let g = null, frame = 0;
+  const paint = (f) => { cancelAnimationFrame(frame); frame = requestAnimationFrame(f); };
+  const settle = (els, ms = 280) => { els.forEach((e) => e && e.classList.add('settle')); setTimeout(() => els.forEach((e) => e && e.classList.remove('settle', 'dragging')), ms); };
+  addEventListener('touchstart', (e) => {
+    const s = S(), t = e.touches[0];
+    if (!narrow.matches || e.touches.length !== 1 || s.dialog || s.modal || s.palette) return (g = null);
+    const sheet = e.target.closest?.('.sheet, .jobs');
+    if (sheet) {
+      // Hojas: se arrastran desde su cabecera hacia abajo para cerrarlas.
+      if (t.clientY - sheet.getBoundingClientRect().top < 64) g = { kind: 'sheet', el: sheet, x: t.clientX, y: t.clientY, t: performance.now() };
+      return;
+    }
+    if (s.sheet || s.jobsOpen || s.menu || s.picked.size) return (g = null);
+    const r = s.route, list = document.querySelector('.list');
+    if (t.clientX < 28 && !browserEdge && (r.doc || (r.view === 'all' && r.f && !filteredRoute(r)))) {
+      const el = document.querySelector(r.doc ? '.detail' : '.list');
+      g = { kind: 'edge', el, under: r.doc ? document.querySelector('.main') : null, doc: !!r.doc, x: t.clientX, y: t.clientY, t: performance.now(), w: innerWidth };
+    } else if (!r.doc && list && list.contains(e.target) && list.scrollTop <= 0) {
+      g = { kind: 'pull', el: list.querySelector('.ptr'), x: t.clientX, y: t.clientY, t: performance.now() };
+    } else g = null;
+  }, { passive: true });
+  addEventListener('touchmove', (e) => {
+    if (!g || !g.el) return;
+    const t = e.touches[0], dx = t.clientX - g.x, dy = t.clientY - g.y;
+    if (g.lock === undefined) {
+      if (Math.abs(dx) < 7 && Math.abs(dy) < 7) return;
+      g.lock = g.kind === 'edge' ? dx > Math.abs(dy) * 1.1 : dy > Math.abs(dx);
+      if (!g.lock) return (g = null);
+      g.el.classList.add('dragging'); g.under?.classList.add('dragging');
+    }
+    if (g.kind === 'edge') {
+      g.dx = Math.max(0, dx);
+      paint(() => { g && (g.el.style.transform = `translateX(${g.dx}px)`, g.under && (g.under.style.transform = `translateX(${-24 * (1 - g.dx / g.w)}%)`)); });
+    } else if (g.kind === 'sheet') {
+      g.dy = Math.max(0, dy);
+      paint(() => { g && (g.el.style.transform = `translateY(${g.dy}px)`); });
+    } else {
+      // Resistencia: el indicador se mueve la mitad que el dedo y se detiene en 110 px.
+      const pull = Math.min(110, Math.max(0, dy) * 0.5), armed = pull >= 64;
+      if (armed && !g.armed) buzz(10);
+      g.pull = pull; g.armed = armed;
+      paint(() => { if (!g) return; g.el.style.transform = `translateY(${pull}px) rotate(${pull * 3.2}deg)`; g.el.style.opacity = Math.min(1, pull / 50); g.el.classList.toggle('armed', armed); });
+    }
+  }, { passive: true });
+  const end = () => {
+    const x = g; g = null;
+    if (!x?.lock || !x.el) return;
+    cancelAnimationFrame(frame);
+    const fast = (d) => d / Math.max(1, performance.now() - x.t) > 0.45;
+    if (x.kind === 'edge') {
+      const commit = x.dx > x.w * 0.33 || (fast(x.dx) && x.dx > 40);
+      settle([x.el, x.under]);
+      if (!commit) { x.el.style.transform = ''; x.under && (x.under.style.transform = ''); return; }
+      buzz(); x.el.style.transform = `translateX(${x.w}px)`; x.under && (x.under.style.transform = 'translateX(0)');
+      setTimeout(() => {
+        if (x.doc) { x.el.classList.add('gone'); x.under && (x.under.style.transform = ''); nav({ doc: null }); return; }
+        // La carpeta superior entra desde la izquierda, como si estuviera debajo.
+        nav({ f: folderOf(S().route.f)?.parent_id || null, doc: null }, false, true).then(() => {
+          x.el.style.transform = ''; x.el.classList.remove('settle'); x.el.classList.add('pop-in'); setTimeout(() => x.el.classList.remove('pop-in'), 420);
+        });
+      }, 230);
+    } else if (x.kind === 'sheet') {
+      const commit = x.dy > 90 || (fast(x.dy) && x.dy > 30);
+      settle([x.el], 240);
+      x.el.style.transform = commit ? 'translateY(110%)' : '';
+      if (commit) setTimeout(() => store.set({ sheet: null, jobsOpen: false }), 200);
+    } else {
+      x.el.classList.remove('dragging');
+      if (!x.armed) { settle([x.el]); x.el.style.transform = ''; x.el.style.opacity = 0; return; }
+      x.el.classList.add('spin'); x.el.style.transform = 'translateY(64px)';
+      quietRefresh = true;
+      Promise.all([loadDocs(), loadMeta(), tick(500)]).finally(() => { quietRefresh = false; settle([x.el]); x.el.classList.remove('spin', 'armed'); x.el.style.transform = ''; x.el.style.opacity = 0; });
+    }
+  };
+  addEventListener('touchend', end, { passive: true }); addEventListener('touchcancel', end, { passive: true });
+}
+addEventListener('popstate', () => go(S().route, parseHash()));
+// popstate ya cubre atrás/adelante; esto solo atiende a quien edita la URL a mano.
+addEventListener('hashchange', () => { if (!moving && JSON.stringify(parseHash()) !== JSON.stringify(S().route)) onRoute(); });
 
 async function api(path, o = {}) {
   const init = { method: o.method || (o.json !== undefined || o.body ? 'POST' : 'GET'), headers: { 'X-Requested-With': 'papiro' }, credentials: 'same-origin' };
@@ -315,14 +514,18 @@ async function loadDocs(more) {
   store.set({ loading: true });
   try {
     const res = await api('/documents?' + p);
-    if (my === seq) store.set({ docs: more ? [...docs, ...res.items] : res.items, total: res.total, amountTotal: res.amount_total, loading: false });
+    if (my !== seq) return;
+    // Lo que llega en vivo (otra pestaña, correo, carpeta vigilada, un agente) brilla un momento.
+    const known = new Set(docs.map((d) => d.id)), fresh = quietRefresh && docs.length ? new Set(res.items.filter((d) => !known.has(d.id)).map((d) => d.id)) : S().fresh;
+    store.set({ docs: more ? [...docs, ...res.items] : res.items, total: res.total, amountTotal: res.amount_total, loading: false, fresh });
   } catch { if (my === seq) store.set({ loading: false }); }
 }
+let quietRefresh = false;
 async function loadMeta() {
   const [tag, correspondent, doctype, folders, stats] = await Promise.all([api('/tags'), api('/correspondents'), api('/doctypes'), api('/folders'), api('/stats')]);
   store.set({ labels: { tag, correspondent, doctype }, folders, stats, meta: true });
 }
-const refresh = debounce(() => { loadDocs(); loadMeta(); }, 250);
+const refresh = debounce(() => { quietRefresh = true; loadDocs().finally(() => (quietRefresh = false)); loadMeta(); }, 250);
 const labelOf = (kind, id) => S().labels[kind].find((l) => l.id === id);
 const folderOf = (id) => (id ? S().folders.find((f) => f.id === id) : undefined);
 const kids = (id) => S().folders.filter((f) => (f.parent_id ?? null) === (id ?? null));
@@ -346,7 +549,7 @@ async function boot() {
   const st = await api('/auth/status', { quiet: true }).catch(() => null);
   if (!st) return store.set({ ready: true, down: true });
   store.set({ ready: true, down: false, setup: st.setup_required, user: st.user, llm: st.llm });
-  if (st.user) start();
+  if (st.user && !CONSENT) start();
 }
 let es;
 function start() {
@@ -544,7 +747,7 @@ function Auth({ setup }) {
   const [u, setU] = useState(''), [p, setP] = useState(''), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   const go = async (e) => {
     e.preventDefault(); setBusy(true); setErr('');
-    try { const user = await api(setup ? '/auth/setup' : '/auth/login', { json: { username: u, password: p }, quiet: true }); store.set({ user, setup: false }); start(); }
+    try { const user = await api(setup ? '/auth/setup' : '/auth/login', { json: { username: u, password: p }, quiet: true }); store.set({ user, setup: false }); CONSENT || start(); }
     catch (x) { setErr(x.message); } setBusy(false);
   };
   return html`<div class="auth"><form onSubmit=${go}>
@@ -599,6 +802,7 @@ function Sidebar() {
       <button class="nav only-wide" onClick=${openJobs}>${active ? html`<span class="spinner" />` : html`<${Icon} n="activity" />`}
         <span class="name">${active ? t('Processing {n}…', { n: active }) : t('Activity')}</span>${s.stats.failed > 0 && html`<span class="count" style="color:var(--danger)" title=${t('Failed jobs')}>${s.stats.failed}</span>`}</button>
       ${s.install && html`<button class="nav" onClick=${() => { s.install.prompt(); store.set({ install: null, menu: false }); }}><${Icon} n="install" /><span class="name">${t('Install Papiro')}</span></button>`}
+      ${pushReady() && html`<button class="nav only-narrow" onClick=${() => store.set({ modal: 'settings:notifications', menu: false })}><${Icon} n="bell" /><span class="name">${t('Notifications')}</span></button>`}
       <button class="nav" onClick=${() => store.set({ modal: 'settings', menu: false })}><${Icon} n="settings" /><span class="name">${t('Settings')}</span><span class="count only-wide"><kbd>,</kbd></span></button>
       <button class="nav" onClick=${() => setTheme(isDark() ? 'light' : 'dark')}><${Icon} n=${isDark() ? 'sun' : 'moon'} /><span class="name">${isDark() ? t('Light mode') : t('Dark mode')}</span></button>
     </div></nav>`;
@@ -662,7 +866,7 @@ function DocRow({ d, i }) {
   const down = (e) => { if (e.pointerType !== 'mouse' && canWrite()) pressTimer = setTimeout(() => { pressed = true; navigator.vibrate?.(10); togglePick(d.id, i); }, 480); };
   const up = () => clearTimeout(pressTimer);
   const drag = (e) => { const ids = picked ? [...s.picked] : [d.id]; e.dataTransfer.setData(DND, ids.join(',')); e.dataTransfer.effectAllowed = 'move'; };
-  return html`<div class=${cls('doc', i === s.cur && 'cur', open && 'open', picked && 'picked')} data-i=${i} onClick=${click} draggable=${!touch && canWrite()} onDragStart=${drag}
+  return html`<div class=${cls('doc', i === s.cur && 'cur', open && 'open', picked && 'picked', i < 18 && 'enter', s.fresh.has(d.id) && 'fresh')} style=${i < 18 ? `--i:${i}` : ''} data-i=${i} onClick=${click} draggable=${!touch && canWrite()} onDragStart=${drag}
       onPointerDown=${down} onPointerUp=${up} onPointerCancel=${up} onPointerLeave=${up} onContextMenu=${(e) => touch && e.preventDefault()}>
     ${d.has_thumb ? html`<img class="thumb" loading="lazy" draggable=${false} src=${`/api/documents/${d.id}/thumb?v=2`} alt="" />` : html`<div class="thumb">${d.original_name.split('.').pop()}</div>`}
     <span class="check"><${Icon} n="check" /></span>
@@ -678,6 +882,16 @@ function togglePick(id, i, range) {
   if (range) for (let k = Math.min(anchor, i); k <= Math.max(anchor, i); k++) next.add(docs[k].id);
   else { next.has(id) ? next.delete(id) : next.add(id); anchor = i; }
   store.set({ picked: next, cur: i });
+}
+/** Una carpeta que parece carpeta: los últimos documentos asoman por arriba y al tocarla se abre. */
+function FolderCard({ f }) {
+  const sub = kids(f.id).length, papers = f.preview || [];
+  const hide = (e) => e.target.remove();
+  return html`<button class="fcard" data-folder=${f.id} onClick=${() => openFolder(f.id)} ...${dropOn(f.id)} title=${f.path}>
+    <span class="fc-back" />
+    <span class="fc-papers">${papers.map((id, k) => html`<i key=${id} style=${`--k:${k};--n:${papers.length}`}><img loading="lazy" decoding="async" draggable=${false} src=${`/api/documents/${id}/thumb?v=2`} alt="" onError=${hide} /></i>`)}</span>
+    <span class="fc-front"><span class="name">${f.name}</span>
+      <small>${tn(f.document_count, '{n} document', '{n} documents')}${sub ? ' · ' + tn(sub, '{n} folder', '{n} folders') : ''}</small></span></button>`;
 }
 function Crumbs({ f }) {
   const chain = [];
@@ -728,20 +942,29 @@ function Main() {
         ${filtered && html`<button class="btn ghost sm" onClick=${() => { input.current.value = ''; nav({ q: '', tags: [], c: null, t: null, from: '', to: '' }); }}>${t('Clear')}</button>`}
       </div>
     </div>
-    <div class=${cls('list scroll', s.picked.size && 'selecting')}>
-      <div class="list-head">${folder && html`<${Crumbs} f=${folder} />`}
-        <div class="row"><h1 class="grow">${title}</h1>${folder && canWrite() && html`<${MenuButton} items=${folderMenu(folder)} title=${t('Folder options')} right cls="btn icon ghost" />`}</div>
+    <div class=${cls('list scroll', s.picked.size && 'selecting')} onScroll=${onListScroll}>
+      <i class="ptr" aria-hidden="true"><${Icon} n="restore" /></i>
+      ${folder && html`<div class="navbar only-narrow"><button class="back-btn" onClick=${back} ...${dropOn(folder.parent_id || null)}><${Icon} n="chev" /><span>${folderOf(folder.parent_id)?.name || t('Archive')}</span></button>
+        <b class="mini-title">${folder.name}</b>${canWrite() && html`<${MenuButton} items=${folderMenu(folder)} title=${t('Folder options')} right cls="btn icon ghost sm" />`}</div>`}
+      <div class="list-head">${folder && html`<span class="only-wide"><${Crumbs} f=${folder} /></span>`}
+        <div class="row"><h1 class="grow">${title}</h1>${folder && canWrite() && html`<span class="only-wide"><${MenuButton} items=${folderMenu(folder)} title=${t('Folder options')} right cls="btn icon ghost" /></span>`}</div>
         <div class="row"><span class="sub grow">${s.amountTotal != null ? tn(s.total, '{n} document · total {amount}', '{n} documents · total {amount}', { amount: fmtMoney(s.amountTotal) }) : tn(s.total, '{n} document', '{n} documents')}</span>
           <select title=${t('Sort')} value=${r.sort} onChange=${(e) => nav({ sort: e.target.value })}>${sorts.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select>
           <button class="btn icon ghost sm" title=${t('Change view (V)')} onClick=${toggleGrid}><${Icon} n=${s.grid ? 'rows' : 'grid'} /></button></div></div>
-      ${browsing && (tiles.length > 0 || canWrite()) && html`<div class="tiles">
-        ${tiles.map((f) => html`<button class="tile" key=${f.id} onClick=${() => nav({ f: f.id, doc: null })} ...${dropOn(f.id)}><${Icon} n="folder" /><span class="grow"><span class="name">${f.name}</span>
-          <small>${tn(f.document_count, '{n} document', '{n} documents')}</small></span></button>`)}
-        ${canWrite() && html`<button class="tile new" onClick=${() => newFolder(r.f)}><${Icon} n="plus" /><span class="name">${t('New folder')}</span></button>`}</div>`}
+      ${browsing && (tiles.length > 0 || canWrite()) && html`<div class="folders">
+        ${tiles.map((f) => html`<${FolderCard} f=${f} key=${f.id} />`)}
+        ${canWrite() && html`<button class="fcard new" onClick=${() => newFolder(r.f)}><span class="fc-back" /><span class="fc-front"><${Icon} n="plus" /><span class="name">${t('New folder')}</span></span></button>`}</div>`}
       ${!s.docs.length && !s.loading ? html`<div class="empty"><div><div class="big"><${Icon} n=${empty[0]} /></div><h3>${empty[1]}</h3><div>${empty[2]}</div>
           ${!filtered && r.view === 'all' && canWrite() && html`<button class="btn primary" onClick=${addDocs}><${Icon} n="upload" />${t('Add documents')}</button>`}</div></div>`
         : html`<div class=${s.grid ? 'grid' : ''}>${s.docs.map((d, i) => html`<${DocRow} d=${d} i=${i} key=${d.id} />`)}</div><div ref=${more} style="height:1px" />`}
     </div></main>`;
+}
+/** El título grande se recoge en la barra al desplazarse (sin re-renderizar: solo una clase). */
+let scrollFrame = 0;
+function onListScroll(e) {
+  const el = e.currentTarget;
+  cancelAnimationFrame(scrollFrame);
+  scrollFrame = requestAnimationFrame(() => el.parentElement?.classList.toggle('scrolled', el.scrollTop > 52));
 }
 function toggleGrid() { localStorage.grid = S().grid ? '0' : '1'; store.set({ grid: !S().grid }); }
 
@@ -751,7 +974,7 @@ function PageImg({ id, n }) {
   if (bad) return html`<div class="page-error"><${Icon} n="help" /><b>${t('Couldn’t show page {n}', { n })}</b>
     <span>${t('The extracted text is still available in the Text tab. If the problem continues, an admin can check it in Settings → Health.')}</span>
     <button class="btn sm" onClick=${() => setBad(false)}>${t('Retry')}</button></div>`;
-  return html`<img loading=${n > 1 ? 'lazy' : 'eager'} src=${`/api/documents/${id}/pages/${n}?v=2`} alt=${t('Page {n}', { n })} onError=${() => setBad(true)} />`;
+  return html`<img loading=${n > 1 ? 'lazy' : 'eager'} decoding="async" src=${`/api/documents/${id}/pages/${n}?v=2`} alt=${t('Page {n}', { n })} onLoad=${(e) => e.target.classList.add('loaded')} onError=${() => setBad(true)} />`;
 }
 function Prop({ k, icon, children, picker }) {
   const [open, setOpen] = useState(false);
@@ -904,23 +1127,125 @@ function Labels({ kind, path, title, blurb }) {
       <td class="muted">${l.document_count}</td>
       <td><button class="btn icon ghost sm" title=${t('Delete')} onClick=${async () => await ask({ title: t('Delete “{name}”?', { name: l.name }), text: t('The documents are kept; they only lose this assignment.'), ok: t('Delete'), danger: true }) && attempt(api(`/${path}/${l.id}`, { method: 'DELETE' })).then(refresh)}><${Icon} n="trash" /></button></td></tr>`)}</table>`;
 }
+/** Elegir carpetas: marcar una incluye sus subcarpetas (se ven marcadas y bloqueadas). */
+function FolderChecks({ folders, value, onChange }) {
+  const chosen = new Set(value), byId = new Map(folders.map((f) => [f.id, f]));
+  const covered = (f) => { for (let x = byId.get(f.parent_id); x; x = byId.get(x.parent_id)) if (chosen.has(x.id)) return true; return false; };
+  if (!folders.length) return html`<p class="faint">${t('No folders yet')}</p>`;
+  return html`<div class="fchecks scroll">${folders.map((f) => {
+    const inherited = covered(f);
+    return html`<label class=${cls('fcheck', inherited && 'inherited')} style=${`--d:${f.path.split('/').length - 1}`} key=${f.id}>
+      <input type="checkbox" checked=${inherited || chosen.has(f.id)} disabled=${inherited} onChange=${(e) => onChange(e.target.checked ? [...value, f.id] : value.filter((x) => x !== f.id))} />
+      <${Icon} n="folder" /><span class="grow">${f.name}</span><small>${f.document_count}</small></label>`;
+  })}</div>`;
+}
+/** Todo el archivo, o solo algunas carpetas. `value`: null = todo. */
+function Reach({ folders, value, onChange }) {
+  return html`<div class="reach">
+    <label class=${cls('choice', value === null && 'on')}><input type="radio" checked=${value === null} onChange=${() => onChange(null)} /><span><b>${t('The whole archive')}</b><small>${t('Every folder, now and in the future')}</small></span></label>
+    <label class=${cls('choice', value !== null && 'on')}><input type="radio" checked=${value !== null} onChange=${() => onChange(value || [])} /><span><b>${t('Only some folders')}</b><small>${t('And everything inside them')}</small></span></label>
+    ${value !== null && html`<${FolderChecks} folders=${folders} value=${value} onChange=${onChange} />`}</div>`;
+}
+
+/** Pantalla de inicio de sesión OAuth: una app (Claude, ChatGPT…) pide acceso al archivo. */
+const CONSENT = location.pathname === '/oauth/authorize';
+function Consent() {
+  const s = useStore(), q = location.search.slice(1), [info, setInfo] = useState(null), [err, setErr] = useState(''), [folders, setFolders] = useState([]);
+  const [write, setWrite] = useState(true), [reach, setReach] = useState(null), [busy, setBusy] = useState(false);
+  useEffect(() => {
+    api('/oauth/request?' + q).then((i) => { setInfo(i); setWrite(i.write && canWrite()); }).catch((e) => setErr(e.message));
+    api('/folders').then(setFolders).catch(() => {});
+  }, []);
+  const decide = async (approve) => {
+    setBusy(true);
+    try {
+      const params = Object.fromEntries(new URLSearchParams(q));
+      const r = await api('/oauth/decide', { json: { ...params, approve, read_only: !write, folders: reach } });
+      buzz(); location.href = r.redirect;
+    } catch (e) { setErr(e.message); setBusy(false); }
+  };
+  if (err && !info) return html`<div class="auth"><div class="consent"><div class="brand"><img class="logo" src="/assets/icon.svg" alt="" />Papiro</div><h1>${t('This connection can’t continue')}</h1><p class="err">${err}</p></div></div>`;
+  if (!info) return html`<div class="auth"><span class="spinner" /></div>`;
+  const ready = reach === null || reach.length > 0;
+  return html`<div class="auth"><div class="consent">
+    <div class="pair"><span class="app-badge">${info.client_name[0]}</span><span class="link-dots"><i /><i /><i /></span><img class="logo" src="/assets/icon.svg" alt="" /></div>
+    <h1>${t('{app} wants to use your Papiro', { app: info.client_name })}</h1>
+    <p class="muted">${t('Signed in as {user}. After you decide, you’ll go back to {host}.', { user: html`<b>${s.user.username}</b>`, host: html`<b>${info.redirect_host}</b>` })}</p>
+    <h5>${t('What it can do')}</h5>
+    <div class="reach">
+      <label class=${cls('choice', !write && 'on')}><input type="radio" checked=${!write} onChange=${() => setWrite(false)} /><span><b>${t('Read only')}</b><small>${t('Search, read and look at documents')}</small></span></label>
+      <label class=${cls('choice', write && 'on', !canWrite() && 'off')}><input type="radio" checked=${write} disabled=${!canWrite()} onChange=${() => setWrite(true)} /><span><b>${t('Read and add')}</b><small>${t('Also upload documents, create folders and edit tags. It can never delete.')}</small></span></label>
+    </div>
+    <h5>${t('Where')}</h5>
+    <${Reach} folders=${folders} value=${reach} onChange=${setReach} />
+    ${err && html`<p class="err">${err}</p>`}
+    <div class="row end"><button class="btn" disabled=${busy} onClick=${() => decide(false)}>${t('Deny')}</button>
+      <button class="btn primary" disabled=${busy || !ready} onClick=${() => decide(true)}>${busy ? html`<span class="spinner" />` : html`<${Icon} n="shield" />`}${t('Allow')}</button></div>
+    <small class="faint">${t('You can disconnect it at any time in Settings → Tokens & MCP.')}</small>
+  </div></div>`;
+}
+
+// ───────────── notificaciones push ─────────────
+const pushReady = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const b64key = (s) => { const b = atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - s.length % 4) % 4)); return Uint8Array.from(b, (c) => c.charCodeAt(0)); };
+async function currentSub() { if (!pushReady()) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
+async function enablePush(folders) {
+  if (await Notification.requestPermission() !== 'granted') throw new Error(t('Notifications are blocked for Papiro in this browser’s settings.'));
+  const reg = await navigator.serviceWorker.ready, { public_key } = await api('/push');
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64key(public_key) });
+  await api('/push/subscriptions', { json: { ...sub.toJSON(), folders, lang: LANG } });
+}
+function Notifications() {
+  const [st, setSt] = useState(null), [busy, setBusy] = useState(false), [reach, setReach] = useState(null), s = useStore();
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent), installed = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  const load = async () => { const sub = await currentSub().catch(() => null); const r = await api('/push' + (sub ? '?endpoint=' + encodeURIComponent(sub.endpoint) : '')); setSt(r); setReach(r.folders ?? null); };
+  useEffect(() => { load(); }, []);
+  const run = (f, msg) => async () => { setBusy(true); await attempt(f(), msg); setBusy(false); load(); };
+  const on = run(() => enablePush(reach), t('Notifications turned on'));
+  const off = run(async () => { const sub = await currentSub(); if (sub) { await api('/push/unsubscribe', { json: { endpoint: sub.endpoint } }); await sub.unsubscribe(); } }, t('Notifications turned off'));
+  const test = run(() => api('/push/test', { method: 'POST' }).then((r) => r.devices || Promise.reject(new Error(t('No device has notifications on yet')))), t('Test sent: it should arrive in a few seconds'));
+  return html`<h2>${t('Notifications')}</h2><p>${t('Get a notification when a new document arrives: by email, in the watched folder, from an AI agent, the API or another person. Not for what you upload yourself from here.')}</p>
+    ${!pushReady() ? html`<div class="health"><div class="card warn"><b>${t('Not available here')}</b>
+        <span>${ios && !installed ? t('On iPhone and iPad, add Papiro to your Home Screen first (Share → Add to Home Screen) and open it from there. Requires iOS 16.4 or later.') : t('This browser doesn’t support push notifications, or Papiro isn’t served over HTTPS.')}</span></div></div>`
+      : !st ? html`<span class="spinner" />` : html`<div class=${cls('push-card', st.subscribed && 'on')}>
+        <span class="bell"><${Icon} n="bell" /></span><div class="grow"><b>${st.subscribed ? t('On for this device') : t('Off for this device')}</b>
+          <small>${tn(st.devices, '{n} device of yours receives them', '{n} devices of yours receive them')}${st.last_status && !st.last_status.startsWith('2') ? ' · ' + t('last delivery: {status}', { status: st.last_status }) : ''}</small></div>
+        ${st.subscribed ? html`<button class="btn" disabled=${busy} onClick=${off}>${t('Turn off')}</button>` : html`<button class="btn primary" disabled=${busy || (reach !== null && !reach.length)} onClick=${on}>${busy ? html`<span class="spinner" />` : null}${t('Turn on')}</button>`}</div>
+      <h5 class="sub-h">${t('About which documents')}</h5>
+      <${Reach} folders=${s.folders} value=${reach} onChange=${setReach} />
+      <div class="row wrap" style="margin-top:12px">${st.subscribed && html`<button class="btn" disabled=${busy || (reach !== null && !reach.length)} onClick=${on}>${t('Save folders')}</button>`}
+        <button class="btn ghost" disabled=${busy || !st.devices} onClick=${test}><${Icon} n="bell" />${t('Send a test')}</button></div>`}`;
+}
+
 function Tokens() {
-  const [list, setList] = useState([]), [f, setF] = useState({ name: '', read_only: false, expires_days: '' }), [fresh, setFresh] = useState(null);
-  const load = () => api('/tokens').then(setList); useEffect(() => { load(); }, []);
-  const add = async (e) => { e.preventDefault(); const t = await attempt(api('/tokens', { json: { ...f, expires_days: f.expires_days ? Number(f.expires_days) : null } })); if (t) { setFresh(t.token); setF({ name: '', read_only: false, expires_days: '' }); load(); } };
+  const s = useStore(), blank = { name: '', read_only: false, expires_days: '', folders: null };
+  const [list, setList] = useState([]), [apps, setApps] = useState([]), [f, setF] = useState(blank), [fresh, setFresh] = useState(null);
+  const load = () => { api('/tokens').then(setList); api('/oauth/grants').then(setApps).catch(() => {}); }; useEffect(() => { load(); }, []);
+  const add = async (e) => { e.preventDefault(); const t = await attempt(api('/tokens', { json: { ...f, expires_days: f.expires_days ? Number(f.expires_days) : null } })); if (t) { setFresh(t.token); setF(blank); load(); } };
   const tok = fresh || t('ppr_YOUR_TOKEN');
+  const where = (ids) => ids ? ids.map((id) => folderOf(id)?.name).filter(Boolean).join(', ') || '—' : t('Everything');
   return html`<h2>${t('API tokens and MCP')}</h2><p>${t('A token gives scripts, automations or AI assistants access to your archive. It’s shown only once; the server stores only a hash of it.')}</p>
     <form style="display:grid;gap:8px;margin-bottom:12px" onSubmit=${add}><input class="input" placeholder=${t('What is it for? (e.g. n8n, Claude)')} value=${f.name} onInput=${(e) => setF({ ...f, name: e.target.value })} required />
       <div class="row" style="flex-wrap:wrap"><label class="row"><input type="checkbox" checked=${f.read_only} onChange=${(e) => setF({ ...f, read_only: e.target.checked })} />${t('Read-only')}</label>
         <select class="input" style="width:auto" value=${f.expires_days} onChange=${(e) => setF({ ...f, expires_days: e.target.value })}><option value="">${t('Never expires')}</option><option value="30">${t('Expires in {n} days', { n: 30 })}</option><option value="90">${t('Expires in {n} days', { n: 90 })}</option><option value="365">${t('Expires in 1 year')}</option></select>
-        <span class="grow" /><button class="btn primary">${t('Create token')}</button></div></form>
+        <span class="grow" /><button class="btn primary" disabled=${f.folders !== null && !f.folders.length}>${t('Create token')}</button></div>
+      <${Reach} folders=${s.folders} value=${f.folders} onChange=${(folders) => setF({ ...f, folders })} /></form>
     ${fresh && html`<div class="section" style="border:0;padding:0;margin-bottom:14px"><b>${t('Copy your token now; it won’t be shown again:')}</b><div class="code">${fresh}</div></div>`}
-    <table class="table"><tr><th>${t('Name')}</th><th>${t('Access')}</th><th>${t('Expires')}</th><th>${t('Last used')}</th><th></th></tr>${list.map((k) => html`<tr><td>${k.name}</td><td class="muted">${k.read_only ? t('Read-only') : t('Full')}</td><td class="muted">${k.expires ? fmtDate(k.expires) : t('Never')}</td><td class="muted">${k.last_used ? fmtDate(k.last_used) : t('Never')}</td>
+    <table class="table"><tr><th>${t('Name')}</th><th>${t('Access')}</th><th>${t('Folders')}</th><th>${t('Expires')}</th><th>${t('Last used')}</th><th></th></tr>${list.map((k) => html`<tr><td>${k.name}</td><td class="muted">${k.read_only ? t('Read-only') : t('Full')}</td><td class="muted">${where(k.folders)}</td><td class="muted">${k.expires ? fmtDate(k.expires) : t('Never')}</td><td class="muted">${k.last_used ? fmtDate(k.last_used) : t('Never')}</td>
       <td><button class="btn ghost sm danger" onClick=${() => attempt(api(`/tokens/${k.id}`, { method: 'DELETE' }), t('Token revoked')).then(load)}>${t('Revoke')}</button></td></tr>`)}</table>
-    <h2 style="margin-top:26px">${t('Connect an AI (MCP)')}</h2><p>${t('Papiro includes an MCP server so an assistant can search, read, upload and tag documents. With a read-only token, it can only search and read.')}</p>
-    <div class="code">claude mcp add --transport http papiro ${location.origin}/mcp --header "Authorization: Bearer ${tok}"</div>
+    <h2 style="margin-top:26px">${t('Connect an AI (MCP)')}</h2><p>${t('Papiro includes an MCP server so an assistant can browse folders, search, read, look at pages, upload and organize documents. It never deletes anything.')}</p>
+    <div class="steps"><div><b>${t('Claude, ChatGPT and other apps')}</b><span>${t('Add a custom connector with this URL. The app opens Papiro so you sign in and choose what it can read and in which folders. No token to copy.')}</span><div class="code">${location.origin}/mcp</div></div>
+      <div><b>Claude Code</b><span>${t('Same thing from the terminal; it opens the browser to sign in:')}</span><div class="code">claude mcp add --transport http papiro ${location.origin}/mcp</div></div>
+      <div><b>${t('With a token')}</b><span>${t('For scripts and clients without sign-in, use a token from above:')}</span><div class="code">claude mcp add --transport http papiro ${location.origin}/mcp --header "Authorization: Bearer ${tok}"</div></div></div>
     <p style="margin:14px 0 6px" class="muted">${t('Or through the REST API:')}</p>
-    <div class="code">curl -H "Authorization: Bearer ${tok}" "${location.origin}/api/documents?q=${t('invoice')}"</div>`;
+    <div class="code">curl -H "Authorization: Bearer ${tok}" "${location.origin}/api/documents?q=${t('invoice')}"</div>
+    <h2 style="margin-top:26px">${t('Connected apps')}</h2><p>${t('Apps you allowed by signing in. Disconnecting one revokes its access immediately.')}</p>
+    ${apps.length ? html`<div class="apps">${apps.map((a) => html`<div class="app-row" key=${a.id}><span class="app-badge sm">${a.name[0]}</span><div class="grow"><b>${a.name}</b>
+        <small>${a.read_only ? t('Read-only') : t('Read and add')} · ${where(a.folders)} · ${t('last used {date}', { date: a.last_used ? fmtDate(a.last_used) : t('Never').toLowerCase() })}</small></div>
+        <button class="btn ghost sm danger" onClick=${async () => await ask({ title: t('Disconnect {app}?', { app: a.name }), text: t('It will lose access right away. You can connect it again later.'), ok: t('Disconnect'), danger: true }) && attempt(api(`/oauth/grants/${a.id}`, { method: 'DELETE' }), t('Disconnected')).then(load)}>${t('Disconnect')}</button></div>`)}</div>`
+      : html`<p class="faint">${t('No apps connected yet.')}</p>`}
+`;
 }
 function Webhooks() {
   const [list, setList] = useState([]), [f, setF] = useState({ url: '', events: '*', secret: '' });
@@ -1004,13 +1329,13 @@ function ApiDocs() {
 function Settings({ tab }) {
   const [tb, setT] = useState(tab || 'tags'), s = useStore();
   useEffect(() => { document.querySelector('.modal aside .nav.on')?.scrollIntoView({ inline: 'center', block: 'nearest' }); }, [tb]);
-  const tabs = [['tags', 'tag', t('Tags')], ['correspondents', 'user', t('Correspondents')], ['doctypes', 'type', t('Types')], ['tokens', 'key', t('Tokens & MCP')], ...(isAdmin() ? [['webhooks', 'hook', 'Webhooks'], ['health', 'activity', t('Health')], ['audit', 'rows', t('Audit log')]] : []), ['api', 'code', 'API'], ['account', 'settings', t('Account')]];
+  const tabs = [['tags', 'tag', t('Tags')], ['correspondents', 'user', t('Correspondents')], ['doctypes', 'type', t('Types')], ['notifications', 'bell', t('Notifications')], ['tokens', 'key', t('Tokens & MCP')], ...(isAdmin() ? [['webhooks', 'hook', 'Webhooks'], ['health', 'activity', t('Health')], ['audit', 'rows', t('Audit log')]] : []), ['api', 'code', 'API'], ['account', 'settings', t('Account')]];
   return html`<div class="veil full" onMouseDown=${(e) => e.target === e.currentTarget && store.set({ modal: null })}><div class="modal">
     <aside><button class="btn icon ghost close" title=${t('Close')} onClick=${() => store.set({ modal: null })}><${Icon} n="back" /></button><h3>${t('Settings')}</h3>${tabs.map(([k, icon, label]) => html`<button class=${cls('nav', tb === k && 'on')} onClick=${() => setT(k)}><${Icon} n=${icon} /><span class="name">${label}</span></button>`)}</aside>
     <section class="scroll">${tb === 'tags' ? html`<${Labels} kind="tag" path="tags" title=${t('Tags')} blurb=${t('Tags marked as “Inbox” are added automatically to every new document; remove them once you’ve reviewed it.')} />`
       : tb === 'correspondents' ? html`<${Labels} kind="correspondent" path="correspondents" title=${t('Correspondents')} blurb=${t('Who issues or sends the document: companies, banks, agencies, people.')} />`
       : tb === 'doctypes' ? html`<${Labels} kind="doctype" path="doctypes" title=${t('Document types')} blurb=${t('Invoice, contract, receipt, policy… Rules assign the type on ingestion.')} />`
-      : tb === 'tokens' ? html`<${Tokens} />` : tb === 'webhooks' ? html`<${Webhooks} />` : tb === 'health' ? html`<${Health} />` : tb === 'audit' ? html`<${Audit} />` : tb === 'api' ? html`<${ApiDocs} />` : html`<${Account} />`}</section></div></div>`;
+      : tb === 'tokens' ? html`<${Tokens} />` : tb === 'notifications' ? html`<${Notifications} />` : tb === 'webhooks' ? html`<${Webhooks} />` : tb === 'health' ? html`<${Health} />` : tb === 'audit' ? html`<${Audit} />` : tb === 'api' ? html`<${ApiDocs} />` : html`<${Account} />`}</section></div></div>`;
 }
 function Help() {
   const keys = [['/', t('Search')], ['⌘K · Ctrl K', t('Command palette')], ['J · ↓', t('Next document')], ['K · ↑', t('Previous document')], ['↵ · O', t('Open preview')], ['Esc', t('Close / clear selection')],
@@ -1061,13 +1386,14 @@ function App() {
     const over = (e) => has(e) && e.preventDefault(), drop = (e) => { if (has(e)) { e.preventDefault(); depth = 0; setDrag(false); S().user && upload(e.dataTransfer.files); } };
     addEventListener('keydown', onKey); addEventListener('dragenter', enter); addEventListener('dragleave', leave); addEventListener('dragover', over); addEventListener('drop', drop);
     addEventListener('paste', (e) => S().user && !/INPUT|TEXTAREA/.test(e.target.tagName) && e.clipboardData.files.length && upload(e.clipboardData.files));
-    boot();
+    gestures(); boot();
   }, []);
   if (!s.ready) return html`<div class="auth"><span class="spinner" /></div>`;
   if (s.down) return html`<div class="auth"><div class="empty"><div><div class="big"><${Icon} n="activity" /></div><h3>${t('No connection to Papiro')}</h3>
     <div>${t('Your documents are on your server: you need a connection to see them. It retries by itself as soon as it’s back.')}</div>
     <button class="btn primary" onClick=${() => { store.set({ ready: false }); boot(); }}>${t('Retry')}</button></div></div></div>`;
   if (s.setup || !s.user) return html`<${Auth} setup=${s.setup} /><${Toasts} />`;
+  if (CONSENT) return html`<${Consent} /><${Toasts} />`;
   const [modal, tab] = (s.modal || '').split(':'), folder = here();
   return html`${!s.online && html`<div class="offline">${t('Offline: you’re seeing what was last loaded')}</div>`}
     <div class=${cls('shell', s.route.doc && 'has-doc')}>

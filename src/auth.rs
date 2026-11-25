@@ -30,17 +30,31 @@ pub struct AuthUser {
     pub read_only: bool,
     #[serde(skip)]
     pub ip: String,
+    /// Authenticated with a Bearer token (API, MCP) instead of the browser session
+    #[serde(skip)]
+    pub token: bool,
+    /// The token only reaches these folders and their subfolders (None = the whole archive)
+    #[serde(skip)]
+    pub folders: Option<Vec<i64>>,
+    /// The token belongs to an app connected with OAuth: it never acts as an administrator
+    #[serde(skip)]
+    pub oauth: bool,
 }
 
 impl AuthUser {
     pub fn new(id: i64, username: String, role: String) -> Self {
-        AuthUser { id, username, is_admin: role == "admin", role, read_only: false, ip: String::new() }
+        AuthUser { id, username, is_admin: role == "admin", role, read_only: false, ip: String::new(), token: false, folders: None, oauth: false }
     }
     pub fn can_write(&self) -> bool {
         self.role != "viewer" && !self.read_only
     }
+    /// Administrar (usuarios, webhooks, borrado definitivo) exige una sesión o un token completo:
+    /// un token limitado a carpetas o de una app conectada nunca administra.
     pub fn admin(&self) -> bool {
-        self.role == "admin" && !self.read_only
+        self.role == "admin" && !self.read_only && !self.limited()
+    }
+    pub fn limited(&self) -> bool {
+        self.folders.is_some() || self.oauth
     }
 }
 
@@ -170,16 +184,26 @@ pub fn new_session(user_id: i64, https: bool) -> Result<String, store::Error> {
     Ok(format!("{COOKIE}={token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000{}", if https { "; Secure" } else { "" }))
 }
 
-pub fn new_api_token(user_id: i64, name: &str, read_only: bool, days: Option<i64>) -> Result<(i64, String), store::Error> {
+pub fn new_api_token(user_id: i64, name: &str, read_only: bool, days: Option<i64>, folders: Option<&[i64]>) -> Result<(i64, String), store::Error> {
     let token = format!("ppr_{}", random_hex(24));
+    let folders = folders.map(|f| serde_json::to_string(f).unwrap_or_default());
     let id = db::with(|c| {
         c.execute(
-            "INSERT INTO api_tokens(user_id, name, token_hash, read_only, expires) VALUES(?,?,?,?, CASE WHEN ?5 IS NULL THEN NULL ELSE datetime('now', '+' || ?5 || ' days') END)",
-            params![user_id, name, sha(&token), read_only, days.filter(|d| *d > 0)],
+            "INSERT INTO api_tokens(user_id, name, token_hash, read_only, expires, folders) VALUES(?,?,?,?, CASE WHEN ?5 IS NULL THEN NULL ELSE datetime('now', '+' || ?5 || ' days') END, ?6)",
+            params![user_id, name, sha(&token), read_only, days.filter(|d| *d > 0), folders],
         )?;
         Ok(c.last_insert_rowid())
     })?;
     Ok((id, token))
+}
+
+/// Lee la lista de carpetas guardada como JSON (`[1,2]`). NULL o ilegible = sin límite.
+pub fn parse_folders(v: Option<String>) -> Option<Vec<i64>> {
+    v.and_then(|s| serde_json::from_str::<Vec<i64>>(&s).ok())
+}
+
+pub fn bearer(parts: &Parts) -> Option<&str> {
+    parts.headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()).and_then(|v| v.strip_prefix("Bearer ").or_else(|| v.strip_prefix("bearer "))).map(str::trim)
 }
 
 pub fn cookie_token(parts: &Parts) -> Option<&str> {
@@ -211,16 +235,19 @@ impl<S: Send + Sync> FromRequestParts<S> for AuthUser {
 
     async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Self, ApiError> {
         let ip = client_ip(parts);
-        let bearer = parts.headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()).and_then(|v| v.strip_prefix("Bearer "));
-        if let Some(token) = bearer {
-            let hash = sha(token.trim());
+        if let Some(token) = bearer(parts) {
+            let hash = sha(token);
             return db::with(|c| {
                 let u = c
                     .query_row(
-                        "SELECT u.id, u.username, u.role, t.read_only FROM api_tokens t JOIN users u ON u.id=t.user_id
+                        "SELECT u.id, u.username, u.role, t.read_only, t.folders, t.grant_id IS NOT NULL FROM api_tokens t JOIN users u ON u.id=t.user_id
                          WHERE t.token_hash=? AND (t.expires IS NULL OR t.expires > datetime('now'))",
                         [&hash],
-                        |r| Ok((AuthUser::new(r.get(0)?, r.get(1)?, r.get(2)?), r.get::<_, bool>(3)?)),
+                        |r| {
+                            let mut u = AuthUser::new(r.get(0)?, r.get(1)?, r.get(2)?);
+                            (u.folders, u.oauth, u.token) = (parse_folders(r.get(4)?), r.get(5)?, true);
+                            Ok((u, r.get::<_, bool>(3)?))
+                        },
                     )
                     .optional()?;
                 if u.is_some() {

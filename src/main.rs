@@ -8,6 +8,8 @@ mod ingest;
 mod llm;
 mod mail;
 mod mcp;
+mod oauth;
+mod push;
 mod store;
 mod suggest;
 
@@ -247,11 +249,13 @@ fn app() -> Router {
         .merge(api)
         .route("/api/openapi.json", get(move |_u: auth::AuthUser| async move { ([(header::CONTENT_TYPE, "application/json")], spec) }))
         .route("/api/health", get(health))
-        .route("/mcp", post(mcp::handle).get(|| async { StatusCode::METHOD_NOT_ALLOWED }))
+        .route("/mcp", post(mcp::handle).get(mcp::probe))
+        .merge(oauth::router())
         .fallback(asset)
         .layer(DefaultBodyLimit::max(cfg().max_upload))
         .layer(CompressionLayer::new().compress_when(tower_http::compression::predicate::SizeAbove::new(512).and(textual)))
         .layer(axum::middleware::map_response(security_headers))
+        .layer(axum::middleware::from_fn(oauth::cors_layer))
         .layer(axum::middleware::from_fn(log_requests))
 }
 
@@ -356,6 +360,7 @@ fn maintenance() {
         std::thread::sleep(Duration::from_secs(60));
         if last_clean.elapsed() > hours(1) {
             last_clean = Instant::now();
+            oauth::cleanup();
             let _ = db::with(|c| {
                 c.execute_batch(
                     "DELETE FROM sessions WHERE expires < datetime('now');

@@ -123,8 +123,9 @@ Papiro is faster partly **because it does less**: no PDF/A, no page cleaning or 
 - **Folders, tags, correspondents and types.** Nested folders, drag documents onto them, bulk edit anything.
 - **Local auto-filing.** Papiro suggests folder, type, correspondent and tags based on similar documents you've already filed, and finds expiry dates and amounts. **Nothing leaves your server**: no model, no API call. [How it works and how accurate it is →](docs/AUTO-FILING.md)
 - **Expiry tracking.** An "expiring" view with everything that's expired or due in 60 days (IDs, insurance policies, contracts), and amounts summed over any list.
-- **Phone-first and installable.** A PWA with a bottom tab bar, camera capture and the Android share sheet. Works on desktop with three panes, a command palette (`⌘K`) and keyboard shortcuts for everything.
-- **Built for scripts and AI.** REST API with an OpenAPI 3.1 spec, signed webhooks with a persistent retry queue, read-only and expiring API tokens, and an **MCP server** so Claude (or any MCP client) can search, read, upload and file documents.
+- **Phone-first and installable.** A PWA with a bottom tab bar, camera capture and the Android share sheet. Folders look and open like real folders (their latest documents peek out), pages slide in and out like a native app, swipe from the edge to go back, pull to refresh. All of it is CSS and the browser's View Transitions: no animation library, nothing extra on the server. Works on desktop with three panes, a command palette (`⌘K`) and keyboard shortcuts for everything.
+- **Push notifications.** Get notified on your phone or desktop when a new document arrives by email, the watched folder, the API, an AI agent or another person, optionally only for some folders. Standard Web Push (VAPID + aes128gcm) straight from your server: no Firebase project, no third-party account.
+- **Built for scripts and AI.** REST API with an OpenAPI 3.1 spec, signed webhooks with a persistent retry queue, read-only, expiring and folder-limited API tokens, and an **MCP server with sign-in** so Claude, ChatGPT or any MCP client can browse, search, read, look at pages, upload and file documents, only in the folders you allow.
 - **Multi-user.** Admin, editor and viewer roles, private documents, an audit log.
 - **Your documents stay safe.** See below.
 
@@ -198,6 +199,8 @@ Everything is an environment variable. No secret lives in the code or the image.
 | `PAPIRO_LLM_MODEL` | `claude-opus-5-5` | Model. `claude-haiku-5-5` is the cheap option |
 | `PAPIRO_LLM_BASE_URL` | per provider | For proxies or local models |
 | `PAPIRO_LLM_AUTO` | `false` | Classify every new document automatically |
+| `PAPIRO_PUBLIC_URL` | from the request | Public address (e.g. `https://papiro.example.com`), used by MCP sign-in |
+| `PAPIRO_PUSH_CONTACT` | project URL | `mailto:` or `https://` contact sent to push services (VAPID `sub`) |
 | `PAPIRO_IMAP_HOST`, `_PORT`, `_USER`, `_PASSWORD`, `_FOLDER`, `_INTERVAL` | — / 993 / … / `INBOX` / 300 | Email ingestion |
 
 ## Users and permissions
@@ -233,11 +236,20 @@ curl -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
 
 **Webhooks:** `POST /api/webhooks` with `{"url", "events", "secret"}`. Events: `document.created`, `document.updated`, `document.deleted`, `document.purged` (or `*`). Deliveries are queued in the database, survive restarts and are retried up to 6 times with growing back-off. With a secret, each one carries `X-Papiro-Signature: sha256=<HMAC-SHA256 of the body>`.
 
-**MCP:** a Streamable HTTP server at `/mcp`, same bearer token. Tools: `search_documents`, `get_document`, `list_metadata`, `update_document`, `upload_document`. A read-only token can only search and read.
+**MCP:** a Streamable HTTP server at `/mcp`.
+
+- **Sign in, no token to copy.** Add `https://your-domain/mcp` as a custom connector in Claude (or ChatGPT, Cursor…). The app opens Papiro, you sign in and choose: *read only* or *read and add*, and *the whole archive* or *only some folders* (with their subfolders). Papiro implements the MCP authorization spec: OAuth 2.1 with PKCE, dynamic client registration and rotating refresh tokens. Revoke an app any time in Settings → Tokens & MCP → Connected apps.
+- **Or with a token** for scripts and clients without sign-in. Tokens can also be read-only, expiring and limited to folders.
+- **Tools:** `browse_folder` (open a folder like a file browser), `search_documents`, `get_document` (metadata + OCR text), `get_document_file` (the actual PDF/image), `get_page_image` (a page rendered as an image, for the model to look at), `list_metadata`, and with write access `upload_document` (base64, text or a URL to download), `create_folder`, `update_document`. Nothing can delete. A connection limited to folders can't see, upload or move anything outside them, through MCP or the REST API.
 
 ```bash
+claude mcp add --transport http papiro https://your-domain/mcp            # opens the browser to sign in
 claude mcp add --transport http papiro https://your-domain/mcp --header "Authorization: Bearer ppr_…"
 ```
+
+Set `PAPIRO_PUBLIC_URL` if Papiro sits behind a proxy that doesn't pass `X-Forwarded-Proto`/`Host`: OAuth needs to know its public address.
+
+**Notifications:** Settings → Notifications → *Turn on*. On iPhone/iPad, add Papiro to the Home Screen first and open it from there (iOS 16.4+). Needs HTTPS.
 
 ## How it's built
 
@@ -250,6 +262,8 @@ src/suggest.rs  local auto-filing: rules and similarity
 src/api.rs      REST API with OpenAPI annotations
 src/auth.rs     users, sessions, tokens, roles, throttling
 src/mcp.rs      MCP server
+src/oauth.rs    OAuth 2.1 sign-in for MCP clients (PKCE, dynamic registration, folder-limited grants)
+src/push.rs     Web Push notifications (VAPID, RFC 8291 encryption)
 src/import.rs   Paperless-ngx importer
 src/backup.rs   backup, restore and export
 web/            UI: Preact + htm, no build step, embedded in the binary
@@ -270,7 +284,7 @@ Needs `tesseract`, poppler-utils (`pdftotext`, `pdftoppm`, `pdfinfo`, `pdfimages
 
 - Multi-page scanning from the phone camera into one PDF, with edge detection
 - Deskewing and contrast cleanup before OCR
-- Expiry reminders (calendar feed and push notifications)
+- Expiry reminders (calendar feed; push notifications for new documents are done)
 - PDF/A output
 
 ## License

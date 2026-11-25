@@ -112,7 +112,7 @@ pub fn init(path: PathBuf) -> Result<Vec<i64>, String> {
 
 /// Cada entrada se aplica una sola vez, en orden y dentro de una transacción. Nunca se edita una
 /// migración ya publicada: los cambios de esquema se añaden como una entrada nueva.
-const MIGRATIONS: &[(i64, &str)] = &[(1, V1), (2, V2), (3, V3), (4, V4)];
+const MIGRATIONS: &[(i64, &str)] = &[(1, V1), (2, V2), (3, V3), (4, V4), (5, V5)];
 
 const V1: &str = r#"
 CREATE TABLE users(
@@ -207,4 +207,25 @@ ALTER TABLE documents ADD COLUMN amount REAL;
 ALTER TABLE documents ADD COLUMN suggest TEXT NOT NULL DEFAULT '{}';
 CREATE INDEX documents_expires ON documents(expires) WHERE expires IS NOT NULL;
 CREATE VIRTUAL TABLE docs_vocab USING fts5vocab(docs_fts, 'row');
+"#;
+
+// v5: inicio de sesión OAuth 2.1 para clientes MCP (registro dinámico, códigos con PKCE y permisos
+// concedidos), tokens limitados a ciertas carpetas y suscripciones a notificaciones push.
+const V5: &str = r#"
+CREATE TABLE oauth_clients(
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, redirect_uris TEXT NOT NULL, created TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE TABLE oauth_grants(
+  id INTEGER PRIMARY KEY, client_id TEXT NOT NULL REFERENCES oauth_clients(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, read_only INTEGER NOT NULL DEFAULT 1,
+  folders TEXT, refresh_hash TEXT UNIQUE, refresh_expires TEXT,
+  created TEXT NOT NULL DEFAULT (datetime('now')), last_used TEXT);
+CREATE TABLE oauth_codes(
+  code_hash TEXT PRIMARY KEY, grant_id INTEGER NOT NULL REFERENCES oauth_grants(id) ON DELETE CASCADE,
+  redirect_uri TEXT NOT NULL, challenge TEXT NOT NULL, expires TEXT NOT NULL);
+ALTER TABLE api_tokens ADD COLUMN folders TEXT;   -- JSON: ids de carpetas permitidas (con sus subcarpetas); NULL = todo
+ALTER TABLE api_tokens ADD COLUMN grant_id INTEGER REFERENCES oauth_grants(id) ON DELETE CASCADE;
+CREATE TABLE push_subs(
+  id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT UNIQUE NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL, folders TEXT, lang TEXT NOT NULL DEFAULT 'en',
+  created TEXT NOT NULL DEFAULT (datetime('now')), last_status TEXT);
 "#;
