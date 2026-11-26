@@ -657,6 +657,15 @@ async function takeShared() {
 // ───────────── piezas comunes ─────────────
 const Tag = ({ l, onRemove }) => html`<span class="tag" style=${`--c:${l.color}`}>${l.name}${onRemove && html`<button onClick=${(e) => { e.stopPropagation(); onRemove(); }} title=${t('Remove')}>×</button>`}</span>`;
 
+/** En el móvil, menús y selectores se dibujan directamente en <body>: así ningún ancestro (una barra
+ * sticky con z-index, un transform, un filtro) puede atraparlos ni dejarlos debajo de la barra inferior.
+ * En pantalla grande siguen dentro de su botón, como desplegables anclados a él. */
+function Layer({ children }) {
+  const host = useMemo(() => (narrow.matches ? document.createElement('div') : null), []);
+  useEffect(() => { if (!host) return; document.body.appendChild(host); return () => { render(null, host); host.remove(); }; }, []);
+  useEffect(() => { if (host) render(children, host); });
+  return host ? null : children;
+}
 /** Cierra un desplegable al tocar fuera de él. */
 function usePop(onClose) {
   const ref = useRef();
@@ -681,21 +690,21 @@ function Picker({ kind, value, multi, onChange, onClose }) {
   const list = s.labels[kind].filter((l) => l.name.toLowerCase().includes(q.trim().toLowerCase()));
   const canCreate = canWrite() && q.trim() && !s.labels[kind].some((l) => l.name.toLowerCase() === q.trim().toLowerCase());
   const n = list.length + (canCreate ? 1 : 0);
-  useEffect(() => { input.current.focus(); }, []);
+  useEffect(() => { touch || input.current.focus(); }, []);
   const choose = async (i) => {
     let l = list[i];
     if (!l && canCreate) { l = await attempt(api('/' + ({ tag: 'tags', correspondent: 'correspondents', doctype: 'doctypes' })[kind], { json: { name: q.trim() } })); if (!l) return; await loadMeta(); }
     if (!l) return;
     if (multi) { sel.has(l.id) ? sel.delete(l.id) : sel.add(l.id); onChange([...sel], l); setQ(''); } else { onChange(sel.has(l.id) ? null : l.id, l); onClose(); }
   };
-  return html`<div class="pop-scrim" /><div class="pop" ref=${ref} onClick=${(e) => e.stopPropagation()}>
+  return html`<${Layer}><div class="pop-scrim" /><div class="pop" ref=${ref} onClick=${(e) => e.stopPropagation()}>
     <input ref=${input} value=${q} placeholder=${canWrite() ? t('Search or create…') : t('Search…')} onInput=${(e) => { setQ(e.target.value); setHi(0); }} onKeyDown=${listKeys(n, hi, setHi, choose, onClose)} />
     <div class="opts scroll">
       ${list.map((l, i) => html`<button class=${cls('opt', i === hi && 'hi')} onMouseEnter=${() => setHi(i)} onClick=${() => choose(i)}>
         <i class="dot" style=${`background:${l.color}`} /><span>${l.name}</span>${sel.has(l.id) && html`<span class="tick"><${Icon} n="check" /></span>`}</button>`)}
       ${canCreate && html`<button class=${cls('opt', hi === list.length && 'hi')} onMouseEnter=${() => setHi(list.length)} onClick=${() => choose(list.length)}><${Icon} n="plus" /><span>${t('Create “{name}”', { name: q.trim() })}</span></button>`}
       ${!n && html`<div class="opt muted">${t('No results')}</div>`}
-    </div></div>`;
+    </div></div><//>`;
 }
 
 /** Selector de carpeta: filtra por ruta, permite sacar el documento de su carpeta y crear una nueva. */
@@ -705,27 +714,27 @@ function FolderPicker({ value, onChange, onClose }) {
   const items = [...(value && !needle ? [{ id: null, none: true }] : []), ...list];
   const canCreate = needle && !q.includes('/') && !s.folders.some((f) => !f.parent_id && f.name.toLowerCase() === needle);
   const n = items.length + (canCreate ? 1 : 0);
-  useEffect(() => { input.current.focus(); }, []);
+  useEffect(() => { touch || input.current.focus(); }, []);
   const choose = async (i) => {
     let f = items[i];
     if (!f && canCreate) { f = await attempt(api('/folders', { json: { name: q.trim() } })); if (!f) return; await loadMeta(); }
     if (f) { onChange(f.id, f); onClose(); }
   };
-  return html`<div class="pop-scrim" /><div class="pop" ref=${ref} onClick=${(e) => e.stopPropagation()}>
+  return html`<${Layer}><div class="pop-scrim" /><div class="pop" ref=${ref} onClick=${(e) => e.stopPropagation()}>
     <input ref=${input} value=${q} placeholder=${t('Search or create a folder…')} onInput=${(e) => { setQ(e.target.value); setHi(0); }} onKeyDown=${listKeys(n, hi, setHi, choose, onClose)} />
     <div class="opts scroll">
       ${items.map((f, i) => html`<button class=${cls('opt fold', i === hi && 'hi')} onMouseEnter=${() => setHi(i)} onClick=${() => choose(i)}>
         ${f.none ? html`<${Icon} n="x" /><span>${t('No folder')}</span>` : html`<${Icon} n="folder" /><span>${f.path.replaceAll('/', ' › ')}</span>${f.id === value && html`<span class="tick"><${Icon} n="check" /></span>`}`}</button>`)}
       ${canCreate && html`<button class=${cls('opt', hi === items.length && 'hi')} onMouseEnter=${() => setHi(items.length)} onClick=${() => choose(items.length)}><${Icon} n="plus" /><span>${t('Create folder “{name}”', { name: q.trim() })}</span></button>`}
       ${!n && html`<div class="opt muted">${t('No folders yet: type a name to create the first one')}</div>`}
-    </div></div>`;
+    </div></div><//>`;
 }
 
 /** Menú de acciones: [icono, texto, acción, peligrosa]. */
 function Menu({ items, onClose, right }) {
   const ref = usePop(onClose);
-  return html`<div class="pop-scrim" /><div class=${cls('pop menu', right && 'right')} ref=${ref} onClick=${(e) => e.stopPropagation()}>${items.filter(Boolean).map(([icon, label, fn, danger]) =>
-    html`<button class=${cls('opt', danger && 'danger')} onClick=${() => { onClose(); fn(); }}><${Icon} n=${icon} /><span>${label}</span></button>`)}</div>`;
+  return html`<${Layer}><div class="pop-scrim" /><div class=${cls('pop menu', right && 'right')} ref=${ref} onClick=${(e) => e.stopPropagation()}>${items.filter(Boolean).map(([icon, label, fn, danger]) =>
+    html`<button class=${cls('opt', danger && 'danger')} onClick=${() => { onClose(); fn(); }}><${Icon} n=${icon} /><span>${label}</span></button>`)}</div><//>`;
 }
 /** Botón que abre un menú. */
 function MenuButton({ items, icon = 'dots', title, right, cls: c = 'btn icon ghost sm', children }) {
