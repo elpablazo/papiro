@@ -181,6 +181,9 @@ const ES = {
   'Drop to add to Papiro': 'Suelta para añadir a Papiro', 'Drop to add to “{name}”': 'Suelta para añadir a «{name}»',
   'PDF, images, Word, Excel, PowerPoint, text': 'PDF, imágenes, Word, Excel, PowerPoint, texto',
   // scanner, inbox review, sharing, offline, smart folders, reminders
+  'Share a link': 'Compartir un enlace',
+  'Share': 'Compartir',
+  'Send…': 'Enviar…',
   'Undo': 'Deshacer',
   'Undone': 'Deshecho',
   'Smart folders': 'Carpetas inteligentes',
@@ -355,6 +358,7 @@ const ICONS = {
   lock: 'M7 11V7a5 5 0 0 1 10 0v4M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z', cal: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
   install: 'M12 3v12M7 10l5 5 5-5M5 21h14', clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2', cash: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
   restore: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5', logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9', activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  share: 'M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13',
   bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0', plug: 'M12 22v-5M9 8V2M15 8V2M18 8v5a6 6 0 0 1-12 0V8z',
   shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
   globe: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
@@ -370,7 +374,26 @@ function dueLabel(d) {
   const n = Math.round((new Date(d + 'T12:00') - new Date(new Date().toDateString() + ' 12:00')) / 864e5);
   return n < 0 ? ['bad', t('Overdue')] : n === 0 ? ['bad', t('Due today')] : n <= 60 ? ['warn', tn(n, 'Due in {n} day', 'Due in {n} days')] : null;
 }
+/** Un campo de texto que crece con su contenido (Safari no entiende field-sizing). */
+const autosize = (el) => {
+  if (!el) return;
+  const fit = () => { if (!el.offsetWidth) return; el.style.height = 'auto'; el.style.height = el.scrollHeight + 2 + 'px'; };
+  // Se vuelve a medir cuando aparece (la pestaña Detalles estaba oculta) o cambia de ancho.
+  if (!el._fit) { let w = 0; el._fit = new ResizeObserver(() => { if (el.offsetWidth !== w) { w = el.offsetWidth; fit(); } }); el._fit.observe(el); }
+  fit();
+};
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+// iOS, app instalada con la barra de estado translúcida: el viewport mide lo que mide la pantalla menos
+// la barra de estado, así que todo lo fijado abajo quedaba flotando con una franja vacía debajo. Se mide
+// esa diferencia (--gap) y la app se estira hasta el borde real.
+function fitScreen() {
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  const full = innerWidth > innerHeight ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+  const gap = standalone && /iP(hone|ad|od)/.test(navigator.userAgent) ? full - innerHeight : 0;
+  document.documentElement.style.setProperty('--gap', `${gap > 0 && gap < 100 ? gap : 0}px`);
+}
+fitScreen(); addEventListener('resize', fitScreen); addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
 
 // ───────────── estado global ─────────────
 const parseHash = () => {
@@ -801,8 +824,11 @@ function usePop(onClose) {
   const ref = useRef();
   useEffect(() => {
     const out = (e) => ref.current && !ref.current.contains(e.target) && onClose();
+    // Esc cierra primero el menú abierto (y no la pantalla que hay debajo)
+    const esc = (e) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
     const t = setTimeout(() => addEventListener('pointerdown', out));
-    return () => { clearTimeout(t); removeEventListener('pointerdown', out); };
+    addEventListener('keydown', esc, true);
+    return () => { clearTimeout(t); removeEventListener('pointerdown', out); removeEventListener('keydown', esc, true); };
   }, []);
   return ref;
 }
@@ -1159,7 +1185,6 @@ function Detail({ id }) {
   const file = `/api/documents/${id}/file`, view = tab === 'meta' ? 'doc' : tab;
   const files = [pdf && ['ext', t('Open the PDF in a new tab'), () => window.open(file, '_blank')], ['down', t('Download the original ({size})', { size: fmtSize(d.size) }), () => { location.href = `${file}?variant=original&download=true`; }],
     d.has_archive && ['down', t('Download the PDF with text (OCR)'), () => { location.href = `${file}?variant=archive&download=true`; }],
-    !ro && !trashed && ['globe', t('Share a link…'), () => store.set({ shareDoc: d })],
     ['install', isOffline(id) ? t('Remove from this device') : t('Keep offline on this device'), () => keepOffline(d, !isOffline(id))]];
   return html`<section class=${`detail tab-${tab}`}>
     <div class="viewer">
@@ -1167,12 +1192,14 @@ function Detail({ id }) {
         <div class=${cls('seg', !pdf && 'only-narrow')}>${pdf && html`<button class=${tab === 'doc' ? 'on' : ''} onClick=${() => setTab('doc')}>${t('Pages')}</button>`}
           <button class=${tab === 'text' || (!pdf && tab === 'doc') ? 'on' : ''} onClick=${() => setTab(pdf ? 'text' : 'doc')}>${t('Text')}</button>
           <button class=${cls('only-narrow', tab === 'meta' && 'on')} onClick=${() => setTab('meta')}>${t('Details')}</button></div>
-        <span class="grow" /><${MenuButton} items=${files} icon="down" title=${t('Open or download')} right cls="btn ghost sm"><span class="only-wide">${t('Download')}</span><//></div>
+        <span class="grow" />
+        ${!ro && !trashed && html`<button class="btn ghost sm bar-btn" title=${t('Share a link')} onClick=${() => store.set({ shareDoc: d })}><${Icon} n="share" /><span class="only-wide">${t('Share')}</span></button>`}
+        <${MenuButton} items=${files} icon="down" title=${t('Download')} right cls="btn ghost sm bar-btn"><span class="only-wide">${t('Download')}</span><//></div>
       ${view === 'text' || !pdf ? html`<div class="textview scroll">${d.content ? text() : html`<span class="muted">${t('This document has no extracted text.')}</span>`}</div>`
         : html`<${Pages} id=${id} n=${d.pages} key=${id} />`}
     </div>
     <div class="meta scroll">
-      <textarea class="title-input" rows="1" key=${id} defaultValue=${d.title} title=${t('Title (tap to edit)')} readonly=${ro} enterkeyhint="done"
+      <textarea class="title-input" rows="1" key=${id} defaultValue=${d.title} ref=${autosize} onInput=${(e) => autosize(e.target)} title=${t('Title (tap to edit)')} readonly=${ro} enterkeyhint="done"
         onKeyDown=${(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }} onBlur=${(e) => !ro && e.target.value.trim() && e.target.value !== d.title && save({ title: e.target.value.trim() })} />
       ${trashed && html`<div class="row"><span class="chip on">${t('In the trash')}</span>${!ro && html`<button class="btn sm" onClick=${async () => { await attempt(api(`/documents/${id}/restore`, { method: 'POST' }), t('Restored')); load(); refresh(); }}><${Icon} n="restore" />${t('Restore')}</button>`}</div>`}
       ${inbox.length > 0 && !trashed && !ro && html`<button class="btn primary" onClick=${() => save({ remove_tags: inbox })}><${Icon} n="check" />${t('Mark as reviewed')} <kbd class="only-wide" style="background:none;border-color:currentColor;color:inherit;opacity:.7">E</kbd></button>`}
@@ -1393,10 +1420,11 @@ function Tokens() {
     <form style="display:grid;gap:8px;margin-bottom:12px" onSubmit=${add}><input class="input" placeholder=${t('What is it for? (e.g. n8n, Claude)')} value=${f.name} onInput=${(e) => setF({ ...f, name: e.target.value })} required />
       <div class="row" style="flex-wrap:wrap"><label class="row"><input type="checkbox" checked=${f.read_only} onChange=${(e) => setF({ ...f, read_only: e.target.checked })} />${t('Read-only')}</label>
         <select class="input" style="width:auto" value=${f.expires_days} onChange=${(e) => setF({ ...f, expires_days: e.target.value })}><option value="">${t('Never expires')}</option><option value="30">${t('Expires in {n} days', { n: 30 })}</option><option value="90">${t('Expires in {n} days', { n: 90 })}</option><option value="365">${t('Expires in 1 year')}</option></select>
-        <span class="grow" /><button class="btn primary" disabled=${f.folders !== null && !f.folders.length}>${t('Create token')}</button></div>
-      <${Reach} folders=${s.folders} value=${f.folders} onChange=${(folders) => setF({ ...f, folders })} /></form>
+</div>
+      <${Reach} folders=${s.folders} value=${f.folders} onChange=${(folders) => setF({ ...f, folders })} />
+      <button class="btn primary" style="justify-self:start" disabled=${f.folders !== null && !f.folders.length}>${t('Create token')}</button></form>
     ${fresh && html`<div class="section" style="border:0;padding:0;margin-bottom:14px"><b>${t('Copy your token now; it won’t be shown again:')}</b><div class="code">${fresh}</div></div>`}
-    <table class="table"><tr><th>${t('Name')}</th><th>${t('Access')}</th><th>${t('Folders')}</th><th>${t('Expires')}</th><th>${t('Last used')}</th><th></th></tr>${list.map((k) => html`<tr><td>${k.name}</td><td class="muted">${k.read_only ? t('Read-only') : t('Full')}</td><td class="muted">${where(k.folders)}</td><td class="muted">${k.expires ? fmtDate(k.expires) : t('Never')}</td><td class="muted">${k.last_used ? fmtDate(k.last_used) : t('Never')}</td>
+    <table class="table cards"><tr><th>${t('Name')}</th><th>${t('Access')}</th><th>${t('Folders')}</th><th>${t('Expires')}</th><th>${t('Last used')}</th><th></th></tr>${list.map((k) => html`<tr><td>${k.name}</td><td class="muted">${k.read_only ? t('Read-only') : t('Full')}</td><td class="muted">${where(k.folders)}</td><td class="muted">${k.expires ? fmtDate(k.expires) : t('Never')}</td><td class="muted">${k.last_used ? fmtDate(k.last_used) : t('Never')}</td>
       <td><button class="btn ghost sm danger" onClick=${() => attempt(api(`/tokens/${k.id}`, { method: 'DELETE' }), t('Token revoked')).then(load)}>${t('Revoke')}</button></td></tr>`)}</table>
     <h2 style="margin-top:26px">${t('Connect an AI (MCP)')}</h2><p>${t('Papiro includes an MCP server so an assistant can browse folders, search, read, look at pages, upload and organize documents. It never deletes anything.')}</p>
     <div class="steps"><div><b>${t('Claude, ChatGPT and other apps')}</b><span>${t('Add a custom connector with this URL. The app opens Papiro so you sign in and choose what it can read and in which folders. No token to copy.')}</span><div class="code">${location.origin}/mcp</div></div>
@@ -1419,7 +1447,7 @@ function Webhooks() {
     <form style="display:grid;gap:8px;margin-bottom:14px" onSubmit=${add}><input class="input" type="url" placeholder=${t('https://your-server/webhook')} value=${f.url} onInput=${(e) => setF({ ...f, url: e.target.value })} required />
       <div class="row"><select class="input" value=${f.events} onChange=${(e) => setF({ ...f, events: e.target.value })}><option value="*">${t('All events')}</option><option value="document.created">${t('New documents only')}</option><option value="document.created,document.updated">${t('New and changed')}</option></select>
         <input class="input" placeholder=${t('Signing secret (optional)')} value=${f.secret} onInput=${(e) => setF({ ...f, secret: e.target.value })} /><button class="btn primary">${t('Add')}</button></div></form>
-    <table class="table"><tr><th>URL</th><th>${t('Events')}</th><th>${t('Last delivery')}</th><th></th></tr>${list.map((w) => html`<tr><td style="overflow-wrap:anywhere">${w.url}${w.signed && html` <span class="chip">${t('signed')}</span>`}</td><td class="muted">${w.events === '*' ? t('all') : w.events}</td>
+    <table class="table cards"><tr><th>URL</th><th>${t('Events')}</th><th>${t('Last delivery')}</th><th></th></tr>${list.map((w) => html`<tr><td style="overflow-wrap:anywhere">${w.url}${w.signed && html` <span class="chip">${t('signed')}</span>`}</td><td class="muted">${w.events === '*' ? t('all') : w.events}</td>
       <td class="muted">${w.last_status ? `${w.last_status} · ${fmtDate(w.last_at)}` : '—'}</td>
       <td class="row"><button class="btn ghost sm" onClick=${() => attempt(api(`/webhooks/${w.id}/test`, { method: 'POST' })).then((r) => { r && toast(t('Response: {status}', { status: r.status }), r.status.startsWith('2') ? 'ok' : 'bad'); load(); })}>${t('Test')}</button>
         <button class="btn icon ghost sm" onClick=${() => attempt(api(`/webhooks/${w.id}`, { method: 'DELETE' })).then(load)}><${Icon} n="trash" /></button></td></tr>`)}</table>`;
@@ -1439,7 +1467,7 @@ function Account() {
       <form class="row" style="margin-bottom:12px;flex-wrap:wrap" onSubmit=${add}><input class="input" style="flex:1;min-width:120px" placeholder=${t('Username')} value=${nu.username} onInput=${(e) => setNu({ ...nu, username: e.target.value })} required />
         <input class="input" style="flex:1;min-width:120px" type="password" placeholder=${t('Password')} minlength="8" value=${nu.password} onInput=${(e) => setNu({ ...nu, password: e.target.value })} required />
         <select class="input" style="width:auto" value=${nu.role} onChange=${(e) => setNu({ ...nu, role: e.target.value })}>${ROLES.map(([v, n]) => html`<option value=${v}>${n}</option>`)}</select><button class="btn primary">${t('Add')}</button></form>
-      <table class="table">${users.map((u) => html`<tr><td>${u.username}</td>
+      <table class="table cards">${users.map((u) => html`<tr><td>${u.username}</td>
         <td><select class="input" style="width:auto" value=${u.role} disabled=${u.id === s.user.id} onChange=${(e) => attempt(api(`/users/${u.id}`, { method: 'PATCH', json: { role: e.target.value } }), t('Role updated')).then(load)}>${ROLES.map(([v, n]) => html`<option value=${v}>${n}</option>`)}</select></td>
         <td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onClick=${() => reset(u)}>${t('Reset password')}</button>
           ${u.id !== s.user.id && html`<button class="btn ghost sm danger" onClick=${async () => await ask({ title: t('Delete the user {user}?', { user: u.username }), text: t('Their documents are kept.'), ok: t('Delete user'), danger: true }) && attempt(api(`/users/${u.id}`, { method: 'DELETE' })).then(load)}>${t('Delete')}</button>`}</td></tr>`)}</table>`}`;
@@ -1463,13 +1491,13 @@ function Health() {
       <div class=${cls('card', st.failed_jobs ? 'warn' : 'good')}><b>${t('Ingestion')}</b><span>${t(st.failed_jobs ? '{queued} queued · {failed} failed (their files were kept: review them in Activity) · {hooks} pending webhook deliveries.' : '{queued} queued · {failed} failed · {hooks} pending webhook deliveries.', { queued: st.queued, failed: st.failed_jobs, hooks: st.pending_webhooks })}</span></div>
     </div>
     ${v?.problems.length > 0 && html`<h2 style="margin-top:22px">${t('Documents with problems')}</h2><p>${t('If you still have the file, upload it again: Papiro recognizes it’s the same one and replaces the damaged copy.')}</p>
-      <table class="table">${v.problems.map((p) => html`<tr><td><a href="#" onClick=${(e) => { e.preventDefault(); store.set({ modal: null }); nav({ doc: p.document_id }); }}>${p.title}</a></td><td class="err">${srv(p.problem)}</td></tr>`)}</table>`}`;
+      <table class="table cards">${v.problems.map((p) => html`<tr><td><a href="#" onClick=${(e) => { e.preventDefault(); store.set({ modal: null }); nav({ doc: p.document_id }); }}>${p.title}</a></td><td class="err">${srv(p.problem)}</td></tr>`)}</table>`}`;
 }
 function Audit() {
   const [rows, setRows] = useState(null); useEffect(() => { api('/audit?limit=200').then(setRows); }, []);
   if (!rows) return html`<span class="spinner" />`;
   return html`<h2>${t('Audit log')}</h2><p>${t('Who did what and from where: sign-ins, uploads, edits, deletions and admin changes.')}</p>
-    <table class="table"><tr><th>${t('When')}</th><th>${t('Who')}</th><th>${t('What')}</th><th>${t('Target')}</th><th>IP</th></tr>
+    <table class="table cards"><tr><th>${t('When')}</th><th>${t('Who')}</th><th>${t('What')}</th><th>${t('Target')}</th><th>IP</th></tr>
     ${rows.map((r) => html`<tr><td class="muted" style="white-space:nowrap">${new Date(r.at.replace(' ', 'T') + 'Z').toLocaleString(LOCALE, { dateStyle: 'short', timeStyle: 'short' })}</td><td>${r.username}</td><td>${srv(r.action)}</td>
       <td class="muted" style="overflow-wrap:anywhere">${r.target}${r.detail ? ` — ${r.detail}` : ''}</td><td class="faint">${r.ip}</td></tr>`)}</table>`;
 }
@@ -1816,12 +1844,12 @@ function ShareSheet({ d, onClose }) {
   const copy = async () => { try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { toast(url, 'warn', 9000); } };
   const share = () => navigator.share?.({ title: d.title, url }).catch(() => {});
   return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}><div class="sheet"><div class="grabber" />
-    <h3>${t('Share “{title}”', { title: d.title })}</h3>
+    <h3 class="sheet-title"><small>${t('Share a link')}</small><span class="clamp">${d.title}</span></h3>
     <p class="hint" style="padding-top:0">${t('Anyone with the link can view and download this document, without an account, until it expires.')}</p>
-    ${url ? html`<div class="code share-url">${url}</div><div class="row wrap">${'share' in navigator && html`<button class="btn primary" onClick=${share}><${Icon} n="ext" />${t('Share…')}</button>`}
+    ${url ? html`<div class="code share-url">${url}</div><div class="row wrap">${'share' in navigator && html`<button class="btn primary" onClick=${share}><${Icon} n="share" />${t('Send…')}</button>`}
         <button class=${cls('btn', !('share' in navigator) && 'primary')} onClick=${copy}><${Icon} n="check" />${t('Copy link')}</button><button class="btn ghost" onClick=${() => setUrl(null)}>${t('Another link')}</button></div>`
       : html`<div class="seg" style="justify-self:start">${[[1, t('1 day')], [7, t('7 days')], [30, t('30 days')]].map(([v, l]) => html`<button class=${days === v ? 'on' : ''} onClick=${() => setDays(v)}>${l}</button>`)}</div>
-        <button class="btn primary big" disabled=${busy} onClick=${create}>${busy ? html`<span class="spinner" />` : html`<${Icon} n="globe" />`}${t('Create link')}</button>`}
+        <button class="btn primary big" disabled=${busy} onClick=${create}>${busy ? html`<span class="spinner" />` : html`<${Icon} n="share" />`}${t('Create link')}</button>`}
     ${list.length > 0 && html`<h5 class="sub-h" style="margin:10px 6px 2px">${t('Active links')}</h5>${list.map((x) => html`<div class="app-row" key=${x.id}><div class="grow"><b>${t('Expires {date}', { date: fmtDate(x.expires) })}</b>
         <small>${tn(x.views, 'Opened {n} time', 'Opened {n} times')} · ${t('created {date}', { date: fmtDate(x.created) })}</small></div>
         <button class="btn ghost sm danger" onClick=${() => attempt(api(`/shares/${x.id}`, { method: 'DELETE' }), t('Link revoked')).then(load)}>${t('Revoke')}</button></div>`)}`}

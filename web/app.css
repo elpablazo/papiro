@@ -7,7 +7,7 @@
   --shadow: 0 1px 2px rgb(40 30 20 / .05), 0 10px 32px rgb(40 30 20 / .12); --lift: 0 1px 2px rgb(40 30 20 / .06), 0 2px 8px rgb(40 30 20 / .05);
   --fold-back: #e3ad55; --fold-1: #f8d995; --fold-2: #f0c069; --fold-ink: #4a2f07; --fold-sub: #7d5719; --paper: #fffdf9;
   --ease: cubic-bezier(.32, .72, 0, 1); --spring: cubic-bezier(.3, 1.45, .5, 1);
-  --side: 264px; --tabbar: 60px;
+  --side: 264px; --tabbar: 60px; --gap: 0px;
   --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -651,3 +651,47 @@ html[data-motion=fade]::view-transition-new(page) { animation: .3s var(--ease) b
 }
 @media (hover: none) { .doc:hover { background: none; } .doc.cur { background: none; box-shadow: none; } .doc.open { background: var(--sel); } .doc.picked { background: var(--accent-bg); } .nav .more { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ───────── iOS instalada: sin franja vacía abajo (ver fitScreen en app.js) ───────── */
+html { background: var(--bg); }
+.shell { height: calc(100dvh + var(--gap)); }
+.tabbar, .scanner, .review, .offline-doc, .veil, .scrim, .pop-scrim, .drop, .side { bottom: calc(0px - var(--gap)); }
+.bulk, .toasts { translate: 0 var(--gap); }
+@media (max-width: 760px) {
+  .detail { bottom: calc(0px - var(--gap)); }
+  .pop.menu { translate: 0 var(--gap); }
+}
+
+/* ───────── nada se sale de la pantalla: títulos y nombres de archivo larguísimos se parten ───────── */
+.sheet, .jobs, .dialog, .consent, .palette, .pop { grid-template-columns: minmax(0, 1fr); max-width: 100%; overflow-x: hidden; }
+.sheet > *, .dialog > *, .consent > * { min-width: 0; }
+.sheet h3, .dialog h3, .dialog p, .sheet p, .consent h1, .consent p, .meta .title-input, .facts, .rinfo b, .app-row b, .app-row small, .job .name,
+.list-head h1, .doc .title, .summary, .note, .code, .scan-bar b, .navbar .mini-title { overflow-wrap: anywhere; min-width: 0; }
+.toast span, .push-card b, .push-card small, .choice b, .choice small { overflow-wrap: break-word; }
+/* tablas: cada columna conserva un ancho legible; si no caben, la tabla se desliza dentro de su caja */
+.table td, .table th { min-width: 72px; } .table td:first-child { min-width: 96px; }
+/* tarjeta de notificaciones: el texto nunca se aprieta; el botón baja a su línea si hace falta */
+.push-card .grow { min-width: 170px; } .push-card .btn { margin-left: auto; }
+.sheet-title { display: grid; gap: 3px; }
+.sheet-title small { font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.meta .title-input { max-height: none; overflow: hidden; }
+.bar-btn { gap: 6px; }
+@media (max-width: 760px) { .bar-btn { width: 40px; padding: 0; } }
+/* teléfonos angostos: las pestañas del documento bajan a su propia fila, a todo lo ancho */
+@media (max-width: 420px) {
+  .viewer-bar { flex-wrap: wrap; row-gap: 8px; }
+  .viewer-bar .seg { order: 5; flex: 1 0 100%; display: flex; }
+  .viewer-bar .seg button { flex: 1; padding: 0 6px; }
+}
+
+/* tablas de Ajustes en el teléfono: una tarjeta por fila, con su encabezado como etiqueta pequeña */
+@media (max-width: 760px) {
+  .table.cards, .table.cards tbody, .table.cards tr, .table.cards td { display: block; min-width: 0; }
+  .table.cards tr:has(th) { display: none; }
+  .table.cards tr { padding: 10px 2px; border-bottom: 1px solid var(--line); }
+  .table.cards td { border: 0; padding: 2px 0; overflow-wrap: anywhere; }
+  .table.cards td:first-child { font-weight: 600; color: var(--text); }
+  .table.cards td:empty { display: none; }
+  .table.cards td:last-child:has(.btn) { padding-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+}
