@@ -71,6 +71,7 @@ pub struct ErrorBody {
         (name = "queue", description = "Ingest status and live events"),
         (name = "webhooks", description = "Signed HTTP notifications when a document changes"),
         (name = "notifications", description = "Push notifications to the browser or the installed app"),
+        (name = "sharing", description = "Temporary links to a document, smart folders and the due-date calendar"),
         (name = "account", description = "Session, users and API tokens"),
         (name = "system", description = "Health, integrity and audit log (administrators)")
     ),
@@ -130,6 +131,11 @@ pub fn router() -> (axum::Router, utoipa::openapi::OpenApi) {
         .routes(routes!(auth_password))
         .routes(routes!(list_tokens, create_token))
         .routes(routes!(delete_token))
+        .routes(routes!(list_views, create_view))
+        .routes(routes!(delete_view))
+        .routes(routes!(list_shares, create_share))
+        .routes(routes!(delete_share))
+        .routes(routes!(create_calendar, delete_calendar))
         .routes(routes!(push_status))
         .routes(routes!(push_subscribe))
         .routes(routes!(push_unsubscribe))
@@ -428,7 +434,7 @@ struct FileQuery {
     download: Option<bool>,
 }
 
-async fn serve_file(path: std::path::PathBuf, mime: &str, disposition: Option<String>, req: Request) -> Res<Response> {
+pub(crate) async fn serve_file(path: std::path::PathBuf, mime: &str, disposition: Option<String>, req: Request) -> Res<Response> {
     let mut res = tower_http::services::ServeFile::new(path).oneshot(req).await.map_err(bad)?.map(axum::body::Body::new);
     if res.status() == StatusCode::NOT_FOUND {
         return Err(ApiError(StatusCode::NOT_FOUND, "this document's file is not on disk; check Settings → Health".into()));
@@ -1161,6 +1167,10 @@ struct PushStatus {
     folders: Option<Vec<i64>>,
     /// Result of the last delivery to this device (HTTP status of the push service)
     last_status: Option<String>,
+    /// This device also gets the daily due-date reminder
+    reminders: bool,
+    /// A calendar feed exists for your due dates
+    calendar: bool,
 }
 
 /// Notification status
@@ -1172,7 +1182,9 @@ async fn push_status(u: AuthUser, Query(q): Query<PushQuery>) -> Res<Json<PushSt
         devices: crate::push::count(u.id),
         subscribed: this.is_some(),
         last_status: this.as_ref().map(|t| t.1.clone()).filter(|s| !s.is_empty()),
+        reminders: this.as_ref().is_none_or(|t| t.2),
         folders: this.and_then(|t| t.0),
+        calendar: db::with(|c| c.query_row("SELECT calendar_hash IS NOT NULL FROM users WHERE id=?", [u.id], |r| r.get(0))).unwrap_or(false),
     }))
 }
 
@@ -1191,6 +1203,8 @@ struct PushSubscribe {
     folders: Option<Vec<i64>>,
     /// Language of the notifications (`en` or `es`)
     lang: Option<String>,
+    /// Daily reminder of documents due today, tomorrow, in 7 and in 30 days (default true)
+    reminders: Option<bool>,
 }
 
 /// Subscribe this device to notifications
@@ -1203,7 +1217,7 @@ async fn push_subscribe(u: AuthUser, Json(p): Json<PushSubscribe>) -> Res<Status
         return Err(forbidden("a token limited to some folders or apps cannot do this"));
     }
     let folders = p.folders.filter(|f| !f.is_empty());
-    let sub = crate::push::Subscription { endpoint: p.endpoint, p256dh: p.keys.p256dh, auth: p.keys.auth, folders, lang: p.lang.unwrap_or_else(|| "en".into()) };
+    let sub = crate::push::Subscription { endpoint: p.endpoint, p256dh: p.keys.p256dh, auth: p.keys.auth, folders, lang: p.lang.unwrap_or_else(|| "en".into()), reminders: p.reminders.unwrap_or(true) };
     tokio::task::spawn_blocking(move || crate::push::subscribe(u.id, &sub)).await.map_err(bad)??;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -1226,8 +1240,181 @@ struct PushTest {
     devices: usize,
 }
 
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+struct PushTestQuery {
+    /// Send today's due-date reminder now instead of a test message
+    reminders: Option<bool>,
+}
+
 /// Send a test notification to all your devices
-#[utoipa::path(post, path = "/api/push/test", tag = "notifications", responses((status = 200, body = PushTest)))]
-async fn push_test(u: AuthUser) -> Res<Json<PushTest>> {
+#[utoipa::path(post, path = "/api/push/test", tag = "notifications", params(PushTestQuery), responses((status = 200, body = PushTest)))]
+async fn push_test(u: AuthUser, Query(q): Query<PushTestQuery>) -> Res<Json<PushTest>> {
+    if q.reminders == Some(true) {
+        let today: String = db::with(|c| c.query_row("SELECT date('now','localtime')", [], |r| r.get(0))).map_err(store::Error::from)?;
+        return Ok(Json(PushTest { devices: tokio::task::spawn_blocking(move || crate::push::send_reminders(&today, Some(u.id))).await.map_err(bad)? }));
+    }
     Ok(Json(PushTest { devices: crate::push::test(u.id) }))
+}
+
+// ───────────────────────── vistas guardadas (carpetas inteligentes) ─────────────────────────
+
+#[derive(Serialize, ToSchema)]
+struct View {
+    id: i64,
+    name: String,
+    /// Search parameters, same as `GET /api/documents` (e.g. `q=electricity&tags=3`)
+    query: String,
+    /// The interface's own route for this view
+    route: String,
+    /// Documents that match right now
+    count: i64,
+}
+
+#[derive(Deserialize, ToSchema)]
+struct ViewInput {
+    name: String,
+    query: String,
+    #[serde(default)]
+    route: String,
+}
+
+fn view_count(u: &AuthUser, query: &str) -> i64 {
+    let uri: axum::http::Uri = match format!("/?{query}").parse() {
+        Ok(u) => u,
+        Err(_) => return 0,
+    };
+    Query::<SearchParams>::try_from_uri(&uri).ok().and_then(|Query(mut p)| {
+        p.limit = Some(1);
+        store::search(&p, u).ok()
+    }).map_or(0, |r| r.total)
+}
+
+/// Your saved views, with how many documents each one matches now
+#[utoipa::path(get, path = "/api/views", tag = "sharing", responses((status = 200, body = Vec<View>)))]
+async fn list_views(u: AuthUser) -> Res<Json<Vec<View>>> {
+    let rows: Vec<(i64, String, String, String)> = db::with(|c| {
+        c.prepare_cached("SELECT id, name, query, route FROM views WHERE user_id=? ORDER BY name COLLATE NOCASE")?
+            .query_map([u.id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+            .collect()
+    }).map_err(store::Error::from)?;
+    Ok(Json(rows.into_iter().map(|(id, name, query, route)| View { count: view_count(&u, &query), id, name, query, route }).collect()))
+}
+
+/// Save a search as a view
+#[utoipa::path(post, path = "/api/views", tag = "sharing", request_body = ViewInput, responses((status = 201, body = View), (status = 400, body = ErrorBody)))]
+async fn create_view(u: AuthUser, Json(v): Json<ViewInput>) -> Res<(StatusCode, Json<View>)> {
+    let name: String = v.name.trim().chars().take(80).collect();
+    if name.is_empty() || v.query.len() > 2000 || v.route.len() > 2000 {
+        return Err(bad("the view needs a name"));
+    }
+    let id = db::with(|c| {
+        c.execute("INSERT INTO views(user_id, name, query, route) VALUES(?,?,?,?)", params![u.id, name, v.query, v.route])?;
+        Ok(c.last_insert_rowid())
+    }).map_err(store::Error::from)?;
+    Ok((StatusCode::CREATED, Json(View { count: view_count(&u, &v.query), id, name, query: v.query, route: v.route })))
+}
+
+/// Delete a saved view
+#[utoipa::path(delete, path = "/api/views/{id}", tag = "sharing", params(("id" = i64, Path,)), responses((status = 204)))]
+async fn delete_view(u: AuthUser, Path(id): Path<i64>) -> Res<StatusCode> {
+    db::with(|c| c.execute("DELETE FROM views WHERE id=? AND user_id=?", [id, u.id])).map_err(store::Error::from)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ───────────────────────── enlaces para compartir ─────────────────────────
+
+#[derive(Serialize, ToSchema)]
+struct Share {
+    id: i64,
+    created: String,
+    expires: String,
+    /// Times the link was opened
+    views: i64,
+    /// Only returned once, when it is created
+    #[serde(skip_serializing_if = "Option::is_none")]
+    url: Option<String>,
+}
+
+#[derive(Deserialize, ToSchema)]
+struct ShareInput {
+    /// Days until the link stops working (1 to 90, default 7)
+    days: Option<i64>,
+}
+
+fn shares_of(doc: i64) -> store::Result<Vec<Share>> {
+    Ok(db::with(|c| {
+        c.prepare_cached("SELECT id, created, expires, views FROM shares WHERE doc_id=? AND expires > datetime('now') ORDER BY id DESC")?
+            .query_map([doc], |r| Ok(Share { id: r.get(0)?, created: r.get(1)?, expires: r.get(2)?, views: r.get(3)?, url: None }))?
+            .collect()
+    })?)
+}
+
+/// Active share links of a document
+#[utoipa::path(get, path = "/api/documents/{id}/shares", tag = "sharing", params(("id" = i64, Path,)), responses((status = 200, body = Vec<Share>)))]
+async fn list_shares(u: AuthUser, Path(id): Path<i64>) -> Res<Json<Vec<Share>>> {
+    store::authorize(&u, id)?;
+    Ok(Json(shares_of(id)?))
+}
+
+/// Create a temporary share link
+///
+/// Anyone with the link can view and download this one document, without an account, until it expires.
+/// The link is only shown in this response; the server stores a hash of it.
+#[utoipa::path(post, path = "/api/documents/{id}/shares", tag = "sharing", params(("id" = i64, Path,)), request_body = ShareInput,
+    responses((status = 201, body = Share), (status = 403, body = ErrorBody)))]
+async fn create_share(Editor(u): Editor, headers: HeaderMap, Path(id): Path<i64>, Json(i): Json<ShareInput>) -> Res<(StatusCode, Json<Share>)> {
+    if u.limited() {
+        return Err(forbidden("a token limited to some folders or apps cannot do this"));
+    }
+    store::authorize(&u, id)?;
+    let days = i.days.unwrap_or(7).clamp(1, 90);
+    let token = random_hex(24);
+    let sid = db::with(|c| {
+        c.execute("INSERT INTO shares(doc_id, user_id, token_hash, expires) VALUES(?,?,?, datetime('now', '+' || ? || ' days'))", params![id, u.id, auth::sha(&token), days])?;
+        Ok(c.last_insert_rowid())
+    }).map_err(store::Error::from)?;
+    store::audit(Some(&u), "share link created", &format!("document {id}"), &format!("{days} days"));
+    let mut s = shares_of(id)?.into_iter().find(|s| s.id == sid).ok_or(store::Error::NotFound)?;
+    s.url = Some(format!("{}/s/{token}", crate::oauth::origin(&headers)));
+    Ok((StatusCode::CREATED, Json(s)))
+}
+
+/// Revoke a share link
+#[utoipa::path(delete, path = "/api/shares/{id}", tag = "sharing", params(("id" = i64, Path,)), responses((status = 204), (status = 404, body = ErrorBody)))]
+async fn delete_share(Editor(u): Editor, Path(id): Path<i64>) -> Res<StatusCode> {
+    let doc: i64 = db::with(|c| c.query_row("SELECT doc_id FROM shares WHERE id=?", [id], |r| r.get(0))).map_err(store::Error::from)?;
+    store::authorize(&u, doc)?;
+    db::with(|c| c.execute("DELETE FROM shares WHERE id=?", [id])).map_err(store::Error::from)?;
+    store::audit(Some(&u), "share link revoked", &format!("document {doc}"), "");
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ───────────────────────── calendario ─────────────────────────
+
+#[derive(Serialize, ToSchema)]
+struct CalendarLink {
+    /// Subscribe to this URL from your calendar app (it is shown only once; creating a new one revokes the old)
+    url: String,
+}
+
+/// Create the due-date calendar link
+#[utoipa::path(post, path = "/api/calendar", tag = "sharing", responses((status = 201, body = CalendarLink)))]
+async fn create_calendar(u: AuthUser, headers: HeaderMap) -> Res<(StatusCode, Json<CalendarLink>)> {
+    if u.limited() || u.read_only {
+        return Err(forbidden("a token limited to some folders or apps cannot do this"));
+    }
+    let token = crate::public::new_calendar(u.id)?;
+    store::audit(Some(&u), "calendar link created", &u.username, "");
+    Ok((StatusCode::CREATED, Json(CalendarLink { url: format!("{}/cal/{token}.ics", crate::oauth::origin(&headers)) })))
+}
+
+/// Revoke the due-date calendar link
+#[utoipa::path(delete, path = "/api/calendar", tag = "sharing", responses((status = 204)))]
+async fn delete_calendar(u: AuthUser) -> Res<StatusCode> {
+    if u.limited() || u.read_only {
+        return Err(forbidden("a token limited to some folders or apps cannot do this"));
+    }
+    db::with(|c| c.execute("UPDATE users SET calendar_hash=NULL WHERE id=?", [u.id])).map_err(store::Error::from)?;
+    Ok(StatusCode::NO_CONTENT)
 }

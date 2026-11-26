@@ -112,7 +112,7 @@ pub fn init(path: PathBuf) -> Result<Vec<i64>, String> {
 
 /// Cada entrada se aplica una sola vez, en orden y dentro de una transacción. Nunca se edita una
 /// migración ya publicada: los cambios de esquema se añaden como una entrada nueva.
-const MIGRATIONS: &[(i64, &str)] = &[(1, V1), (2, V2), (3, V3), (4, V4), (5, V5)];
+const MIGRATIONS: &[(i64, &str)] = &[(1, V1), (2, V2), (3, V3), (4, V4), (5, V5), (6, V6)];
 
 const V1: &str = r#"
 CREATE TABLE users(
@@ -228,4 +228,19 @@ CREATE TABLE push_subs(
   id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   endpoint TEXT UNIQUE NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL, folders TEXT, lang TEXT NOT NULL DEFAULT 'en',
   created TEXT NOT NULL DEFAULT (datetime('now')), last_status TEXT);
+"#;
+
+// v6: vistas guardadas (carpetas inteligentes), enlaces temporales para compartir un documento,
+// recordatorios de vencimiento por push y un calendario .ics por usuario.
+const V6: &str = r#"
+CREATE TABLE views(
+  id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, name TEXT NOT NULL,
+  query TEXT NOT NULL, route TEXT NOT NULL, created TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE TABLE shares(
+  id INTEGER PRIMARY KEY, doc_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, token_hash TEXT UNIQUE NOT NULL, expires TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE INDEX shares_doc ON shares(doc_id);
+ALTER TABLE push_subs ADD COLUMN reminders INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE users ADD COLUMN calendar_hash TEXT;
 "#;

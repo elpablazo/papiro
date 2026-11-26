@@ -104,6 +104,7 @@ pub struct Subscription {
     pub auth: String,
     pub folders: Option<Vec<i64>>,
     pub lang: String,
+    pub reminders: bool,
 }
 
 pub fn subscribe(user_id: i64, s: &Subscription) -> Result<(), store::Error> {
@@ -118,9 +119,9 @@ pub fn subscribe(user_id: i64, s: &Subscription) -> Result<(), store::Error> {
     let folders = s.folders.as_ref().map(|f| serde_json::to_string(f).unwrap_or_default());
     db::with(|c| {
         c.execute(
-            "INSERT INTO push_subs(user_id, endpoint, p256dh, auth, folders, lang) VALUES(?1,?2,?3,?4,?5,?6)
-             ON CONFLICT(endpoint) DO UPDATE SET user_id=?1, p256dh=?3, auth=?4, folders=?5, lang=?6",
-            params![user_id, s.endpoint, s.p256dh, s.auth, folders, s.lang],
+            "INSERT INTO push_subs(user_id, endpoint, p256dh, auth, folders, lang, reminders) VALUES(?1,?2,?3,?4,?5,?6,?7)
+             ON CONFLICT(endpoint) DO UPDATE SET user_id=?1, p256dh=?3, auth=?4, folders=?5, lang=?6, reminders=?7",
+            params![user_id, s.endpoint, s.p256dh, s.auth, folders, s.lang, s.reminders],
         )
     })?;
     Ok(())
@@ -132,10 +133,10 @@ pub fn unsubscribe(user_id: i64, endpoint: &str) -> Result<(), store::Error> {
 }
 
 /// Suscripción de este dispositivo (por endpoint), si existe.
-pub fn find(user_id: i64, endpoint: &str) -> Option<(Option<Vec<i64>>, String)> {
+pub fn find(user_id: i64, endpoint: &str) -> Option<(Option<Vec<i64>>, String, bool)> {
     db::with(|c| {
-        c.query_row("SELECT folders, last_status FROM push_subs WHERE user_id=? AND endpoint=?", params![user_id, endpoint], |r| {
-            Ok((crate::auth::parse_folders(r.get(0)?), r.get::<_, Option<String>>(1)?.unwrap_or_default()))
+        c.query_row("SELECT folders, last_status, reminders FROM push_subs WHERE user_id=? AND endpoint=?", params![user_id, endpoint], |r| {
+            Ok((crate::auth::parse_folders(r.get(0)?), r.get::<_, Option<String>>(1)?.unwrap_or_default(), r.get(2)?))
         })
     })
     .ok()
@@ -265,6 +266,7 @@ pub fn document_created(doc_id: i64, uploader: Option<i64>, source: &str) {
         let payload = json!({
             "title": if es { "Nuevo documento en Papiro" } else { "New document in Papiro" },
             "body": body, "url": format!("/#/?doc={doc_id}"), "tag": format!("doc-{doc_id}"), "doc": doc_id,
+            "badge": store::stats(&u).map(|s| s.inbox).unwrap_or(0),
         });
         enqueue(id, endpoint, p256dh, auth, payload, Some(format!("doc{doc_id}")));
     }
@@ -283,6 +285,66 @@ pub fn test(user_id: i64) -> usize {
         enqueue(*id, endpoint.clone(), p256dh.clone(), auth.clone(), payload, None);
     }
     list.len()
+}
+
+/// Recordatorio diario (una vez al día, desde las 9:00 hora local): lo que vence hoy, mañana, en 7 y en
+/// 30 días, en una sola notificación por usuario. Lo llama el hilo de mantenimiento cada minuto.
+pub fn reminders_tick() {
+    let Ok((today, hour)) = db::with(|c| c.query_row("SELECT date('now','localtime'), CAST(strftime('%H','now','localtime') AS INTEGER)", [], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)))) else { return };
+    if hour < 9 || store::meta_get("reminders_day").as_deref() == Some(today.as_str()) {
+        return;
+    }
+    store::meta_set("reminders_day", &today);
+    send_reminders(&today, None);
+}
+
+/// Envía el resumen de vencimientos (a todos, o solo a un usuario para probarlo). Devuelve cuántos avisos salieron.
+pub fn send_reminders(today: &str, only_user: Option<i64>) -> usize {
+    let users: Vec<(i64, String, String)> = db::with(|c| {
+        c.prepare("SELECT DISTINCT u.id, u.username, u.role FROM push_subs s JOIN users u ON u.id=s.user_id WHERE s.reminders")?
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+            .collect()
+    })
+    .unwrap_or_default();
+    let mut sent = 0;
+    for (id, name, role) in users.into_iter().filter(|u| only_user.is_none_or(|o| o == u.0)) {
+        let u = AuthUser::new(id, name, role);
+        let due = store::due(&u, Some(&[0, 1, 7, 30])).unwrap_or_default();
+        if due.is_empty() {
+            continue;
+        }
+        let devices: Vec<(i64, String, String, String, String)> = db::with(|c| {
+            c.prepare("SELECT id, endpoint, p256dh, auth, lang FROM push_subs WHERE user_id=? AND reminders")?
+                .query_map([id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)))?
+                .collect()
+        })
+        .unwrap_or_default();
+        for (sid, endpoint, p256dh, auth, lang) in devices {
+            let es = lang.starts_with("es");
+            let when = |d: i64| match (d, es) {
+                (0, true) => "hoy".to_string(),
+                (0, false) => "today".to_string(),
+                (1, true) => "mañana".to_string(),
+                (1, false) => "tomorrow".to_string(),
+                (n, true) => format!("en {n} días"),
+                (n, false) => format!("in {n} days"),
+            };
+            let mut lines: Vec<String> = due.iter().take(3).map(|(_, t, _, d)| format!("{t} ({})", when(*d))).collect();
+            if due.len() > 3 {
+                lines.push(if es { format!("y {} más", due.len() - 3) } else { format!("and {} more", due.len() - 3) });
+            }
+            let title = match (due.len(), es) {
+                (1, true) => "1 documento vence pronto".to_string(),
+                (n, true) => format!("{n} documentos vencen pronto"),
+                (1, false) => "1 document is due soon".to_string(),
+                (n, false) => format!("{n} documents are due soon"),
+            };
+            let url = if due.len() == 1 { format!("/#/?doc={}", due[0].0) } else { "/#/?view=expiring".into() };
+            enqueue(sid, endpoint, p256dh, auth, json!({"title": title, "body": lines.join(" · "), "url": url, "tag": format!("due-{today}")}), Some(format!("due{}", today.replace('-', ""))));
+            sent += 1;
+        }
+    }
+    sent
 }
 
 #[cfg(test)]

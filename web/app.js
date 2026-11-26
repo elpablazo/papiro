@@ -180,6 +180,83 @@ const ES = {
   'Offline: you’re seeing what was last loaded': 'Sin conexión: verás lo último que se cargó',
   'Drop to add to Papiro': 'Suelta para añadir a Papiro', 'Drop to add to “{name}”': 'Suelta para añadir a «{name}»',
   'PDF, images, Word, Excel, PowerPoint, text': 'PDF, imágenes, Word, Excel, PowerPoint, texto',
+  // scanner, inbox review, sharing, offline, smart folders, reminders
+  'Undo': 'Deshacer',
+  'Undone': 'Deshecho',
+  'Smart folders': 'Carpetas inteligentes',
+  'Scan a document': 'Escanear un documento',
+  'Finds the edges, straightens the page and joins several pages into one PDF.': 'Detecta los bordes, endereza la hoja y une varias páginas en un PDF.',
+  'Save search': 'Guardar búsqueda',
+  'Delete smart folder': 'Borrar carpeta inteligente',
+  'Options': 'Opciones',
+  'Review': 'Revisar',
+  'Share a link…': 'Compartir un enlace…',
+  'Remove from this device': 'Quitar de este dispositivo',
+  'Keep offline on this device': 'Guardar sin conexión en este dispositivo',
+  'Nothing is due today, tomorrow, in 7 or in 30 days': 'Nada vence hoy, mañana, en 7 ni en 30 días',
+  'Reminder sent': 'Recordatorio enviado',
+  'Calendar link revoked': 'Enlace de calendario revocado',
+  'Link copied': 'Enlace copiado',
+  'Daily due-date reminder': 'Recordatorio diario de vencimientos',
+  'At 9:00, one notification with what is due today, tomorrow, in 7 and in 30 days (IDs, insurance, contracts…).': 'A las 9:00, una sola notificación con lo que vence hoy, mañana, en 7 y en 30 días (identificaciones, seguros, contratos…).',
+  'Send today’s reminder': 'Enviar el recordatorio de hoy',
+  'Calendar': 'Calendario',
+  'Subscribe from your phone’s calendar (Apple, Google, Outlook) and every due date shows up there, with an alert 7 days before. It updates by itself.': 'Suscríbete desde el calendario de tu teléfono (Apple, Google, Outlook) y cada vencimiento aparece ahí, con aviso 7 días antes. Se actualiza solo.',
+  'Add to my calendar': 'Añadir a mi calendario',
+  'Copy link': 'Copiar enlace',
+  'Keep this link private: it shows your due dates to whoever has it.': 'No compartas este enlace: muestra tus vencimientos a quien lo tenga.',
+  'Create a new link (revokes the old one)': 'Crear un enlace nuevo (revoca el anterior)',
+  'Create calendar link': 'Crear enlace de calendario',
+  'Finding the edges…': 'Buscando los bordes…',
+  'Page {n} of {total}…': 'Página {n} de {total}…',
+  'That photo couldn’t be read': 'No se pudo leer esa foto',
+  'Straightening…': 'Enderezando…',
+  'Making the PDF…': 'Armando el PDF…',
+  'Scan': 'Escaneo',
+  'Document': 'Documento',
+  'B&W': 'B/N',
+  'Original': 'Original',
+  'Adjust the corners': 'Ajusta las esquinas',
+  'Rotate': 'Girar',
+  'Use this page': 'Usar esta página',
+  'Save PDF': 'Guardar PDF',
+  'Add a page': 'Añadir página',
+  'Open the camera': 'Abrir la cámara',
+  'Tap a page to fix its corners': 'Toca una página para corregir sus esquinas',
+  'Papiro finds the edges, straightens the page and joins several into one PDF.': 'Papiro encuentra los bordes, endereza la hoja y une varias en un solo PDF.',
+  'It will be saved in “{name}”': 'Se guardará en «{name}»',
+  'File it': 'Archivar',
+  'Later': 'Después',
+  'Edit': 'Editar',
+  'No suggestions: it stays where it is': 'Sin sugerencias: se queda donde está',
+  '{n} of {total}': '{n} de {total}',
+  'Everything is filed. New documents will wait for you here.': 'Todo está archivado. Lo nuevo te esperará aquí.',
+  'Swipe right to accept the suggestions and file it, left to leave it for later, up to edit it.': 'Desliza a la derecha para aceptar las sugerencias y archivarlo, a la izquierda para dejarlo para después, hacia arriba para editarlo.',
+  'Fit': 'Ajustar',
+  'Share “{title}”': 'Compartir «{title}»',
+  'Anyone with the link can view and download this document, without an account, until it expires.': 'Cualquiera con el enlace puede ver y descargar este documento, sin cuenta, hasta que caduque.',
+  'Share…': 'Compartir…',
+  'Another link': 'Otro enlace',
+  '1 day': '1 día',
+  '7 days': '7 días',
+  '30 days': '30 días',
+  'Create link': 'Crear enlace',
+  'Active links': 'Enlaces activos',
+  'Expires {date}': 'Caduca el {date}',
+  'created {date}': 'creado el {date}',
+  'Link revoked': 'Enlace revocado',
+  'This browser can’t keep documents offline': 'Este navegador no puede guardar documentos sin conexión',
+  'Saving “{title}” on this device…': 'Guardando «{title}» en este dispositivo…',
+  'Couldn’t save it offline; try again with a connection': 'No se pudo guardar sin conexión; inténtalo de nuevo con conexión',
+  'Available offline': 'Disponible sin conexión',
+  'Removed from this device': 'Quitado de este dispositivo',
+  'Saved on this device': 'Guardados en este dispositivo',
+  'Save this search': 'Guardar esta búsqueda',
+  'It shows up as a smart folder that is always up to date.': 'Aparece como una carpeta inteligente, siempre al día.',
+  'Saved as a smart folder': 'Guardada como carpeta inteligente',
+  'Smart folder deleted': 'Carpeta inteligente borrada',
+  'Opened {n} time': 'Abierto {n} vez',
+  'Opened {n} times': 'Abierto {n} veces',
   // folders that look like folders, sign-in for apps, notifications
   'The whole archive': 'Todo el archivo',
   'Every folder, now and in the future': 'Todas las carpetas, ahora y en el futuro',
@@ -246,7 +323,7 @@ const tn = (n, one, other, vars) => t(n === 1 ? one : other, { n, ...vars });
 const setLang = (l) => { localStorage.lang = l; location.reload(); };
 // Server messages arrive in English: [englishPattern, spanish] pairs, `{}` marks a dynamic part (substituted in order).
 // Filled from the server's message list.
-const SERVER_ES = [["this token can only reach some folders; choose one of them", "este token solo llega a algunas carpetas; elige una de ellas"],["choose at least one folder, or give the token access to the whole archive", "elige al menos una carpeta, o da acceso a todo el archivo"],["this app is not registered with Papiro; connect it again from the app", "esta app no está registrada en Papiro; vuelve a conectarla desde la app"],["the return address does not match the one the app registered", "la dirección de retorno no coincide con la que registró la app"],["unsupported response_type (only code)", "response_type no admitido (solo code)"],["the app must use PKCE with S256", "la app debe usar PKCE con S256"],["the push endpoint must use https", "el endpoint push debe usar https"],["invalid push subscription keys", "claves de suscripción push inválidas"],["a token limited to some folders or apps cannot do this", "un token limitado a carpetas o de una app no puede hacer esto"],["app registered (OAuth)", "app registrada (OAuth)"],["app connected (OAuth)", "app conectada (OAuth)"],["app disconnected (OAuth)", "app desconectada (OAuth)"],["app connection denied (OAuth)", "conexión de app rechazada (OAuth)"],["{} points to an internal address, which is not allowed (set PAPIRO_WEBHOOK_ALLOW_PRIVATE=true to allow it)","{} apunta a una dirección interna; no se permite (PAPIRO_WEBHOOK_ALLOW_PRIVATE=true para permitirlo)"],["this job cannot be retried (it did not fail, or its file no longer exists)","este trabajo no se puede reintentar (no falló o su archivo ya no existe)"],["a folder cannot be moved into itself or into a folder that does not exist","una carpeta no se puede mover dentro de sí misma, ni a una que no existe"],["this is the only administrator; make someone else an administrator first","es el único administrador; nombra otro antes"],["only the uploader or an administrator can change a document's privacy","solo quien subió el documento o un administrador puede cambiar su privacidad"],["a folder name must be 1 to 80 characters long and cannot contain \"/\"","el nombre de la carpeta debe tener entre 1 y 80 caracteres y no llevar «/»"],["this document's file is not on disk; check Settings → Health","el archivo de este documento no está en disco; revisa Ajustes → Salud"],["too many attempts from your connection; wait a few minutes","demasiados intentos desde tu conexión; espera unos minutos"],["the copy does not match the original (different SHA-256)","la copia no coincide con el original (SHA-256 distinto)"],["a folder with that name already exists here","ya hay una carpeta con ese nombre en ese lugar"],["the password must be at least 8 characters long","la contraseña debe tener al menos 8 caracteres"],["the model's response was truncated (max_tokens)","la respuesta del modelo quedó truncada (max_tokens)"],[".{} requires PAPIRO_GOTENBERG_URL to be converted",".{} requiere PAPIRO_GOTENBERG_URL para convertirse"],["only an administrator can delete permanently","solo un administrador puede borrar definitivamente"],["a read-only token cannot change the password","un token de solo lectura no puede cambiar la contraseña"],["a read-only token cannot create other tokens","un token de solo lectura no puede crear otros tokens"],["the URL must start with http:// or https://","la URL debe empezar con http:// o https://"],["the model declined to process this document","el modelo declinó procesar este documento"],["action must be accept, dismiss or refresh","action debe ser accept, dismiss o refresh"],["no LLM is configured (PAPIRO_LLM_API_KEY)","no hay LLM configurado (PAPIRO_LLM_API_KEY)"],["server busy; try again in a few seconds","servidor ocupado; intenta de nuevo en unos segundos"],["{} document(s) moved to the parent folder","{} documento(s) pasaron a la carpeta superior"],["the original does not match its SHA-256","el original no coincide con su SHA-256"],["a read-only token cannot revoke tokens","un token de solo lectura no puede revocar tokens"],["invalid role (admin, editor or viewer)","rol inválido (admin, editor o viewer)"],["the original is {} bytes but should be {}","el original mide {} bytes y deberían ser {}"],["permanently deleted from the console","borrado definitivo desde la consola"],["this installation already has users","la instalación ya tiene usuarios"],["the LLM did not return valid JSON: {}","el LLM no devolvió JSON válido: {}"],["the LLM response contains no text","respuesta del LLM sin texto"],["the parent folder does not exist","la carpeta superior no existe"],["you cannot delete your own user","no puedes borrar tu propio usuario"],["your user or token is read-only","tu usuario o token es de solo lectura"],["administrator account created","cuenta de administrador creada"],["could not copy the database: {}","no se pudo copiar la base: {}"],["the job is still in progress","el trabajo sigue en curso"],["unreadable LLM response ({}): {}","respuesta ilegible del LLM ({}): {}"],["document permanently deleted","documento borrado definitivamente"],["more than {} days in the trash","más de {} días en la papelera"],["the original file is missing","falta el archivo original"],["document classified with AI","documento clasificado con IA"],["that folder does not exist","esa carpeta no existe"],["expires must be YYYY-MM-DD","expires debe ser YYYY-MM-DD"],["created must be YYYY-MM-DD","created debe ser YYYY-MM-DD"],["wrong username or password","usuario o contraseña incorrectos"],["the archive PDF is missing","falta el PDF de archivo"],["could not render the page","no se pudo renderizar la página"],["the file no longer exists","el archivo ya no existe"],["the username is required","falta el nombre de usuario"],["duplicate of document #{}","duplicado del documento #{}"],["unsupported file type: {}","tipo de archivo no soportado: {}"],["document moved to trash","documento a la papelera"],["document uploaded (MCP)","documento subido (MCP)"],["administrator required","requiere administrador"],["correspondent deleted","borrado en corresponsales"],["document type deleted","borrado en tipos de documento"],["document edited (MCP)","documento editado (MCP)"],["missing \"file\" field","falta el campo «file»"],["could not resolve {}: {}","no se pudo resolver {}: {}"],["no LLM is configured","LLM no configurado"],["suggestions accepted","sugerencias aceptadas"],["failed job dismissed","trabajo fallido descartado"],["the URL has no host","URL sin host"],["no disk space left","no queda espacio en disco"],["origin not allowed","origen no permitido"],["\"{}\" already exists","ya existe «{}»"],["not authenticated","no autenticado"],["LLM unreachable: {}","LLM inalcanzable: {}"],["document uploaded","documento subido"],["document restored","documento restaurado"],["name is required","falta name"],["unknown action: {}","acción desconocida: {}"],["LLM responded {}: {}","LLM respondió {}: {}"],["could not run {}: {}","no se pudo ejecutar {}: {}"],["{}: timed out ({} s)","{}: tiempo agotado ({} s)"],["password changed","contraseña cambiada"],["document edited","documento editado"],["integrity check","verificación de integridad"],["webhook created","webhook creado"],["webhook deleted","webhook borrado"],["folder created","carpeta creada"],["folder deleted","carpeta borrada"],["password reset","contraseña restablecida"],["token created","token creado"],["token revoked","token revocado"],["trash emptied","papelera vaciada"],["bulk edit ({})","edición masiva ({})"],["user created","usuario creado"],["role changed","rol cambiado"],["user deleted","usuario borrado"],["login failed","inicio de sesión fallido"],["tag deleted","borrado en etiquetas"],["conflict: {}","conflicto: {}"],["no details","sin detalle"],["{} documents","{} documentos"],["not found","no encontrado"],["bulk edit","edición masiva"],["logged in","sesión iniciada"],["document {}","documento {}"],["{} problems","{} problemas"],["read-only","solo lectura"],["blocked: {}","bloqueado: {}"],["console","consola"],["unknown","desconocida"],["system","sistema"]];
+const SERVER_ES = [["share link created", "enlace para compartir creado"],["share link revoked", "enlace para compartir revocado"],["calendar link created", "enlace de calendario creado"],["the view needs a name", "la vista necesita un nombre"],["this token can only reach some folders; choose one of them", "este token solo llega a algunas carpetas; elige una de ellas"],["choose at least one folder, or give the token access to the whole archive", "elige al menos una carpeta, o da acceso a todo el archivo"],["this app is not registered with Papiro; connect it again from the app", "esta app no está registrada en Papiro; vuelve a conectarla desde la app"],["the return address does not match the one the app registered", "la dirección de retorno no coincide con la que registró la app"],["unsupported response_type (only code)", "response_type no admitido (solo code)"],["the app must use PKCE with S256", "la app debe usar PKCE con S256"],["the push endpoint must use https", "el endpoint push debe usar https"],["invalid push subscription keys", "claves de suscripción push inválidas"],["a token limited to some folders or apps cannot do this", "un token limitado a carpetas o de una app no puede hacer esto"],["app registered (OAuth)", "app registrada (OAuth)"],["app connected (OAuth)", "app conectada (OAuth)"],["app disconnected (OAuth)", "app desconectada (OAuth)"],["app connection denied (OAuth)", "conexión de app rechazada (OAuth)"],["{} points to an internal address, which is not allowed (set PAPIRO_WEBHOOK_ALLOW_PRIVATE=true to allow it)","{} apunta a una dirección interna; no se permite (PAPIRO_WEBHOOK_ALLOW_PRIVATE=true para permitirlo)"],["this job cannot be retried (it did not fail, or its file no longer exists)","este trabajo no se puede reintentar (no falló o su archivo ya no existe)"],["a folder cannot be moved into itself or into a folder that does not exist","una carpeta no se puede mover dentro de sí misma, ni a una que no existe"],["this is the only administrator; make someone else an administrator first","es el único administrador; nombra otro antes"],["only the uploader or an administrator can change a document's privacy","solo quien subió el documento o un administrador puede cambiar su privacidad"],["a folder name must be 1 to 80 characters long and cannot contain \"/\"","el nombre de la carpeta debe tener entre 1 y 80 caracteres y no llevar «/»"],["this document's file is not on disk; check Settings → Health","el archivo de este documento no está en disco; revisa Ajustes → Salud"],["too many attempts from your connection; wait a few minutes","demasiados intentos desde tu conexión; espera unos minutos"],["the copy does not match the original (different SHA-256)","la copia no coincide con el original (SHA-256 distinto)"],["a folder with that name already exists here","ya hay una carpeta con ese nombre en ese lugar"],["the password must be at least 8 characters long","la contraseña debe tener al menos 8 caracteres"],["the model's response was truncated (max_tokens)","la respuesta del modelo quedó truncada (max_tokens)"],[".{} requires PAPIRO_GOTENBERG_URL to be converted",".{} requiere PAPIRO_GOTENBERG_URL para convertirse"],["only an administrator can delete permanently","solo un administrador puede borrar definitivamente"],["a read-only token cannot change the password","un token de solo lectura no puede cambiar la contraseña"],["a read-only token cannot create other tokens","un token de solo lectura no puede crear otros tokens"],["the URL must start with http:// or https://","la URL debe empezar con http:// o https://"],["the model declined to process this document","el modelo declinó procesar este documento"],["action must be accept, dismiss or refresh","action debe ser accept, dismiss o refresh"],["no LLM is configured (PAPIRO_LLM_API_KEY)","no hay LLM configurado (PAPIRO_LLM_API_KEY)"],["server busy; try again in a few seconds","servidor ocupado; intenta de nuevo en unos segundos"],["{} document(s) moved to the parent folder","{} documento(s) pasaron a la carpeta superior"],["the original does not match its SHA-256","el original no coincide con su SHA-256"],["a read-only token cannot revoke tokens","un token de solo lectura no puede revocar tokens"],["invalid role (admin, editor or viewer)","rol inválido (admin, editor o viewer)"],["the original is {} bytes but should be {}","el original mide {} bytes y deberían ser {}"],["permanently deleted from the console","borrado definitivo desde la consola"],["this installation already has users","la instalación ya tiene usuarios"],["the LLM did not return valid JSON: {}","el LLM no devolvió JSON válido: {}"],["the LLM response contains no text","respuesta del LLM sin texto"],["the parent folder does not exist","la carpeta superior no existe"],["you cannot delete your own user","no puedes borrar tu propio usuario"],["your user or token is read-only","tu usuario o token es de solo lectura"],["administrator account created","cuenta de administrador creada"],["could not copy the database: {}","no se pudo copiar la base: {}"],["the job is still in progress","el trabajo sigue en curso"],["unreadable LLM response ({}): {}","respuesta ilegible del LLM ({}): {}"],["document permanently deleted","documento borrado definitivamente"],["more than {} days in the trash","más de {} días en la papelera"],["the original file is missing","falta el archivo original"],["document classified with AI","documento clasificado con IA"],["that folder does not exist","esa carpeta no existe"],["expires must be YYYY-MM-DD","expires debe ser YYYY-MM-DD"],["created must be YYYY-MM-DD","created debe ser YYYY-MM-DD"],["wrong username or password","usuario o contraseña incorrectos"],["the archive PDF is missing","falta el PDF de archivo"],["could not render the page","no se pudo renderizar la página"],["the file no longer exists","el archivo ya no existe"],["the username is required","falta el nombre de usuario"],["duplicate of document #{}","duplicado del documento #{}"],["unsupported file type: {}","tipo de archivo no soportado: {}"],["document moved to trash","documento a la papelera"],["document uploaded (MCP)","documento subido (MCP)"],["administrator required","requiere administrador"],["correspondent deleted","borrado en corresponsales"],["document type deleted","borrado en tipos de documento"],["document edited (MCP)","documento editado (MCP)"],["missing \"file\" field","falta el campo «file»"],["could not resolve {}: {}","no se pudo resolver {}: {}"],["no LLM is configured","LLM no configurado"],["suggestions accepted","sugerencias aceptadas"],["failed job dismissed","trabajo fallido descartado"],["the URL has no host","URL sin host"],["no disk space left","no queda espacio en disco"],["origin not allowed","origen no permitido"],["\"{}\" already exists","ya existe «{}»"],["not authenticated","no autenticado"],["LLM unreachable: {}","LLM inalcanzable: {}"],["document uploaded","documento subido"],["document restored","documento restaurado"],["name is required","falta name"],["unknown action: {}","acción desconocida: {}"],["LLM responded {}: {}","LLM respondió {}: {}"],["could not run {}: {}","no se pudo ejecutar {}: {}"],["{}: timed out ({} s)","{}: tiempo agotado ({} s)"],["password changed","contraseña cambiada"],["document edited","documento editado"],["integrity check","verificación de integridad"],["webhook created","webhook creado"],["webhook deleted","webhook borrado"],["folder created","carpeta creada"],["folder deleted","carpeta borrada"],["password reset","contraseña restablecida"],["token created","token creado"],["token revoked","token revocado"],["trash emptied","papelera vaciada"],["bulk edit ({})","edición masiva ({})"],["user created","usuario creado"],["role changed","rol cambiado"],["user deleted","usuario borrado"],["login failed","inicio de sesión fallido"],["tag deleted","borrado en etiquetas"],["conflict: {}","conflicto: {}"],["no details","sin detalle"],["{} documents","{} documentos"],["not found","no encontrado"],["bulk edit","edición masiva"],["logged in","sesión iniciada"],["document {}","documento {}"],["{} problems","{} problemas"],["read-only","solo lectura"],["blocked: {}","bloqueado: {}"],["console","consola"],["unknown","desconocida"],["system","sistema"]];
 const SERVER_RE = SERVER_ES.map(([pat, es]) => [new RegExp(`^${pat.split('{}').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.+?)')}$`, 's'), es]);
 function srv(m) {
   if (LANG !== 'es' || typeof m !== 'string') return m;
@@ -307,7 +384,7 @@ const HOME = { doc: null, tags: [], c: null, t: null, q: '', from: '', to: '', f
 const touch = matchMedia('(hover: none)').matches;
 const store = {
   state: { ready: false, setup: false, user: null, llm: false, labels: { tag: [], correspondent: [], doctype: [] }, folders: [], meta: false, stats: {}, route: parseHash(), docs: [], total: 0,
-    loading: false, amountTotal: null, cur: 0, picked: new Set(), fresh: new Set(), jobs: [], toasts: [], modal: null, palette: false, grid: localStorage.grid === '1', menu: false, jobsOpen: false,
+    loading: false, amountTotal: null, cur: 0, picked: new Set(), fresh: new Set(), views: [], review: false, scan: false, jobs: [], toasts: [], modal: null, palette: false, grid: localStorage.grid === '1', menu: false, jobsOpen: false,
     open: new Set(JSON.parse(localStorage.open || '[]')), dialog: null, sheet: null, install: null, online: navigator.onLine },
   subs: new Set(),
   set(patch) { Object.assign(this.state, typeof patch === 'function' ? patch(this.state) : patch); this.subs.forEach((f) => f()); },
@@ -409,7 +486,7 @@ function gestures() {
       if (t.clientY - sheet.getBoundingClientRect().top < 64) g = { kind: 'sheet', el: sheet, x: t.clientX, y: t.clientY, t: performance.now() };
       return;
     }
-    if (s.sheet || s.jobsOpen || s.menu || s.picked.size) return (g = null);
+    if (s.sheet || s.jobsOpen || s.menu || s.shareDoc || s.scan || s.review || s.picked.size) return (g = null);
     const r = s.route, list = document.querySelector('.list');
     if (t.clientX < 28 && !browserEdge && (r.doc || (r.view === 'all' && r.f && !filteredRoute(r)))) {
       const el = document.querySelector(r.doc ? '.detail' : '.list');
@@ -419,6 +496,7 @@ function gestures() {
     } else g = null;
   }, { passive: true });
   addEventListener('touchmove', (e) => {
+    if (carry) return (g = null);
     if (!g || !g.el) return;
     const t = e.touches[0], dx = t.clientX - g.x, dy = t.clientY - g.y;
     if (g.lock === undefined) {
@@ -462,7 +540,7 @@ function gestures() {
       const commit = x.dy > 90 || (fast(x.dy) && x.dy > 30);
       settle([x.el], 240);
       x.el.style.transform = commit ? 'translateY(110%)' : '';
-      if (commit) setTimeout(() => store.set({ sheet: null, jobsOpen: false }), 200);
+      if (commit) setTimeout(() => store.set({ sheet: null, jobsOpen: false, shareDoc: null }), 200);
     } else {
       x.el.classList.remove('dragging');
       if (!x.armed) { settle([x.el]); x.el.style.transform = ''; x.el.style.opacity = 0; return; }
@@ -475,7 +553,7 @@ function gestures() {
 }
 addEventListener('popstate', () => go(S().route, parseHash()));
 // popstate ya cubre atrás/adelante; esto solo atiende a quien edita la URL a mano.
-addEventListener('hashchange', () => { if (!moving && JSON.stringify(parseHash()) !== JSON.stringify(S().route)) onRoute(); });
+addEventListener('hashchange', () => { if (location.hash.includes('action=')) return takeAction(); if (!moving && JSON.stringify(parseHash()) !== JSON.stringify(S().route)) onRoute(); });
 
 async function api(path, o = {}) {
   const init = { method: o.method || (o.json !== undefined || o.body ? 'POST' : 'GET'), headers: { 'X-Requested-With': 'papiro' }, credentials: 'same-origin' };
@@ -487,19 +565,25 @@ async function api(path, o = {}) {
   if (!r.ok) throw new Error(srv(data?.error) || `Error ${r.status}`);
   return data;
 }
-function toast(text, kind = 'ok', ms = 4200) {
+/** Aviso breve; con `action` ({label, fn}) lleva un botón (Deshacer) y dura un poco más. */
+function toast(text, kind = 'ok', ms = 4200, action) {
   const id = Math.random();
-  store.set((s) => ({ toasts: [...s.toasts, { id, text, kind }] }));
-  setTimeout(() => store.set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), ms);
+  store.set((s) => ({ toasts: [...s.toasts.slice(-3), { id, text, kind, action }] }));
+  setTimeout(() => dropToast(id), action ? Math.max(ms, 6500) : ms);
+  return id;
 }
+const dropToast = (id) => store.set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+/** En vez de preguntar «¿seguro?», se hace y se ofrece deshacer. */
+const undoable = (text, undo) => toast(text, 'ok', 6500, { label: t('Undo'), fn: async () => { if (await attempt(undo())) { buzz(); toast(t('Undone')); } refresh(); } });
 const attempt = (p, okMsg) => p.then((v) => { okMsg && toast(okMsg); return v; }).catch((e) => { toast(e.message, 'bad', 6500); });
 /** Diálogo propio en lugar de confirm()/prompt(): devuelve true, el texto escrito o null si se cancela. */
 const ask = (d) => new Promise((resolve) => store.set({ dialog: { ...d, resolve, id: Math.random() } }));
 
 const PAGE = 60;
 let seq = 0;
-async function loadDocs(more) {
-  const { route: r, docs } = S(), my = ++seq, p = new URLSearchParams({ limit: PAGE, offset: more ? docs.length : 0 });
+/** Parámetros de la API para una ruta de la interfaz (los mismos sirven para guardar una vista). */
+function queryOf(r) {
+  const p = new URLSearchParams();
   if (r.q) p.set('q', r.q);
   if (r.tags.length) p.set('tags', r.tags.join(','));
   if (r.c) p.set('correspondent', r.c);
@@ -511,6 +595,11 @@ async function loadDocs(more) {
   if (r.view === 'trash') p.set('trash', 'true');
   if (r.view === 'expiring') p.set('expiring', 'true');
   if (r.sort) { const [s, o] = r.sort.split(':'); p.set('sort', s); p.set('order', o || 'desc'); }
+  return p;
+}
+async function loadDocs(more) {
+  const { route: r, docs } = S(), my = ++seq, p = queryOf(r);
+  p.set('limit', PAGE); p.set('offset', more ? docs.length : 0);
   store.set({ loading: true });
   try {
     const res = await api('/documents?' + p);
@@ -522,8 +611,10 @@ async function loadDocs(more) {
 }
 let quietRefresh = false;
 async function loadMeta() {
-  const [tag, correspondent, doctype, folders, stats] = await Promise.all([api('/tags'), api('/correspondents'), api('/doctypes'), api('/folders'), api('/stats')]);
-  store.set({ labels: { tag, correspondent, doctype }, folders, stats, meta: true });
+  const [tag, correspondent, doctype, folders, stats, views] = await Promise.all([api('/tags'), api('/correspondents'), api('/doctypes'), api('/folders'), api('/stats'), api('/views').catch(() => [])]);
+  store.set({ labels: { tag, correspondent, doctype }, folders, stats, views, meta: true });
+  // El ícono de la app muestra cuántos documentos esperan revisión (Android, iOS instalada, escritorio).
+  if ('setAppBadge' in navigator) (stats.inbox ? navigator.setAppBadge(stats.inbox) : navigator.clearAppBadge()).catch(() => {});
 }
 const refresh = debounce(() => { quietRefresh = true; loadDocs().finally(() => (quietRefresh = false)); loadMeta(); }, 250);
 const labelOf = (kind, id) => S().labels[kind].find((l) => l.id === id);
@@ -568,6 +659,19 @@ function start() {
   };
   takeShared();
   if (location.hash.includes('focus=1')) setTimeout(() => document.getElementById('q')?.focus(), 300);
+  takeAction();
+}
+/** Accesos directos del ícono de la app (mantener pulsado): escanear, subir a la última carpeta, revisar. */
+function takeAction() {
+  const action = new URLSearchParams(location.hash.replace(/^#\/?\??/, '')).get('action');
+  if (action && S().user) {
+    history.replaceState(null, '', location.hash.replace(/[?&]action=\w+/, '').replace(/#\/&/, '#/?'));
+    if (JSON.stringify(parseHash()) !== JSON.stringify(S().route)) onRoute();
+    const last = Number(localStorage.lastFolder) || null;
+    if (action === 'scan') store.set({ scan: true });
+    if (action === 'review') store.set({ review: true });
+    if (action === 'upload') { if (last) nav({ ...HOME, view: 'all', f: last }, true, true); store.set({ sheet: 'upload' }); }
+  }
 }
 
 async function upload(files) {
@@ -575,6 +679,7 @@ async function upload(files) {
   if (!files.length) return;
   if (!canWrite()) return toast(t('Your user is read-only'), 'warn');
   const folder = here(), v = { name: files[0].name || t('document'), n: files.length, folder: folder?.name };
+  try { folder ? (localStorage.lastFolder = folder.id) : localStorage.removeItem('lastFolder'); } catch {}
   toast(files.length === 1 ? t(folder ? 'Uploading {name} to “{folder}”…' : 'Uploading {name}…', v) : t(folder ? 'Uploading {n} files to “{folder}”…' : 'Uploading {n} files…', v));
   // De tres en tres: el servidor los encola y procesa a su ritmo.
   const queue = files.slice();
@@ -594,7 +699,24 @@ function pickFiles(camera) {
   i.onchange = () => upload(i.files); i.click();
 }
 const addDocs = () => (touch ? store.set({ sheet: 'upload', menu: false }) : pickFiles());
-async function bulk(ids, json, msg) { await attempt(api('/documents/bulk', { json: { ids: [...ids], ...json } }), msg); store.set({ picked: new Set() }); refresh(); }
+/** Edición masiva. Con `undo(ids)`, el aviso ofrece deshacer. */
+async function bulk(ids, json, msg, undo) {
+  ids = [...ids];
+  const ok = await attempt(api('/documents/bulk', { json: { ids, ...json } }));
+  store.set({ picked: new Set() }); refresh();
+  if (ok) undo ? undoable(msg, () => undo(ids)) : msg && toast(msg);
+  return ok;
+}
+const bulkApi = (ids, json) => api('/documents/bulk', { json: { ids, ...json } });
+const docById = (id) => S().docs.find((d) => d.id === id);
+/** Deshacer un cambio de campo: cada documento vuelve a su valor anterior (agrupados por valor). */
+function restoreField(ids, field) {
+  const before = new Map();
+  for (const id of ids) { const v = docById(id)?.[field] ?? null; before.set(v, [...(before.get(v) || []), id]); }
+  return () => Promise.all([...before].map(([v, group]) => bulkApi(group, { [field]: v })));
+}
+const trashDocs = (ids, msg = t('Documents moved to trash')) => bulk(ids, { action: 'trash' }, msg, (ids) => bulkApi(ids, { action: 'restore' }));
+const markReviewed = (ids, msg = t('Documents marked as reviewed')) => { const inbox = inboxIds(); return bulk(ids, { remove_tags: inbox }, msg, (ids) => bulkApi(ids, { add_tags: inbox })); };
 function setTheme(t) { t ? (localStorage.theme = t) : delete localStorage.theme; document.documentElement.dataset.theme = t || ''; themeColor(); store.set({}); }
 /** La barra del sistema (y la del navegador en móvil) toma el color de fondo de la app. */
 function themeColor() { const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(); document.querySelectorAll('meta[name=theme-color]').forEach((m) => { m.content = bg; m.removeAttribute('media'); }); }
@@ -603,6 +725,13 @@ const isDark = () => (document.documentElement.dataset.theme || (matchMedia('(pr
 const inboxIds = () => S().labels.tag.filter((t) => t.is_inbox).map((t) => t.id);
 const canWrite = () => S().user?.role !== 'viewer';
 const isAdmin = () => S().user?.role === 'admin';
+/** Cerrar sesión también borra lo guardado sin conexión en este dispositivo. */
+async function logout() {
+  await api('/auth/logout', { method: 'POST' }).catch(() => {});
+  try { localStorage.removeItem('offline'); await caches.delete(OFFLINE); } catch {}
+  navigator.clearAppBadge?.().catch(() => {});
+  location.reload();
+}
 const openJobs = () => { api('/jobs').then((jobs) => store.set({ jobs })); store.set({ jobsOpen: true, menu: false }); };
 
 // carpetas
@@ -627,10 +756,11 @@ async function deleteFolder(f) {
   refresh();
 }
 const folderMenu = (f) => [['folder', t('New subfolder'), () => newFolder(f.id)], ['edit', t('Rename'), () => renameFolder(f)], ['trash', t('Delete folder'), () => deleteFolder(f), true]];
-const moveTo = (ids, folder_id) => bulk(ids, { folder_id }, folder_id ? t('Moved to “{name}”', { name: folderOf(folder_id)?.name }) : t('Removed from its folder'));
+const moveTo = (ids, folder_id) => { const undo = restoreField([...ids], 'folder_id'); return bulk(ids, { folder_id }, folder_id ? t('Moved to “{name}”', { name: folderOf(folder_id)?.name }) : t('Removed from its folder'), undo); };
 /** Arrastrar documentos de la lista y soltarlos sobre una carpeta los mueve. */
 const DND = 'application/x-papiro-docs';
 const dropOn = (folder_id) => canWrite() && {
+  'data-drop': String(folder_id ?? 0),
   onDragOver: (e) => { if ([...e.dataTransfer.types].includes(DND)) { e.preventDefault(); e.currentTarget.classList.add('drop-on'); } },
   onDragLeave: (e) => e.currentTarget.classList.remove('drop-on'),
   onDrop: (e) => { e.currentTarget.classList.remove('drop-on'); const ids = e.dataTransfer.getData(DND); if (ids) { e.preventDefault(); moveTo(ids.split(',').map(Number), folder_id); } },
@@ -805,6 +935,8 @@ function Sidebar() {
       <h4>${t('Folders')}${canWrite() && html`<button title=${t('New folder')} onClick=${() => newFolder()}><${Icon} n="plus" /></button>`}</h4>
       ${roots.map((f) => html`<${FolderNode} f=${f} depth=${0} key=${f.id} />`)}
       ${!roots.length && s.meta && html`<button class="nav hint" disabled=${!canWrite()} onClick=${() => newFolder()}><${Icon} n="folder" /><span class="name">${canWrite() ? t('Create your first folder') : t('No folders yet')}</span></button>`}
+      ${s.views.length > 0 && html`<h4>${t('Smart folders')}</h4>${s.views.map((v) => html`<button class=${cls('nav', currentView()?.id === v.id && 'on')} key=${v.id} onClick=${() => { store.set({ menu: false }); openRoute(v.route); }}>
+        <span class="view-ico"><${Icon} n="spark" /></span><span class="name">${v.name}</span><span class="count">${v.count || ''}</span></button>`)}`}
       ${group(t('Tags'), 'tag')}${group(t('Correspondents'), 'correspondent', 'c', 'user')}${group(t('Types'), 'doctype', 't', 'type')}
     </div>
     <div class="side-foot">
@@ -832,7 +964,7 @@ function UploadSheet() {
   const close = () => store.set({ sheet: null }), folder = here();
   return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && close()}><div class="sheet"><div class="grabber" />
     <h3>${folder ? t('Add to “{name}”', { name: folder.name }) : t('Add to Papiro')}</h3>
-    <button class="big-opt" onClick=${() => { close(); pickFiles(true); }}><span class="ico"><${Icon} n="camera" /></span><span><b>${t('Take a photo')}</b><small>${t('Photograph a paper document; Papiro extracts the text.')}</small></span></button>
+    <button class="big-opt" onClick=${() => { close(); store.set({ scan: true }); }}><span class="ico"><${Icon} n="camera" /></span><span><b>${t('Scan a document')}</b><small>${t('Finds the edges, straightens the page and joins several pages into one PDF.')}</small></span></button>
     <button class="big-opt" onClick=${() => { close(); pickFiles(); }}><span class="ico"><${Icon} n="upload" /></span><span><b>${t('Choose files')}</b><small>${t('PDF, photos, Word, Excel, PowerPoint or text.')}</small></span></button>
     <p class="hint">${t('With Papiro installed on your phone, you can also use “Share” from any other app.')}</p></div></div>`;
 }
@@ -872,7 +1004,7 @@ function DocRow({ d, i }) {
     store.set({ cur: i }); nav({ doc: d.id });
   };
   // En pantallas táctiles, mantener pulsado selecciona; después cada toque añade o quita.
-  const down = (e) => { if (e.pointerType !== 'mouse' && canWrite()) pressTimer = setTimeout(() => { pressed = true; navigator.vibrate?.(10); togglePick(d.id, i); }, 480); };
+  const down = (e) => { const { clientX: x, clientY: y } = e; if (e.pointerType !== 'mouse' && canWrite()) pressTimer = setTimeout(() => { pressed = true; navigator.vibrate?.(10); if (!S().picked.has(d.id)) togglePick(d.id, i); armCarry(x, y); }, 480); };
   const up = () => clearTimeout(pressTimer);
   const drag = (e) => { const ids = picked ? [...s.picked] : [d.id]; e.dataTransfer.setData(DND, ids.join(',')); e.dataTransfer.effectAllowed = 'move'; };
   return html`<div class=${cls('doc', i === s.cur && 'cur', open && 'open', picked && 'picked', i < 18 && 'enter', s.fresh.has(d.id) && 'fresh')} style=${i < 18 ? `--i:${i}` : ''} data-i=${i} onClick=${click} draggable=${!touch && canWrite()} onDragStart=${drag}
@@ -919,7 +1051,8 @@ function Main() {
   useEffect(() => { const now = S().route; if (S().meta && now.f && now.view === 'all' && !folderOf(now.f)) nav({ f: null }, true); });
   const more = useRef();
   useEffect(() => { const io = new IntersectionObserver((e) => e[0].isIntersecting && !S().loading && S().docs.length < S().total && loadDocs(true)); more.current && io.observe(more.current); return () => io.disconnect(); });
-  const title = folder ? folder.name : { inbox: t('Inbox'), all: t('All documents'), trash: t('Trash'), expiring: t('Due dates') }[r.view];
+  const view = currentView();
+  const title = view ? view.name : folder ? folder.name : { inbox: t('Inbox'), all: t('All documents'), trash: t('Trash'), expiring: t('Due dates') }[r.view];
   const filtered = r.q || r.tags.length || r.c || r.t || r.from || r.to;
   const browsing = r.view === 'all' && !filtered, tiles = browsing ? kids(r.f) : [];
   const corr = labelOf('correspondent', r.c), type = labelOf('doctype', r.t);
@@ -948,6 +1081,7 @@ function Main() {
         ${filter('t', 'doctype', 'type', t('Type'), r.t, (x) => nav({ t: x }))}
         <label class=${cls('chip', r.from && 'on')}>${t('From')}<input type="date" value=${r.from} onChange=${(e) => nav({ from: e.target.value })} /></label>
         <label class=${cls('chip', r.to && 'on')}>${t('To')}<input type="date" value=${r.to} onChange=${(e) => nav({ to: e.target.value })} /></label>
+        ${filtered && !view && html`<button class="btn ghost sm" onClick=${saveView}><${Icon} n="spark" />${t('Save search')}</button>`}
         ${filtered && html`<button class="btn ghost sm" onClick=${() => { input.current.value = ''; nav({ q: '', tags: [], c: null, t: null, from: '', to: '' }); }}>${t('Clear')}</button>`}
       </div>
     </div>
@@ -956,11 +1090,15 @@ function Main() {
       ${folder && html`<div class="navbar only-narrow"><button class="back-btn" onClick=${back} ...${dropOn(folder.parent_id || null)}><${Icon} n="chev" /><span>${folderOf(folder.parent_id)?.name || t('Archive')}</span></button>
         <b class="mini-title">${folder.name}</b>${canWrite() && html`<${MenuButton} items=${folderMenu(folder)} title=${t('Folder options')} right cls="btn icon ghost sm" />`}</div>`}
       <div class="list-head">${folder && html`<span class="only-wide"><${Crumbs} f=${folder} /></span>`}
-        <div class="row"><h1 class="grow">${title}</h1>${folder && canWrite() && html`<span class="only-wide"><${MenuButton} items=${folderMenu(folder)} title=${t('Folder options')} right cls="btn icon ghost" /></span>`}</div>
+        <div class="row"><h1 class="grow">${view && html`<span class="view-ico"><${Icon} n="spark" /></span>`}${title}</h1>
+          ${view && html`<${MenuButton} items=${[['trash', t('Delete smart folder'), () => deleteView(view), true]]} title=${t('Options')} right cls="btn icon ghost" />`}
+          ${r.view === 'inbox' && s.total > 0 && canWrite() && html`<button class="btn primary sm" onClick=${() => store.set({ review: true })}><${Icon} n="check" />${t('Review')}</button>`}
+          ${folder && !view && canWrite() && html`<span class="only-wide"><${MenuButton} items=${folderMenu(folder)} title=${t('Folder options')} right cls="btn icon ghost" /></span>`}</div>
         <div class="row"><span class="sub grow">${s.amountTotal != null ? tn(s.total, '{n} document · total {amount}', '{n} documents · total {amount}', { amount: fmtMoney(s.amountTotal) }) : tn(s.total, '{n} document', '{n} documents')}</span>
           <select title=${t('Sort')} value=${r.sort} onChange=${(e) => nav({ sort: e.target.value })}>${sorts.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select>
           <button class="btn icon ghost sm" title=${t('Change view (V)')} onClick=${toggleGrid}><${Icon} n=${s.grid ? 'rows' : 'grid'} /></button></div></div>
-      ${browsing && (tiles.length > 0 || canWrite()) && html`<div class="folders">
+      ${browsing && (tiles.length > 0 || canWrite() || (!r.f && s.views.length > 0)) && html`<div class="folders">
+        ${!r.f && s.views.map((v) => html`<${ViewCard} v=${v} key=${'v' + v.id} />`)}
         ${tiles.map((f) => html`<${FolderCard} f=${f} key=${f.id} />`)}
         ${canWrite() && html`<button class="fcard new" onClick=${() => newFolder(r.f)}><span class="fc-back" /><span class="fc-front"><${Icon} n="plus" /><span class="name">${t('New folder')}</span></span></button>`}</div>`}
       ${!s.docs.length && !s.loading ? html`<div class="empty"><div><div class="big"><${Icon} n=${empty[0]} /></div><h3>${empty[1]}</h3><div>${empty[2]}</div>
@@ -1007,7 +1145,9 @@ function Detail({ id }) {
   const addNote = async () => { if (note.trim() && await attempt(api(`/documents/${id}/notes`, { json: { text: note } }))) { setNote(''); load(); } };
   const del = async () => {
     if (trashed && !await ask({ title: t('Delete permanently?'), text: t('“{title}” and its files will be removed from the server. This can’t be undone.', { title: d.title }), ok: t('Delete forever'), danger: true })) return;
-    await attempt(api(`/documents/${id}${trashed ? '?permanent=true' : ''}`, { method: 'DELETE' }), trashed ? t('Permanently deleted') : t('Moved to trash')); nav({ doc: null }, true); refresh();
+    const ok = await attempt(api(`/documents/${id}${trashed ? '?permanent=true' : ''}`, { method: 'DELETE' }), trashed ? t('Permanently deleted') : null);
+    if (ok !== undefined && !trashed) undoable(t('Moved to trash'), () => api(`/documents/${id}/restore`, { method: 'POST' }));
+    nav({ doc: null }, true); refresh();
   };
   const sg = suggestions(d);
   const suggest = async (action, fields) => {
@@ -1018,7 +1158,9 @@ function Detail({ id }) {
   };
   const file = `/api/documents/${id}/file`, view = tab === 'meta' ? 'doc' : tab;
   const files = [pdf && ['ext', t('Open the PDF in a new tab'), () => window.open(file, '_blank')], ['down', t('Download the original ({size})', { size: fmtSize(d.size) }), () => { location.href = `${file}?variant=original&download=true`; }],
-    d.has_archive && ['down', t('Download the PDF with text (OCR)'), () => { location.href = `${file}?variant=archive&download=true`; }]];
+    d.has_archive && ['down', t('Download the PDF with text (OCR)'), () => { location.href = `${file}?variant=archive&download=true`; }],
+    !ro && !trashed && ['globe', t('Share a link…'), () => store.set({ shareDoc: d })],
+    ['install', isOffline(id) ? t('Remove from this device') : t('Keep offline on this device'), () => keepOffline(d, !isOffline(id))]];
   return html`<section class=${`detail tab-${tab}`}>
     <div class="viewer">
       <div class="viewer-bar"><button class="btn icon ghost" onClick=${() => nav({ doc: null })} title=${t('Back (Esc)')}><${Icon} n="back" /></button>
@@ -1027,7 +1169,7 @@ function Detail({ id }) {
           <button class=${cls('only-narrow', tab === 'meta' && 'on')} onClick=${() => setTab('meta')}>${t('Details')}</button></div>
         <span class="grow" /><${MenuButton} items=${files} icon="down" title=${t('Open or download')} right cls="btn ghost sm"><span class="only-wide">${t('Download')}</span><//></div>
       ${view === 'text' || !pdf ? html`<div class="textview scroll">${d.content ? text() : html`<span class="muted">${t('This document has no extracted text.')}</span>`}</div>`
-        : html`<div class="pages scroll" key=${id}>${Array.from({ length: Math.max(d.pages, 1) }, (_, i) => html`<${PageImg} id=${id} n=${i + 1} />`)}</div>`}
+        : html`<${Pages} id=${id} n=${d.pages} key=${id} />`}
     </div>
     <div class="meta scroll">
       <textarea class="title-input" rows="1" key=${id} defaultValue=${d.title} title=${t('Title (tap to edit)')} readonly=${ro} enterkeyhint="done"
@@ -1082,11 +1224,11 @@ function BulkBar() {
     ${trash ? html`<button class="btn sm" onClick=${() => bulk(ids, { action: 'restore' }, t('Documents restored'))}><${Icon} n="restore" />${t('Restore')}</button>
       ${isAdmin() && html`<button class="btn sm" onClick=${purge}><${Icon} n="trash" />${t('Delete forever')}</button>`}`
     : html`${withSug.length > 0 && html`<button class="btn sm" onClick=${acceptAll}><${Icon} n="spark" />${t('Accept suggestions')}</button>`}${btn('f', 'folder', t('Move'), 'folder')}
-      ${btn('tag', 'tag', t('Add tag'), 'tag', (v, l) => bulk(ids, { add_tags: [l.id] }, t('Tag “{name}” added', { name: l.name })))}
-      ${btn('c', 'user', t('Correspondent'), 'correspondent', (v, l) => bulk(ids, { correspondent_id: l.id }, t('Correspondent: {name}', { name: l.name })))}
-      ${btn('t', 'type', t('Type'), 'doctype', (v, l) => bulk(ids, { doctype_id: l.id }, t('Type: {name}', { name: l.name })))}
-      ${inboxIds().length > 0 && html`<button class="btn sm" onClick=${() => bulk(ids, { remove_tags: inboxIds() }, t('Documents marked as reviewed'))}><${Icon} n="check" />${t('Reviewed')}</button>`}
-      <button class="btn sm" onClick=${() => bulk(ids, { action: 'trash' }, t('Documents moved to trash'))}><${Icon} n="trash" />${t('Trash')}</button>`}
+      ${btn('tag', 'tag', t('Add tag'), 'tag', (v, l) => { const fresh = [...ids].filter((id) => !docById(id)?.tags.includes(l.id)); bulk(ids, { add_tags: [l.id] }, t('Tag “{name}” added', { name: l.name }), () => bulkApi(fresh, { remove_tags: [l.id] })); })}
+      ${btn('c', 'user', t('Correspondent'), 'correspondent', (v, l) => bulk(ids, { correspondent_id: l.id }, t('Correspondent: {name}', { name: l.name }), restoreField([...ids], 'correspondent_id')))}
+      ${btn('t', 'type', t('Type'), 'doctype', (v, l) => bulk(ids, { doctype_id: l.id }, t('Type: {name}', { name: l.name }), restoreField([...ids], 'doctype_id')))}
+      ${inboxIds().length > 0 && html`<button class="btn sm" onClick=${() => markReviewed(ids)}><${Icon} n="check" />${t('Reviewed')}</button>`}
+      <button class="btn sm" onClick=${() => trashDocs(ids)}><${Icon} n="trash" />${t('Trash')}</button>`}
     <span class="sep" /><button class="btn icon sm" title=${t('Clear selection (Esc)')} onClick=${() => store.set({ picked: new Set() })}><${Icon} n="x" /></button></div>`;
 }
 
@@ -1099,7 +1241,7 @@ function Palette() {
     [t('Upload documents'), 'upload', () => pickFiles(), 'U'], [t('Go to the inbox'), 'inbox', () => nav({ ...HOME, view: 'inbox' }), 'G I'], [t('Go to all documents'), 'files', () => nav({ ...HOME, view: 'all' }), 'G A'],
     [t('Go to the trash'), 'trash', () => nav({ ...HOME, view: 'trash' }), 'G T'], [t('Go to due dates'), 'clock', () => nav({ ...HOME, view: 'expiring' })], ...(canWrite() ? [[t('New folder'), 'folder', () => newFolder(here()?.id), 'N']] : []), [isDark() ? t('Switch to light mode') : t('Switch to dark mode'), isDark() ? 'sun' : 'moon', () => setTheme(isDark() ? 'light' : 'dark'), 'D'],
     [t('Settings'), 'settings', () => store.set({ modal: 'settings' }), ','], [t('API tokens and MCP'), 'key', () => store.set({ modal: 'settings:tokens' })], ...(isAdmin() ? [[t('Archive health'), 'activity', () => store.set({ modal: 'settings:health' })]] : []), [t('API documentation'), 'code', () => store.set({ modal: 'settings:api' })],
-    [t('Keyboard shortcuts'), 'help', () => store.set({ modal: 'help' }), '?'], [t('Language: {name}', { name: LANG === 'es' ? 'English' : 'Español' }), 'globe', () => setLang(LANG === 'es' ? 'en' : 'es')], [t('Sign out'), 'logout', () => api('/auth/logout', { method: 'POST' }).then(() => location.reload())],
+    [t('Keyboard shortcuts'), 'help', () => store.set({ modal: 'help' }), '?'], [t('Language: {name}', { name: LANG === 'es' ? 'English' : 'Español' }), 'globe', () => setLang(LANG === 'es' ? 'en' : 'es')], [t('Sign out'), 'logout', logout],
     ...s.folders.map((f) => [t('Folder: {name}', { name: f.path.replaceAll('/', ' › ') }), 'folder', () => nav({ ...HOME, view: 'all', f: f.id })]),
     ...s.labels.tag.map((l) => [t('Tag: {name}', { name: l.name }), 'tag', () => nav({ tags: [l.id], doc: null })]),
     ...s.labels.correspondent.map((l) => [t('Correspondent: {name}', { name: l.name }), 'user', () => nav({ c: l.id, doc: null })]),
@@ -1198,20 +1340,24 @@ function Consent() {
 const pushReady = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const b64key = (s) => { const b = atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - s.length % 4) % 4)); return Uint8Array.from(b, (c) => c.charCodeAt(0)); };
 async function currentSub() { if (!pushReady()) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
-async function enablePush(folders) {
+async function enablePush(folders, reminders = true) {
   if (await Notification.requestPermission() !== 'granted') throw new Error(t('Notifications are blocked for Papiro in this browser’s settings.'));
   const reg = await navigator.serviceWorker.ready, { public_key } = await api('/push');
   let sub = await reg.pushManager.getSubscription();
   if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64key(public_key) });
-  await api('/push/subscriptions', { json: { ...sub.toJSON(), folders, lang: LANG } });
+  await api('/push/subscriptions', { json: { ...sub.toJSON(), folders, lang: LANG, reminders } });
 }
 function Notifications() {
-  const [st, setSt] = useState(null), [busy, setBusy] = useState(false), [reach, setReach] = useState(null), s = useStore();
+  const [st, setSt] = useState(null), [busy, setBusy] = useState(false), [reach, setReach] = useState(null), [rem, setRem] = useState(true), [cal, setCal] = useState(null), s = useStore();
   const ios = /iP(hone|ad|od)/.test(navigator.userAgent), installed = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-  const load = async () => { const sub = await currentSub().catch(() => null); const r = await api('/push' + (sub ? '?endpoint=' + encodeURIComponent(sub.endpoint) : '')); setSt(r); setReach(r.folders ?? null); };
+  const load = async () => { const sub = await currentSub().catch(() => null); const r = await api('/push' + (sub ? '?endpoint=' + encodeURIComponent(sub.endpoint) : '')); setSt(r); setReach(r.folders ?? null); setRem(r.reminders); };
   useEffect(() => { load(); }, []);
   const run = (f, msg) => async () => { setBusy(true); await attempt(f(), msg); setBusy(false); load(); };
-  const on = run(() => enablePush(reach), t('Notifications turned on'));
+  const on = run(() => enablePush(reach, rem), t('Notifications turned on'));
+  const testDue = run(() => api('/push/test?reminders=true', { method: 'POST' }).then((r) => r.devices || Promise.reject(new Error(t('Nothing is due today, tomorrow, in 7 or in 30 days')))), t('Reminder sent'));
+  const newCal = run(async () => { const r = await api('/calendar', { method: 'POST' }); setCal(r.url); }, null);
+  const offCal = run(async () => { await api('/calendar', { method: 'DELETE' }); setCal(null); }, t('Calendar link revoked'));
+  const copyCal = async () => { try { await navigator.clipboard.writeText(cal); toast(t('Link copied')); } catch { toast(cal, 'warn', 9000); } };
   const off = run(async () => { const sub = await currentSub(); if (sub) { await api('/push/unsubscribe', { json: { endpoint: sub.endpoint } }); await sub.unsubscribe(); } }, t('Notifications turned off'));
   const test = run(() => api('/push/test', { method: 'POST' }).then((r) => r.devices || Promise.reject(new Error(t('No device has notifications on yet')))), t('Test sent: it should arrive in a few seconds'));
   return html`<h2>${t('Notifications')}</h2><p>${t('Get a notification when a new document arrives: by email, in the watched folder, from an AI agent, the API or another person. Not for what you upload yourself from here.')}</p>
@@ -1223,8 +1369,17 @@ function Notifications() {
         ${st.subscribed ? html`<button class="btn" disabled=${busy} onClick=${off}>${t('Turn off')}</button>` : html`<button class="btn primary" disabled=${busy || (reach !== null && !reach.length)} onClick=${on}>${busy ? html`<span class="spinner" />` : null}${t('Turn on')}</button>`}</div>
       <h5 class="sub-h">${t('About which documents')}</h5>
       <${Reach} folders=${s.folders} value=${reach} onChange=${setReach} />
-      <div class="row wrap" style="margin-top:12px">${st.subscribed && html`<button class="btn" disabled=${busy || (reach !== null && !reach.length)} onClick=${on}>${t('Save folders')}</button>`}
-        <button class="btn ghost" disabled=${busy || !st.devices} onClick=${test}><${Icon} n="bell" />${t('Send a test')}</button></div>`}`;
+      <h5 class="sub-h">${t('Due dates')}</h5>
+      <label class=${cls('choice', rem && 'on')}><input type="checkbox" checked=${rem} onChange=${(e) => setRem(e.target.checked)} /><span><b>${t('Daily due-date reminder')}</b>
+        <small>${t('At 9:00, one notification with what is due today, tomorrow, in 7 and in 30 days (IDs, insurance, contracts…).')}</small></span></label>
+      <div class="row wrap" style="margin-top:12px">${st.subscribed && html`<button class="btn" disabled=${busy || (reach !== null && !reach.length)} onClick=${on}>${t('Save')}</button>`}
+        <button class="btn ghost" disabled=${busy || !st.devices} onClick=${test}><${Icon} n="bell" />${t('Send a test')}</button>
+        <button class="btn ghost" disabled=${busy || !st.devices} onClick=${testDue}><${Icon} n="clock" />${t('Send today’s reminder')}</button></div>`}
+    <h2 style="margin-top:28px">${t('Calendar')}</h2><p>${t('Subscribe from your phone’s calendar (Apple, Google, Outlook) and every due date shows up there, with an alert 7 days before. It updates by itself.')}</p>
+    ${cal ? html`<div class="code share-url">${cal}</div><div class="row wrap"><a class="btn primary" href=${cal.replace(/^https?:/, 'webcal:')}><${Icon} n="cal" />${t('Add to my calendar')}</a>
+        <button class="btn" onClick=${copyCal}>${t('Copy link')}</button></div><p class="faint" style="margin-top:8px">${t('Keep this link private: it shows your due dates to whoever has it.')}</p>`
+      : html`<div class="row wrap"><button class="btn" disabled=${busy} onClick=${newCal}><${Icon} n="cal" />${st?.calendar ? t('Create a new link (revokes the old one)') : t('Create calendar link')}</button>
+        ${st?.calendar && html`<button class="btn ghost danger" disabled=${busy} onClick=${offCal}>${t('Turn off')}</button>`}</div>`}`;
 }
 
 function Tokens() {
@@ -1276,7 +1431,7 @@ function Account() {
   const change = async (e) => { e.preventDefault(); await attempt(api('/auth/password', { json: pw }).then(() => setPw({ current: '', new: '' })), t('Password updated')); };
   const add = async (e) => { e.preventDefault(); if (await attempt(api('/users', { json: nu }), t('User created'))) { setNu({ username: '', password: '', role: 'editor' }); load(); } };
   const reset = async (u) => { const p = await ask({ title: t('New password for {user}', { user: u.username }), text: t('At least 8 characters. Their open sessions will be signed out.'), input: true, type: 'password', minlength: 8, ok: t('Reset') }); if (p) await attempt(api(`/users/${u.id}`, { method: 'PATCH', json: { password: p } }), t('Password reset')); };
-  return html`<h2>${t('Account')}</h2><p>${t('Signed in as {user} ({role}).', { user: html`<b>${s.user.username}</b>`, role: ROLES.find((r) => r[0] === s.user.role)?.[1] })} <a href="#" onClick=${(e) => { e.preventDefault(); api('/auth/logout', { method: 'POST' }).then(() => location.reload()); }}>${t('Sign out')}</a></p>
+  return html`<h2>${t('Account')}</h2><p>${t('Signed in as {user} ({role}).', { user: html`<b>${s.user.username}</b>`, role: ROLES.find((r) => r[0] === s.user.role)?.[1] })} <a href="#" onClick=${(e) => { e.preventDefault(); logout(); }}>${t('Sign out')}</a></p>
     <form class="row" style="flex-wrap:wrap" onSubmit=${change}><input class="input" style="flex:1;min-width:150px" type="password" placeholder=${t('Current password')} value=${pw.current} onInput=${(e) => setPw({ ...pw, current: e.target.value })} required />
       <input class="input" style="flex:1;min-width:150px" type="password" placeholder=${t('New (min. 8)')} minlength="8" value=${pw.new} onInput=${(e) => setPw({ ...pw, new: e.target.value })} required /><button class="btn">${t('Change')}</button></form>
     <h2 style="margin-top:26px">${t('Language')}</h2><select class="input" style="width:auto" value=${LANG} onChange=${(e) => setLang(e.target.value)}><option value="en">English</option><option value="es">Español</option></select>
@@ -1355,14 +1510,426 @@ function Help() {
 }
 
 
+// ───────────── escáner: varias fotos → un PDF, con bordes detectados y enderezados ─────────────
+// Todo ocurre en el teléfono (canvas): el servidor recibe un PDF normal y le hace OCR como a cualquier otro.
+
+/** Esquinas del papel en una imagen pequeña: el papel suele ser la mancha clara más grande. */
+function findPaper(img) {
+  const S = 320, k = Math.min(1, S / Math.max(img.width, img.height)), w = Math.max(8, Math.round(img.width * k)), h = Math.max(8, Math.round(img.height * k));
+  const c = Object.assign(document.createElement('canvas'), { width: w, height: h }), g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0, w, h);
+  const px = g.getImageData(0, 0, w, h).data, lum = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) lum[i] = px[i * 4] * 0.299 + px[i * 4 + 1] * 0.587 + px[i * 4 + 2] * 0.114;
+  // desenfoque 5×5 (dos pasadas de caja) para que el texto no parta el papel en pedazos
+  const blur = (src) => { const out = new Float32Array(w * h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let s = 0, n = 0; for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < w && Y < h) { s += src[Y * w + X]; n++; } } out[y * w + x] = s / n; } return out; };
+  const L = blur(blur(lum));
+  // umbral de Otsu sobre los píxeles entre lo y hi
+  const otsu = (lo, hi) => {
+    const hist = new Array(256).fill(0); let n = 0; for (const v of L) if (v >= lo && v < hi) { hist[v | 0]++; n++; }
+    let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+    let sB = 0, wB = 0, best = 0, th = (lo + hi) / 2;
+    for (let i = 0; i < 256; i++) { wB += hist[i]; if (!wB) continue; const wF = n - wB; if (!wF) break; sB += i * hist[i]; const d = sB / wB - (sum - sB) / wF, v = wB * wF * d * d; if (v > best) { best = v; th = i; } }
+    return th;
+  };
+  // componente clara más grande (BFS) para un umbral
+  const seen = new Uint8Array(w * h), q = new Int32Array(w * h);
+  const largest = (th) => {
+    seen.fill(0); let bestPix = null;
+    for (let i = 0; i < w * h; i++) {
+      if (seen[i] || L[i] <= th) continue;
+      let head = 0, tail = 0; q[tail++] = i; seen[i] = 1;
+      while (head < tail) { const j = q[head++], x = j % w, y = (j / w) | 0;
+        for (const m of [x + 1 < w ? j + 1 : -1, x > 0 ? j - 1 : -1, y + 1 < h ? j + w : -1, y > 0 ? j - w : -1]) if (m >= 0 && !seen[m] && L[m] > th) { seen[m] = 1; q[tail++] = m; } }
+      if (!bestPix || tail > bestPix.length) bestPix = q.slice(0, tail);
+    }
+    return bestPix;
+  };
+  // esquinas (extremos de x+y y x−y) y cuánto llena la mancha su cuadrilátero: una hoja lo llena casi entero
+  const corners = (pix) => {
+    let tl, tr, br, bl, a = Infinity, b = -Infinity, c2 = -Infinity, d = Infinity;
+    for (const j of pix) { const x = j % w, y = (j / w) | 0; if (x + y < a) { a = x + y; tl = [x, y]; } if (x + y > b) { b = x + y; br = [x, y]; } if (x - y > c2) { c2 = x - y; tr = [x, y]; } if (x - y < d) { d = x - y; bl = [x, y]; } }
+    const quad = [tl, tr, br, bl], area = Math.abs(quad.reduce((s, p, i) => { const n = quad[(i + 1) % 4]; return s + p[0] * n[1] - n[0] * p[1]; }, 0)) / 2;
+    return { quad, fill: pix.length / Math.max(1, area), n: pix.length };
+  };
+  const full = [[0.04, 0.04], [0.96, 0.04], [0.96, 0.96], [0.04, 0.96]].map(([x, y]) => [x * img.width, y * img.height]);
+  // Primero el umbral normal; si una sombra parte la hoja en dos, un segundo umbral más bajo la junta.
+  const t1 = otsu(0, 256), t2 = otsu(0, t1);
+  const cands = [t1, t2].map((th) => largest(th)).filter(Boolean).map(corners).filter((c) => c.n > w * h * 0.12 && c.n < w * h * 0.97 && c.fill > 0.82);
+  if (!cands.length) return full;
+  const [tl, tr, br, bl] = cands.sort((x, y) => y.n - x.n)[0].quad;
+  return [tl, tr, br, bl].map(([x, y]) => [(x + 0.5) / k, (y + 0.5) / k]);
+}
+
+/** Matriz 3×3 que lleva el rectángulo de salida (w×h) al cuadrilátero de la foto. */
+function homography(w, h, quad) {
+  const src = [[0, 0], [w, 0], [w, h], [0, h]], A = [], B = [];
+  for (let i = 0; i < 4; i++) { const [x, y] = src[i], [u, v] = quad[i]; A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); B.push(u); A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); B.push(v); }
+  for (let c = 0; c < 8; c++) { let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r; [A[c], A[p]] = [A[p], A[c]]; [B[c], B[p]] = [B[p], B[c]];
+    for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; B[r] -= f * B[c]; } }
+  const m = B.map((v, i) => v / A[i][i]); return [...m, 1];
+}
+
+/** Endereza el papel y aplica el filtro (documento: blanco limpio y texto marcado; byn; original). */
+function flatten(img, quad, filter, maxSide = 2000) {
+  const dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+  let W = Math.max(dist(quad[0], quad[1]), dist(quad[3], quad[2])), H = Math.max(dist(quad[0], quad[3]), dist(quad[1], quad[2]));
+  const k = Math.min(1, maxSide / Math.max(W, H)); W = Math.max(50, Math.round(W * k)); H = Math.max(50, Math.round(H * k));
+  const sc = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height }), sg = sc.getContext('2d', { willReadFrequently: true });
+  sg.drawImage(img, 0, 0); const S = sg.getImageData(0, 0, img.width, img.height).data, SW = img.width, SH = img.height;
+  const out = Object.assign(document.createElement('canvas'), { width: W, height: H }), og = out.getContext('2d'), O = og.createImageData(W, H), D = O.data;
+  const [a, b, c, d, e, f, g, h] = homography(W, H, quad);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const z = g * x + h * y + 1, u = (a * x + b * y + c) / z, v = (d * x + e * y + f) / z;
+    const x0 = Math.max(0, Math.min(SW - 2, u | 0)), y0 = Math.max(0, Math.min(SH - 2, v | 0)), fx = Math.min(1, Math.max(0, u - x0)), fy = Math.min(1, Math.max(0, v - y0));
+    const i00 = (y0 * SW + x0) * 4, i10 = i00 + 4, i01 = i00 + SW * 4, i11 = i01 + 4, o = (y * W + x) * 4;
+    for (let ch = 0; ch < 3; ch++) D[o + ch] = (S[i00 + ch] * (1 - fx) + S[i10 + ch] * fx) * (1 - fy) + (S[i01 + ch] * (1 - fx) + S[i11 + ch] * fx) * fy;
+    D[o + 3] = 255;
+  }
+  if (filter !== 'original') {
+    // Fondo de papel por zonas: la imagen reducida (con el máximo de sus vecinos, para que el texto no
+    // cuente) y ampliada de nuevo. Dividir por él quita sombras y el tono del papel; lo que queda cerca
+    // del blanco se vuelve blanco puro (adiós al grano) y la tinta se oscurece.
+    const sw = Math.max(4, Math.round(W / 22)), sh = Math.max(4, Math.round(H / 22));
+    const small = Object.assign(document.createElement('canvas'), { width: sw, height: sh }), smg = small.getContext('2d', { willReadFrequently: true });
+    smg.imageSmoothingQuality = 'high'; og.putImageData(O, 0, 0); smg.drawImage(out, 0, 0, W, H, 0, 0, sw, sh);
+    const sd = smg.getImageData(0, 0, sw, sh), sp = sd.data, lumS = new Float32Array(sw * sh);
+    for (let k = 0; k < sw * sh; k++) lumS[k] = sp[k * 4] * 0.299 + sp[k * 4 + 1] * 0.587 + sp[k * 4 + 2] * 0.114;
+    // cierre (máximo y luego mínimo): el texto desaparece del fondo, pero el borde de una sombra se queda donde está
+    const pass = (src, pick) => { const dst = new Float32Array(sw * sh); for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) { let m = pick === Math.max ? 0 : 255; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < sw && Y < sh) m = pick(m, src[Y * sw + X]); } dst[y * sw + x] = m; } return dst; };
+    const closed = pass(pass(lumS, Math.max), Math.min);
+    for (let k = 0; k < sw * sh; k++) sp[k * 4] = sp[k * 4 + 1] = sp[k * 4 + 2] = closed[k];
+    smg.putImageData(sd, 0, 0);
+    const bgc = Object.assign(document.createElement('canvas'), { width: W, height: H }), bgg = bgc.getContext('2d', { willReadFrequently: true });
+    bgg.imageSmoothingQuality = 'high'; bgg.drawImage(small, 0, 0, W, H); const BG = bgg.getImageData(0, 0, W, H).data;
+    const bw = filter === 'bw', white = 0.86, ink = bw ? 0.45 : 0.3;
+    for (let i = 0; i < W * H * 4; i += 4) {
+      const l = D[i] * 0.299 + D[i + 1] * 0.587 + D[i + 2] * 0.114, r = l / Math.max(24, BG[i]);
+      const t2 = Math.max(0, Math.min(1, (r - ink) / (white - ink))), v = 255 * (bw ? t2 * t2 : Math.pow(t2, 1.35));
+      if (bw || t2 >= 1) { D[i] = D[i + 1] = D[i + 2] = v; continue; }
+      // en color, la tinta conserva su tono (firmas azules, sellos rojos): se escala sin desaturar
+      const k = v / Math.max(1, l); D[i] = Math.min(255, D[i] * k); D[i + 1] = Math.min(255, D[i + 1] * k); D[i + 2] = Math.min(255, D[i + 2] * k);
+    }
+  }
+  og.putImageData(O, 0, 0);
+  return out;
+}
+
+/** PDF mínimo con una imagen JPEG por página (A4 de ancho, alto proporcional). */
+async function makePdf(canvases) {
+  const enc = new TextEncoder(), parts = [], offsets = [];
+  let len = 0; const push = (x) => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const obj = (n, body) => { offsets[n] = len; push(`${n} 0 obj\n`); body(); push('\nendobj\n'); };
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const n = canvases.length, kids = canvases.map((_, i) => `${3 + i * 3} 0 R`).join(' ');
+  obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => push(`<< /Type /Pages /Kids [${kids}] /Count ${n} >>`));
+  for (let i = 0; i < n; i++) {
+    const cv = canvases[i], jpg = new Uint8Array(await (await new Promise((r) => cv.toBlob(r, 'image/jpeg', 0.82))).arrayBuffer());
+    const pw = 595.28, ph = +(pw * cv.height / cv.width).toFixed(2), page = 3 + i * 3, img = page + 1, content = page + 2, draw = `q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
+    obj(page, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${img} 0 R >> >> /Contents ${content} 0 R >>`));
+    obj(img, () => { push(`<< /Type /XObject /Subtype /Image /Width ${cv.width} /Height ${cv.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`); push(jpg); push('\nendstream'); });
+    obj(content, () => push(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`));
+  }
+  const xref = len, count = 3 + n * 3;
+  push(`xref\n0 ${count}\n0000000000 65535 f \n`);
+  for (let i = 1; i < count; i++) push(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
+  push(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(parts, { type: 'application/pdf' });
+}
+
+async function loadPhoto(file) {
+  const bmp = await createImageBitmap(file);
+  // Las fotos enormes se reducen a 3000 px: más que suficiente para OCR y dentro del límite de canvas de iOS.
+  const k = Math.min(1, 3000 / Math.max(bmp.width, bmp.height));
+  if (k === 1) return bmp;
+  const c = Object.assign(document.createElement('canvas'), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); bmp.close?.();
+  return c;
+}
+function rotate90(img, quad) {
+  const c = Object.assign(document.createElement('canvas'), { width: img.height, height: img.width }), g = c.getContext('2d');
+  g.translate(img.height, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0);
+  return [c, [quad[3], quad[0], quad[1], quad[2]].map(([x, y]) => [img.height - y, x])];
+}
+
+function Scanner() {
+  const [pages, setPages] = useState([]), [edit, setEdit] = useState(null), [busy, setBusy] = useState(''), [filter, setFilter] = useState(localStorage.scanFilter || 'doc');
+  const folder = here(), stage = useRef(), drag = useRef(null);
+  const close = () => store.set({ scan: false });
+  const shoot = () => {
+    const i = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', multiple: true });
+    if (touch) i.capture = 'environment';
+    i.onchange = async () => {
+      const files = [...i.files]; if (!files.length) return;
+      setBusy(t('Finding the edges…'));
+      try {
+        for (const [n, f] of files.entries()) {
+          const img = await loadPhoto(f), quad = findPaper(img);
+          if (files.length === 1) { setEdit({ img, quad, index: null }); break; }
+          const out = flatten(img, quad, filter); setPages((p) => [...p, { img, quad, out, filter }]);
+          setBusy(t('Page {n} of {total}…', { n: n + 2, total: files.length }));
+        }
+      } catch (e) { toast(t('That photo couldn’t be read'), 'bad'); }
+      setBusy('');
+    };
+    i.click();
+  };
+  const accept = async () => {
+    setBusy(t('Straightening…')); await tick(30);
+    const out = flatten(edit.img, edit.quad, filter), page = { img: edit.img, quad: edit.quad, out, filter };
+    setPages((p) => (edit.index == null ? [...p, page] : p.map((x, i) => (i === edit.index ? page : x))));
+    setEdit(null); setBusy(''); buzz();
+  };
+  const save = async () => {
+    setBusy(t('Making the PDF…')); await tick(30);
+    try {
+      const pdf = await makePdf(pages.map((p) => p.out)), d = new Date(), pad = (x) => String(x).padStart(2, '0');
+      const name = `${t('Scan')} ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}.${pad(d.getMinutes())}.pdf`;
+      close(); await upload([new File([pdf], name, { type: 'application/pdf' })]);
+    } catch (e) { toast(e.message, 'bad'); setBusy(''); }
+  };
+  // arrastrar las esquinas
+  const toImg = (e) => { const r = stage.current.getBoundingClientRect(), k = edit.img.width / r.width; return [(e.clientX - r.left) * k, (e.clientY - r.top) * k]; };
+  const onDown = (i) => (e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); drag.current = i; };
+  const onMove = (e) => { if (drag.current == null || !edit) return; const [x, y] = toImg(e); const q = edit.quad.map((p, i) => (i === drag.current ? [Math.max(0, Math.min(edit.img.width, x)), Math.max(0, Math.min(edit.img.height, y))] : p)); setEdit({ ...edit, quad: q }); };
+  const onUp = () => { drag.current = null; };
+  const setF = (f) => { setFilter(f); localStorage.scanFilter = f; };
+  const filters = [['doc', t('Document')], ['bw', t('B&W')], ['original', t('Original')]];
+  if (edit) {
+    const W = edit.img.width, H = edit.img.height, pts = edit.quad.map((p) => p.join(',')).join(' ');
+    return html`<div class="scanner"><div class="scan-bar"><button class="btn ghost" onClick=${() => setEdit(null)}>${t('Cancel')}</button><b class="grow">${t('Adjust the corners')}</b>
+        <button class="btn icon ghost" title=${t('Rotate')} onClick=${() => { const [img, quad] = rotate90(edit.img, edit.quad); setEdit({ ...edit, img, quad }); }}><${Icon} n="restore" /></button></div>
+      <div class="scan-stage"><div class="scan-photo" ref=${stage} style=${`aspect-ratio:${W}/${H}`} onPointerMove=${onMove} onPointerUp=${onUp} onPointerCancel=${onUp}>
+        <canvas ref=${(c) => { const key = String(edit.img.__k ||= Math.random()); if (c && c.dataset.k !== key) { c.width = W; c.height = H; c.getContext('2d').drawImage(edit.img, 0, 0); c.dataset.k = key; } }} />
+        <svg viewBox=${`0 0 ${W} ${H}`} preserveAspectRatio="none"><polygon points=${pts} /></svg>
+        ${edit.quad.map(([x, y], i) => html`<span class="corner" style=${`left:${(x / W) * 100}%;top:${(y / H) * 100}%`} onPointerDown=${onDown(i)} />`)}</div></div>
+      <div class="scan-foot"><div class="seg">${filters.map(([k, l]) => html`<button class=${filter === k ? 'on' : ''} onClick=${() => setF(k)}>${l}</button>`)}</div>
+        <button class="btn primary" disabled=${!!busy} onClick=${accept}>${busy ? html`<span class="spinner" />` : html`<${Icon} n="check" />`}${t('Use this page')}</button></div></div>`;
+  }
+  return html`<div class="scanner"><div class="scan-bar"><button class="btn ghost" onClick=${close}>${t('Cancel')}</button>
+      <b class="grow">${pages.length ? tn(pages.length, '{n} page', '{n} pages') : t('Scan a document')}</b>
+      ${pages.length > 0 && html`<button class="btn primary" disabled=${!!busy} onClick=${save}><${Icon} n="upload" />${t('Save PDF')}</button>`}</div>
+    <div class="scan-pages scroll">${pages.map((p, i) => html`<div class="scan-page" key=${i}>
+        <img src=${p.url || (p.url = p.out.toDataURL('image/jpeg', 0.6))} alt="" onClick=${() => setEdit({ img: p.img, quad: p.quad, index: i })} />
+        <span class="num">${i + 1}</span><button class="del" title=${t('Remove')} onClick=${() => setPages(pages.filter((_, j) => j !== i))}><${Icon} n="x" /></button></div>`)}
+      <button class="scan-add" onClick=${shoot}><span class="ico"><${Icon} n="camera" /></span><b>${pages.length ? t('Add a page') : t('Open the camera')}</b>
+        <small>${pages.length ? t('Tap a page to fix its corners') : t('Papiro finds the edges, straightens the page and joins several into one PDF.')}</small></button></div>
+    ${folder && html`<p class="scan-dest"><${Icon} n="folder" />${t('It will be saved in “{name}”', { name: folder.name })}</p>`}
+    ${busy && html`<div class="scan-busy"><span class="spinner" />${busy}</div>`}</div>`;
+}
+
+// ───────────── revisar la bandeja deslizando tarjetas ─────────────
+function Review() {
+  const [list, setList] = useState(null), [i, setI] = useState(0), [fly, setFly] = useState(null), [last, setLast] = useState(null), card = useRef(), g = useRef(null);
+  const close = () => { store.set({ review: false }); refresh(); };
+  useEffect(() => { api('/documents?inbox=true&limit=200&sort=added&order=asc').then((r) => setList(r.items)).catch(() => setList([])); }, []);
+  const d = list?.[i], next = list?.[i + 1];
+  const go = (dir) => setFly(dir);
+  useEffect(() => {
+    if (!fly || !d) return;
+    const done = async () => {
+      if (fly === 'right') {
+        const sg = suggestions(d).pend.length;
+        if (sg) await attempt(api(`/documents/${d.id}/suggest`, { json: { action: 'accept' } }));
+        const inbox = d.tags.filter((x) => inboxIds().includes(x));
+        if (await attempt(api(`/documents/${d.id}`, { method: 'PATCH', json: { remove_tags: inbox } }))) setLast({ d, inbox });
+      } else if (fly === 'up') { store.set({ review: false }); nav({ doc: d.id }); return; }
+      else setLast(null);
+      setFly(null); setI(i + 1); buzz();
+    };
+    const tm = setTimeout(done, 260); return () => clearTimeout(tm);
+  }, [fly]);
+  const undo = async () => { if (!last) return; await attempt(api(`/documents/${last.d.id}`, { method: 'PATCH', json: { add_tags: last.inbox } })); setLast(null); setI(Math.max(0, i - 1)); };
+  // arrastre con el dedo o el ratón
+  const down = (e) => { if (fly) return; g.current = { x: e.clientX, y: e.clientY, t: performance.now() }; e.currentTarget.setPointerCapture(e.pointerId); card.current.classList.add('dragging'); };
+  const move = (e) => { if (!g.current) return; const dx = e.clientX - g.current.x, dy = Math.min(0, e.clientY - g.current.y); g.current.dx = dx; g.current.dy = dy;
+    card.current.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 18}deg)`; card.current.style.setProperty('--yes', Math.max(0, Math.min(1, dx / 110))); card.current.style.setProperty('--no', Math.max(0, Math.min(1, -dx / 110))); card.current.style.setProperty('--up', Math.max(0, Math.min(1, -dy / 120))); };
+  const up = () => { const x = g.current; g.current = null; if (!x) return; card.current.classList.remove('dragging');
+    const fast = Math.abs(x.dx || 0) / (performance.now() - x.t) > 0.5;
+    if ((x.dx || 0) > 110 || (fast && x.dx > 40)) go('right'); else if ((x.dx || 0) < -110 || (fast && x.dx < -40)) go('left'); else if ((x.dy || 0) < -130) go('up');
+    else { card.current.style.transform = ''; card.current.style.setProperty('--yes', 0); card.current.style.setProperty('--no', 0); card.current.style.setProperty('--up', 0); } };
+  useEffect(() => { const k = (e) => { if (e.key === 'ArrowRight') go('right'); else if (e.key === 'ArrowLeft') go('left'); else if (e.key === 'ArrowUp') go('up'); else if (e.key === 'Escape') close(); }; addEventListener('keydown', k, true); return () => removeEventListener('keydown', k, true); });
+  const face = (x, behind) => {
+    const sg = suggestions(x), folder = folderOf(x.folder_id), pdf = (x.has_archive || x.mime === 'application/pdf') && x.pages > 0;
+    return html`<div class=${cls('rcard', behind && 'behind', !behind && fly && `fly-${fly}`)} ref=${behind ? null : card} key=${x.id}
+        onPointerDown=${behind ? null : down} onPointerMove=${behind ? null : move} onPointerUp=${behind ? null : up} onPointerCancel=${behind ? null : up}>
+      <div class="rimg">${pdf ? html`<img draggable=${false} src=${`/api/documents/${x.id}/pages/1?v=2`} alt="" />` : x.has_thumb ? html`<img draggable=${false} src=${`/api/documents/${x.id}/thumb?v=2`} alt="" />` : html`<span>${x.original_name.split('.').pop()}</span>`}
+        <i class="stamp yes">${t('File it')}</i><i class="stamp no">${t('Later')}</i><i class="stamp up">${t('Edit')}</i></div>
+      <div class="rinfo"><b>${x.title}</b><small>${[fmtDate(x.created), x.amount != null && fmtMoney(x.amount), x.pages > 1 && tn(x.pages, '{n} page', '{n} pages')].filter(Boolean).join(' · ')}</small>
+        <div class="rchips">${sg.pend.map((p) => html`<span class="rchip sug"><${Icon} n=${p.icon} />${p.name}</span>`)}
+          ${!sg.pend.length && folder && html`<span class="rchip"><${Icon} n="folder" />${folder.name}</span>`}
+          ${!sg.pend.length && !folder && html`<span class="rchip faint">${t('No suggestions: it stays where it is')}</span>`}</div></div></div>`;
+  };
+  return html`<div class="review"><div class="scan-bar"><button class="btn ghost" onClick=${close}>${t('Close')}</button>
+      <b class="grow">${list ? (d ? t('{n} of {total}', { n: i + 1, total: list.length }) : t('Inbox')) : ''}</b>
+      <button class="btn icon ghost" title=${t('Undo')} disabled=${!last} onClick=${undo}><${Icon} n="restore" /></button></div>
+    <div class="rstage">${!list ? html`<span class="spinner" />` : d ? html`${next && face(next, true)}${face(d)}`
+      : html`<div class="empty"><div><div class="big"><${Icon} n="check" /></div><h3>${t('Inbox zero')}</h3><div>${t('Everything is filed. New documents will wait for you here.')}</div>
+        <button class="btn primary" onClick=${close}>${t('Done')}</button></div></div>`}</div>
+    ${d && html`<div class="ractions"><button class="rbtn no" title=${t('Later')} onClick=${() => go('left')}><${Icon} n="x" /></button>
+      <button class="rbtn up" title=${t('Edit')} onClick=${() => go('up')}><${Icon} n="edit" /></button>
+      <button class="rbtn yes" title=${t('File it')} onClick=${() => go('right')}><${Icon} n="check" /></button></div>
+      <p class="rhint">${t('Swipe right to accept the suggestions and file it, left to leave it for later, up to edit it.')}</p>`}</div>`;
+}
+
+// ───────────── visor de páginas: pellizcar para ampliar, doble toque, indicador de página ─────────────
+function Pages({ id, n }) {
+  const box = useRef(), inner = useRef(), zoom = useRef(1), [z, setZ] = useState(1), [page, setPage] = useState(1), [show, setShow] = useState(false);
+  const apply = (nz, cx, cy) => {
+    // ampliar alrededor del punto (cx, cy) de la pantalla: el contenido bajo el dedo no se mueve
+    const el = box.current, old = zoom.current; nz = Math.max(1, Math.min(4, nz));
+    const px = el.scrollLeft + cx, py = el.scrollTop + cy;
+    zoom.current = nz; inner.current.style.transform = ''; inner.current.style.setProperty('--zoom', nz); el.classList.toggle('zoomed', nz > 1.01); setZ(nz);
+    requestAnimationFrame(() => { el.scrollLeft = px * (nz / old) - cx; el.scrollTop = py * (nz / old) - cy; });
+  };
+  useEffect(() => {
+    const el = box.current; let pinch = null, lastTap = 0, hide = 0;
+    const d2 = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const start = (e) => {
+      if (e.touches.length === 2) { const r = el.getBoundingClientRect(); const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left, cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+        pinch = { d: d2(e.touches), cx, cy, k: 1 }; inner.current.style.transformOrigin = `${el.scrollLeft + cx}px ${el.scrollTop + cy}px`; }
+      else if (e.touches.length === 1) { const now = performance.now(), r = el.getBoundingClientRect();
+        if (now - lastTap < 280) { apply(zoom.current > 1.2 ? 1 : 2.5, e.touches[0].clientX - r.left, e.touches[0].clientY - r.top); lastTap = 0; } else lastTap = now; }
+    };
+    const moveT = (e) => { if (!pinch || e.touches.length !== 2) return; e.preventDefault(); const k = Math.max(1 / zoom.current, Math.min(4 / zoom.current, d2(e.touches) / pinch.d)); pinch.k = k; inner.current.style.transform = `scale(${k})`; };
+    const end = (e) => { if (pinch && e.touches.length < 2) { const p = pinch; pinch = null; apply(zoom.current * p.k, p.cx, p.cy); } };
+    const noGesture = (e) => e.preventDefault();
+    const dbl = (e) => { const r = el.getBoundingClientRect(); apply(zoom.current > 1.2 ? 1 : 2, e.clientX - r.left, e.clientY - r.top); };
+    const scroll = () => { setShow(true); clearTimeout(hide); hide = setTimeout(() => setShow(false), 900); };
+    el.addEventListener('touchstart', start, { passive: true }); el.addEventListener('touchmove', moveT, { passive: false }); el.addEventListener('touchend', end); el.addEventListener('touchcancel', end);
+    el.addEventListener('gesturestart', noGesture); el.addEventListener('dblclick', dbl); el.addEventListener('scroll', scroll, { passive: true });
+    const io = new IntersectionObserver((es) => { for (const x of es) if (x.isIntersecting) setPage(Number(x.target.dataset.n)); }, { root: el, threshold: 0.5 });
+    el.querySelectorAll('[data-n]').forEach((x) => io.observe(x));
+    return () => { io.disconnect(); clearTimeout(hide); ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'gesturestart', 'dblclick', 'scroll'].forEach((t) => el.removeEventListener(t, { touchstart: start, touchmove: moveT, touchend: end, touchcancel: end, gesturestart: noGesture, dblclick: dbl, scroll }[t])); };
+  }, [id]);
+  return html`<div class="pages-wrap"><div class="pages scroll" ref=${box} key=${id}><div class="pages-inner" ref=${inner} style="--zoom:1">
+      ${Array.from({ length: Math.max(n, 1) }, (_, i) => html`<div class="pg" data-n=${i + 1}><${PageImg} id=${id} n=${i + 1} /></div>`)}</div></div>
+    ${n > 1 && html`<span class=${cls('pg-pill', (show || z > 1) && 'on')}>${page} / ${n}</span>`}
+    ${z > 1.01 && html`<button class="pg-reset" onClick=${() => apply(1, 0, 0)}>${Math.round(z * 100)} % · ${t('Fit')}</button>`}</div>`;
+}
+
+// ───────────── compartir con un enlace que caduca ─────────────
+function ShareSheet({ d, onClose }) {
+  const [list, setList] = useState([]), [days, setDays] = useState(7), [url, setUrl] = useState(null), [busy, setBusy] = useState(false);
+  const load = () => api(`/documents/${d.id}/shares`).then(setList).catch(() => {}); useEffect(() => { load(); }, []);
+  const create = async () => { setBusy(true); const r = await attempt(api(`/documents/${d.id}/shares`, { json: { days } })); setBusy(false); if (r) { setUrl(r.url); load(); buzz(); } };
+  const copy = async () => { try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { toast(url, 'warn', 9000); } };
+  const share = () => navigator.share?.({ title: d.title, url }).catch(() => {});
+  return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}><div class="sheet"><div class="grabber" />
+    <h3>${t('Share “{title}”', { title: d.title })}</h3>
+    <p class="hint" style="padding-top:0">${t('Anyone with the link can view and download this document, without an account, until it expires.')}</p>
+    ${url ? html`<div class="code share-url">${url}</div><div class="row wrap">${'share' in navigator && html`<button class="btn primary" onClick=${share}><${Icon} n="ext" />${t('Share…')}</button>`}
+        <button class=${cls('btn', !('share' in navigator) && 'primary')} onClick=${copy}><${Icon} n="check" />${t('Copy link')}</button><button class="btn ghost" onClick=${() => setUrl(null)}>${t('Another link')}</button></div>`
+      : html`<div class="seg" style="justify-self:start">${[[1, t('1 day')], [7, t('7 days')], [30, t('30 days')]].map(([v, l]) => html`<button class=${days === v ? 'on' : ''} onClick=${() => setDays(v)}>${l}</button>`)}</div>
+        <button class="btn primary big" disabled=${busy} onClick=${create}>${busy ? html`<span class="spinner" />` : html`<${Icon} n="globe" />`}${t('Create link')}</button>`}
+    ${list.length > 0 && html`<h5 class="sub-h" style="margin:10px 6px 2px">${t('Active links')}</h5>${list.map((x) => html`<div class="app-row" key=${x.id}><div class="grow"><b>${t('Expires {date}', { date: fmtDate(x.expires) })}</b>
+        <small>${tn(x.views, 'Opened {n} time', 'Opened {n} times')} · ${t('created {date}', { date: fmtDate(x.created) })}</small></div>
+        <button class="btn ghost sm danger" onClick=${() => attempt(api(`/shares/${x.id}`, { method: 'DELETE' }), t('Link revoked')).then(load)}>${t('Revoke')}</button></div>`)}`}
+  </div></div>`;
+}
+
+// ───────────── sin conexión: documentos guardados en el teléfono ─────────────
+const OFFLINE = 'papiro-offline';
+const offlineList = () => { try { return JSON.parse(localStorage.offline || '[]'); } catch { return []; } };
+const isOffline = (id) => offlineList().some((x) => x.id === id);
+const offlineUrls = (d) => {
+  const pdf = (d.has_archive || d.mime === 'application/pdf') && d.pages > 0;
+  return [`/api/documents/${d.id}`, `/api/documents/${d.id}/thumb?v=2`, ...(pdf ? Array.from({ length: Math.min(d.pages, 40) }, (_, i) => `/api/documents/${d.id}/pages/${i + 1}?v=2`) : []),
+    ...(!pdf && d.mime.startsWith('image/') ? [`/api/documents/${d.id}/file?variant=original`] : [])];
+};
+async function keepOffline(d, on) {
+  if (!('caches' in window)) return toast(t('This browser can’t keep documents offline'), 'warn');
+  const c = await caches.open(OFFLINE), urls = offlineUrls(d);
+  if (on) {
+    toast(t('Saving “{title}” on this device…', { title: d.title }));
+    try { await c.addAll(urls); } catch { return toast(t('Couldn’t save it offline; try again with a connection'), 'bad'); }
+    localStorage.offline = JSON.stringify([...offlineList().filter((x) => x.id !== d.id), { id: d.id, title: d.title, pages: d.pages, mime: d.mime, has_archive: d.has_archive, created: d.created, has_thumb: d.has_thumb, original_name: d.original_name }]);
+    toast(t('Available offline'));
+  } else {
+    await Promise.all(urls.map((u) => c.delete(u)));
+    localStorage.offline = JSON.stringify(offlineList().filter((x) => x.id !== d.id));
+    toast(t('Removed from this device'));
+  }
+  store.set({});
+}
+/** Sin conexión con el servidor: lo guardado en el teléfono sigue a mano. */
+function OfflineShelf() {
+  const [open, setOpen] = useState(null), [doc, setDoc] = useState(null), list = offlineList();
+  useEffect(() => { if (open) api(`/documents/${open.id}`).then(setDoc).catch(() => setDoc({ ...open, content: '' })); else setDoc(null); }, [open]);
+  if (open) {
+    const pdf = (open.has_archive || open.mime === 'application/pdf') && open.pages > 0;
+    return html`<div class="offline-doc"><div class="scan-bar"><button class="btn ghost" onClick=${() => setOpen(null)}><${Icon} n="back" /></button><b class="grow">${open.title}</b></div>
+      ${pdf ? html`<${Pages} id=${open.id} n=${Math.min(open.pages, 40)} />` : open.mime.startsWith('image/') ? html`<div class="pages scroll"><img src=${`/api/documents/${open.id}/file?variant=original`} alt="" class="loaded" /></div>`
+        : html`<div class="textview scroll">${doc?.content || ''}</div>`}</div>`;
+  }
+  if (!list.length) return null;
+  return html`<div class="shelf"><h5 class="sub-h">${t('Saved on this device')}</h5>${list.map((d) => html`<button class="app-row" key=${d.id} onClick=${() => setOpen(d)}>
+    ${d.has_thumb ? html`<img class="thumb" src=${`/api/documents/${d.id}/thumb?v=2`} alt="" />` : html`<div class="thumb">${(d.original_name || '').split('.').pop()}</div>`}
+    <div class="grow" style="text-align:left"><b>${d.title}</b><small>${fmtDate(d.created)}${d.pages > 1 ? ' · ' + tn(d.pages, '{n} page', '{n} pages') : ''}</small></div></button>`)}</div>`;
+}
+
+// ───────────── vistas guardadas (carpetas inteligentes) ─────────────
+const routeString = (r) => { const p = new URLSearchParams(); if (r.view !== 'all') p.set('view', r.view); for (const k of ['q', 'c', 't', 'f', 'from', 'to', 'sort']) if (r[k]) p.set(k, r[k]); if (r.tags.length) p.set('tags', r.tags.join(',')); return p.toString(); };
+const currentView = () => { const now = routeString(S().route); return now && S().views.find((v) => v.route === now); };
+function openRoute(str) { const prev = S().route; history.pushState(null, '', '#/?' + str); buzz(); go(prev, parseHash()); }
+async function saveView() {
+  const r = S().route, guess = [r.q, labelOf('correspondent', r.c)?.name, labelOf('doctype', r.t)?.name, ...r.tags.map((x) => labelOf('tag', x)?.name)].filter(Boolean).join(' · ');
+  const name = await ask({ title: t('Save this search'), text: t('It shows up as a smart folder that is always up to date.'), input: true, value: guess, placeholder: t('Name'), ok: t('Save') });
+  if (!name) return;
+  if (await attempt(api('/views', { json: { name, query: queryOf(r).toString(), route: routeString(r) } }), t('Saved as a smart folder'))) loadMeta();
+}
+async function deleteView(v) {
+  if (await attempt(api(`/views/${v.id}`, { method: 'DELETE' }))) {
+    undoable(t('Smart folder deleted'), () => api('/views', { json: { name: v.name, query: v.query, route: v.route } }));
+    loadMeta();
+  }
+}
+function ViewCard({ v }) {
+  return html`<button class="fcard smart" onClick=${() => openRoute(v.route)} title=${v.name}><span class="fc-back" />
+    <span class="fc-front"><span class="spark"><${Icon} n="spark" /></span><span class="name">${v.name}</span><small>${tn(v.count, '{n} document', '{n} documents')}</small></span></button>`;
+}
+
+// ───────────── arrastrar documentos a una carpeta en el móvil ─────────────
+// Mantener pulsado un documento lo selecciona; sin soltar, moverlo lo convierte en una ficha que se
+// puede dejar sobre una carpeta (tarjeta, «‹ Superior» o carpeta de la barra lateral).
+let carry = null;
+function armCarry(x, y) { carry = { x, y, on: false }; }
+function carryMove(e) {
+  if (!carry) return;
+  const t0 = e.touches[0]; e.preventDefault(); // mientras se sostiene un documento, la lista no se desplaza
+  if (!carry.on && Math.hypot(t0.clientX - carry.x, t0.clientY - carry.y) < 10) return;
+  if (!carry.on) {
+    carry.on = true; buzz(12);
+    carry.ghost = Object.assign(document.createElement('div'), { className: 'carry' });
+    carry.ghost.textContent = tn(S().picked.size, '{n} document', '{n} documents');
+    document.body.append(carry.ghost);
+  }
+  carry.ghost.style.transform = `translate(${t0.clientX - 40}px, ${t0.clientY - 56}px)`;
+  const under = document.elementFromPoint(t0.clientX, t0.clientY)?.closest('[data-drop]');
+  if (under !== carry.target) { carry.target?.classList.remove('drop-on'); under?.classList.add('drop-on'); if (under) buzz(6); carry.target = under; }
+  // cerca de los bordes de la lista, se desplaza sola para alcanzar las carpetas
+  const list = document.querySelector('.list'), r = list?.getBoundingClientRect();
+  carry.scroll = r ? (t0.clientY < r.top + 70 ? -14 : t0.clientY > r.bottom - 90 ? 14 : 0) : 0;
+  if (carry.scroll && !carry.raf) { const step = () => { if (!carry?.scroll) { carry && (carry.raf = 0); return; } list.scrollTop += carry.scroll; carry.raf = requestAnimationFrame(step); }; carry.raf = requestAnimationFrame(step); }
+}
+function carryEnd() {
+  if (!carry) return;
+  const c = carry; carry = null; cancelAnimationFrame(c.raf || 0); c.ghost?.remove(); c.target?.classList.remove('drop-on');
+  if (c.on && c.target) { const f = c.target.dataset.drop; moveTo(new Set(S().picked), f === '0' ? null : Number(f)); }
+}
+addEventListener('touchmove', carryMove, { passive: false }); addEventListener('touchend', carryEnd); addEventListener('touchcancel', carryEnd);
+
 // ───────────── raíz y teclado ─────────────
 let gPending = 0;
 function onKey(e) {
   const s = S(), el = e.target, typing = /INPUT|TEXTAREA|SELECT/.test(el.tagName) || el.isContentEditable, mod = e.metaKey || e.ctrlKey;
   if (s.dialog) { if (e.key === 'Escape') { s.dialog.resolve(null); store.set({ dialog: null }); } return; }
+  // El escáner y la revisión de la bandeja tienen su propio teclado.
+  if (s.review) return;
+  if (s.scan) { if (e.key === 'Escape') store.set({ scan: false }); return; }
   if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); return store.set({ palette: !s.palette }); }
   if (e.key === 'Escape') {
-    if (s.palette || s.modal || s.jobsOpen || s.sheet || s.menu) return store.set({ palette: false, modal: null, jobsOpen: false, sheet: null, menu: false });
+    if (s.palette || s.modal || s.jobsOpen || s.sheet || s.menu || s.shareDoc) return store.set({ palette: false, modal: null, jobsOpen: false, sheet: null, menu: false, shareDoc: null });
     if (typing) return el.blur();
     if (s.picked.size) return store.set({ picked: new Set() });
     if (s.route.doc) return nav({ doc: null });
@@ -1380,8 +1947,8 @@ function onKey(e) {
     Enter: () => cur && nav({ doc: cur.id }), o: () => cur && nav({ doc: cur.id }), x: () => cur && togglePick(cur.id, s.cur), g: () => { gPending = Date.now(); },
     u: () => pickFiles(), v: toggleGrid, d: () => setTheme(isDark() ? 'light' : 'dark'), ',': () => store.set({ modal: 'settings' }), '?': () => store.set({ modal: 'help' }),
     n: () => canWrite() && s.route.view === 'all' && newFolder(s.route.f),
-    e: () => targets.size && inboxIds().length && bulk(targets, { remove_tags: inboxIds() }, t('Marked as reviewed')),
-    '#': () => targets.size && s.route.view !== 'trash' && bulk(targets, { action: 'trash' }, t('Moved to trash')), Delete: () => map['#'](),
+    e: () => targets.size && inboxIds().length && markReviewed(targets, t('Marked as reviewed')),
+    '#': () => targets.size && s.route.view !== 'trash' && trashDocs(targets, t('Moved to trash')), Delete: () => map['#'](),
     t: prop(t('Tags')), c: prop(t('Correspondent')), m: prop(t('Folder')),
   };
   if (map[k]) { e.preventDefault(); map[k](); }
@@ -1400,7 +1967,7 @@ function App() {
   if (!s.ready) return html`<div class="auth"><span class="spinner" /></div>`;
   if (s.down) return html`<div class="auth"><div class="empty"><div><div class="big"><${Icon} n="activity" /></div><h3>${t('No connection to Papiro')}</h3>
     <div>${t('Your documents are on your server: you need a connection to see them. It retries by itself as soon as it’s back.')}</div>
-    <button class="btn primary" onClick=${() => { store.set({ ready: false }); boot(); }}>${t('Retry')}</button></div></div></div>`;
+    <button class="btn primary" onClick=${() => { store.set({ ready: false }); boot(); }}>${t('Retry')}</button><${OfflineShelf} /></div></div></div>`;
   if (s.setup || !s.user) return html`<${Auth} setup=${s.setup} /><${Toasts} />`;
   if (CONSENT) return html`<${Consent} /><${Toasts} />`;
   const [modal, tab] = (s.modal || '').split(':'), folder = here();
@@ -1409,12 +1976,13 @@ function App() {
     <${Sidebar} /><${Main} />${s.route.doc && html`<${Detail} id=${s.route.doc} key=${s.route.doc} />`}</div>
     ${s.menu && html`<div class="scrim only-narrow" onClick=${() => store.set({ menu: false })} />`}
     ${!s.route.doc && html`<${Tabbar} />`}
-    ${s.picked.size > 0 && canWrite() && html`<${BulkBar} />`}${s.jobsOpen && html`<${Jobs} />`}${s.sheet === 'upload' && html`<${UploadSheet} />`}${s.palette && html`<${Palette} />`}
+    ${s.picked.size > 0 && canWrite() && html`<${BulkBar} />`}${s.jobsOpen && html`<${Jobs} />`}${s.sheet === 'upload' && html`<${UploadSheet} />`}${s.palette && html`<${Palette} />`}${s.scan && html`<${Scanner} />`}${s.shareDoc && html`<${ShareSheet} d=${s.shareDoc} key=${s.shareDoc.id} onClose=${() => store.set({ shareDoc: null })} />`}${s.review && html`<${Review} />`}
     ${modal === 'settings' && html`<${Settings} tab=${tab} />`}${modal === 'help' && html`<${Help} />`}${s.dialog && html`<${Dialog} d=${s.dialog} key=${s.dialog.id} />`}
     ${drag && html`<div class="drop"><div>${folder ? t('Drop to add to “{name}”', { name: folder.name }) : t('Drop to add to Papiro')}<small>${t('PDF, images, Word, Excel, PowerPoint, text')}</small></div></div>`}<${Toasts} />`;
 }
 function Toasts() {
   const s = useStore(), icon = { ok: 'check', bad: 'x', warn: 'help' };
-  return html`<div class="toasts">${s.toasts.map((t) => html`<div class=${cls('toast', t.kind === 'bad' && 'bad')} key=${t.id}><span class=${t.kind}><${Icon} n=${icon[t.kind]} /></span><span>${t.text}</span></div>`)}</div>`;
+  return html`<div class="toasts">${s.toasts.map((x) => html`<div class=${cls('toast', x.kind === 'bad' && 'bad', x.action && 'has-action')} key=${x.id}><span class=${x.kind}><${Icon} n=${icon[x.kind]} /></span><span class="grow">${x.text}</span>
+    ${x.action && html`<button class="toast-btn" onClick=${() => { dropToast(x.id); x.action.fn(); }}>${x.action.label}</button>`}</div>`)}</div>`;
 }
 render(html`<${App} />`, document.getElementById('app'));

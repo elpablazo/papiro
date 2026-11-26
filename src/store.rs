@@ -1053,6 +1053,26 @@ pub fn stats(u: &AuthUser) -> Result<Stats> {
     })?)
 }
 
+/// Documentos visibles con fecha de vencimiento: (id, título, vence, días que faltan). Con `days`, solo
+/// los que vencen exactamente dentro de esos días (0 = hoy).
+pub fn due(u: &AuthUser, days: Option<&[i64]>) -> Result<Vec<(i64, String, String, i64)>> {
+    let filter = match days {
+        Some(d) if d.is_empty() => return Ok(vec![]),
+        Some(d) => format!("AND left IN ({})", d.iter().map(i64::to_string).collect::<Vec<_>>().join(",")),
+        None => String::new(),
+    };
+    Ok(db::with(|c| {
+        c.prepare(&format!(
+            "SELECT id, title, expires, left FROM (SELECT d.id, d.title, d.expires,
+               CAST(julianday(d.expires) - julianday(date('now','localtime')) AS INTEGER) AS left
+             FROM documents d WHERE d.expires IS NOT NULL AND d.deleted_at IS NULL AND {}) WHERE 1 {filter} ORDER BY expires",
+            visible(u)
+        ))?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+        .collect()
+    })?)
+}
+
 #[derive(Serialize, Deserialize, ToSchema, Clone, Default)]
 pub struct Problem {
     pub document_id: i64,

@@ -9,6 +9,7 @@ mod llm;
 mod mail;
 mod mcp;
 mod oauth;
+mod public;
 mod push;
 mod store;
 mod suggest;
@@ -251,6 +252,7 @@ fn app() -> Router {
         .route("/api/health", get(health))
         .route("/mcp", post(mcp::handle).get(mcp::probe))
         .merge(oauth::router())
+        .merge(public::router())
         .fallback(asset)
         .layer(DefaultBodyLimit::max(cfg().max_upload))
         .layer(CompressionLayer::new().compress_when(tower_http::compression::predicate::SizeAbove::new(512).and(textual)))
@@ -358,6 +360,7 @@ fn maintenance() {
     let (mut last_backup, mut last_verify, mut last_clean) = (soon(hours(c.backup_hours)), soon(hours(c.verify_hours.max(1))), Instant::now());
     loop {
         std::thread::sleep(Duration::from_secs(60));
+        push::reminders_tick();
         if last_clean.elapsed() > hours(1) {
             last_clean = Instant::now();
             oauth::cleanup();

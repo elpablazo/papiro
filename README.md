@@ -64,6 +64,8 @@ Same machine, same documents, one app at a time. Every number has a script and r
   <img src="docs/img/mobile.jpg" alt="Papiro on a phone: the archive, the due-dates view in dark mode, and a document with suggestions" width="820">
 </p>
 
+Long-press the app icon for shortcuts (Android, desktop): scan, upload to the last folder, review the inbox, search. The icon shows how many documents are waiting in the inbox.
+
 The interface speaks **English and Spanish** and picks yours from the browser (switch it in Settings → Account). More languages are a small, welcome PR: every string lives in one dictionary at the top of `web/app.js`.
 
 ## Quick start
@@ -117,6 +119,7 @@ Papiro is faster partly **because it does less**: no PDF/A, no page cleaning or 
 
 ## Features
 
+- **Scan with your phone.** Take several photos: Papiro finds the edges of the page, straightens it, removes shadows (document, black & white or original) and joins them into one PDF, all on the phone.
 - **Ingest from anywhere.** Drag and drop or paste in the browser, the camera on your phone, "Share → Papiro" on Android, a watched folder (subfolders become Papiro folders), the REST API, MCP, or email over IMAP. PDF, images (PNG, JPEG, TIFF, WebP, GIF), DOCX, XLSX, PPTX, ODT, ODS, ODP, TXT, MD, CSV.
 - **OCR that doesn't redo work.** Pages that already have text skip OCR. Pages scanned sideways or upside down are detected and fixed. 
 - **Instant search.** SQLite FTS5 with ranking, highlighted snippets and filters by tag, correspondent, type, folder and date. Results appear as you type.
@@ -124,6 +127,12 @@ Papiro is faster partly **because it does less**: no PDF/A, no page cleaning or 
 - **Local auto-filing.** Papiro suggests folder, type, correspondent and tags based on similar documents you've already filed, and finds expiry dates and amounts. **Nothing leaves your server**: no model, no API call. [How it works and how accurate it is →](docs/AUTO-FILING.md)
 - **Expiry tracking.** An "expiring" view with everything that's expired or due in 60 days (IDs, insurance policies, contracts), and amounts summed over any list.
 - **Phone-first and installable.** A PWA with a bottom tab bar, camera capture and the Android share sheet. Folders look and open like real folders (their latest documents peek out), pages slide in and out like a native app, swipe from the edge to go back, pull to refresh. All of it is CSS and the browser's View Transitions: no animation library, nothing extra on the server. Works on desktop with three panes, a command palette (`⌘K`) and keyboard shortcuts for everything.
+- **Inbox review, card by card.** Swipe right to accept the suggestions and file it, left for later, up to edit.
+- **Smart folders.** Save any search or filter; it shows up as a folder that is always up to date.
+- **Share a link that expires.** One document, read-only, no account needed, revocable, with a view counter.
+- **Undo instead of "are you sure?".** Move, tag, file or trash, and undo from the notice. On the phone, long-press a document and drag it onto a folder.
+- **Offline copies.** Keep your ID, insurance or prescription on the phone and open it without signing in to the server.
+- **Due-date reminders.** One daily push with what is due today, tomorrow, in 7 and in 30 days, and a calendar feed (`.ics`) for Apple, Google or Outlook.
 - **Push notifications.** Get notified on your phone or desktop when a new document arrives by email, the watched folder, the API, an AI agent or another person, optionally only for some folders. Standard Web Push (VAPID + aes128gcm) straight from your server: no Firebase project, no third-party account.
 - **Built for scripts and AI.** REST API with an OpenAPI 3.1 spec, signed webhooks with a persistent retry queue, read-only, expiring and folder-limited API tokens, and an **MCP server with sign-in** so Claude, ChatGPT or any MCP client can browse, search, read, look at pages, upload and file documents, only in the folders you allow.
 - **Multi-user.** Admin, editor and viewer roles, private documents, an audit log.
@@ -263,7 +272,8 @@ src/api.rs      REST API with OpenAPI annotations
 src/auth.rs     users, sessions, tokens, roles, throttling
 src/mcp.rs      MCP server
 src/oauth.rs    OAuth 2.1 sign-in for MCP clients (PKCE, dynamic registration, folder-limited grants)
-src/push.rs     Web Push notifications (VAPID, RFC 8291 encryption)
+src/push.rs     Web Push notifications (VAPID, RFC 8291 encryption) and daily due-date reminders
+src/public.rs   pages that open without signing in: share links and the calendar feed
 src/import.rs   Paperless-ngx importer
 src/backup.rs   backup, restore and export
 web/            UI: Preact + htm, no build step, embedded in the binary
@@ -282,9 +292,7 @@ Needs `tesseract`, poppler-utils (`pdftotext`, `pdftoppm`, `pdfinfo`, `pdfimages
 
 ## Roadmap
 
-- Multi-page scanning from the phone camera into one PDF, with edge detection
 - Deskewing and contrast cleanup before OCR
-- Expiry reminders (calendar feed; push notifications for new documents are done)
 - PDF/A output
 
 ## License
