@@ -361,6 +361,7 @@ fn maintenance() {
     loop {
         std::thread::sleep(Duration::from_secs(60));
         push::reminders_tick();
+        push::reminders_due();
         if last_clean.elapsed() > hours(1) {
             last_clean = Instant::now();
             oauth::cleanup();

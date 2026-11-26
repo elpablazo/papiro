@@ -695,3 +695,60 @@ html { background: var(--bg); }
   .table.cards td:empty { display: none; }
   .table.cards td:last-child:has(.btn) { padding-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
 }
+
+/* ───────── personas ───────── */
+.avatar-dot { display: inline-grid; place-items: center; flex: none; border-radius: 50%; background: color-mix(in srgb, var(--c) 22%, var(--panel)); color: color-mix(in srgb, var(--c) 75%, var(--text));
+  font-weight: 750; line-height: 1; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--c) 45%, transparent); }
+.chip.person { padding-left: 5px; gap: 6px; } .chip.person.on { background: color-mix(in srgb, var(--accent-bg) 80%, transparent); }
+.doc .tags .avatar-dot + .avatar-dot { margin-left: -6px; box-shadow: 0 0 0 2px var(--bg); }
+
+/* ───────── recuérdamelo ───────── */
+.quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.big-opt.sm { display: grid; gap: 2px; padding: 12px; text-align: left; } .big-opt.sm b { font-size: 15px; } .big-opt.sm small { font-size: 12.5px; }
+.big-opt:disabled { opacity: .5; }
+
+/* ───────── versiones ───────── */
+.versions { display: grid; gap: 8px; } .versions > .row b { font-size: 13.5px; }
+.vlist { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.vrow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-top: 1px solid var(--line); min-width: 0; } .vrow:first-child { border-top: 0; }
+.vrow.current { background: var(--accent-bg); } .vn { font: 700 12px var(--mono); color: var(--muted); flex: none; width: 26px; }
+.vrow b { display: block; font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .vrow small { display: block; font-size: 12px; color: var(--muted); }
+
+/* ───────── títulos ───────── */
+.tokens { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; } .tokens .chip { height: 32px; }
+.preview { display: grid; gap: 6px; } .preview div { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 8px 10px; background: var(--panel2); border-radius: 10px; min-width: 0; }
+.preview .faint { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .preview b { flex: 1.3; min-width: 0; overflow-wrap: anywhere; } .preview svg.i { flex: none; width: 14px; height: 14px; color: var(--faint); }
+
+/* ───────── expedientes ───────── */
+.fullpage { position: fixed; inset: 0; bottom: calc(0px - var(--gap)); z-index: 55; background: var(--bg); display: flex; flex-direction: column; animation: doc-in .42s var(--ease) both; }
+.scan-bar.light { color: var(--text); border-bottom: 1px solid var(--line); background: var(--panel); } .scan-bar.light b { text-align: left; cursor: default; }
+.fp-body { flex: 1; min-height: 0; padding: 14px 16px 24px; display: grid; gap: 10px; align-content: start; width: 100%; max-width: 720px; margin: 0 auto; }
+.fp-foot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: 10px 16px calc(12px + var(--sb) + var(--gap)); border-top: 1px solid var(--line); background: var(--panel); }
+.fp-foot .btn { flex: 1 1 160px; max-width: 280px; } a.btn.disabled { opacity: .45; pointer-events: none; }
+.bundle-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--lift); text-align: left; animation: rise .4s var(--ease) both; }
+.bundle-card b { display: block; font-size: 16px; overflow-wrap: anywhere; } .bundle-card small { display: block; color: var(--muted); font-size: 13px; margin: 2px 0 8px; } .bundle-card > svg.i { color: var(--faint); }
+.bar { display: block; height: 6px; border-radius: 3px; background: var(--panel2); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--ok); border-radius: 3px; transition: width .5s var(--ease); }
+.progress { display: grid; gap: 8px; padding: 4px 2px 6px; } .progress b { font-size: 15px; }
+.checklist { display: grid; gap: 8px; }
+.check-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: var(--panel); border: 1px dashed var(--line2); min-width: 0; }
+.check-row.ok { border-style: solid; border-color: var(--line); }
+.check-row .tick { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line2); display: grid; place-items: center; flex: none; color: #fff; }
+.check-row.ok .tick { background: var(--ok); border-color: var(--ok); animation: tab-pop .4s var(--spring); } .check-row .tick svg.i { width: 15px; height: 15px; stroke-width: 3; }
+.check-row b { display: block; font-size: 15px; overflow-wrap: anywhere; } .check-row small { color: var(--warn); font-weight: 600; font-size: 12.5px; }
+.linkish { display: block; color: var(--accent-text); font-size: 13.5px; text-align: left; overflow-wrap: anywhere; padding: 0; } .linkish b { color: var(--text); } .linkish small { display: block; color: var(--muted); font-size: 12.5px; }
+.add-req .input { flex: 1; min-width: 0; }
+.chooser { max-height: 86dvh; grid-template-rows: auto auto auto minmax(0, 1fr); } .chooser .search input { height: 44px; }
+.choose-list { max-height: 52dvh; display: grid; gap: 2px; align-content: start; } .choose-list .app-row { border: 0; padding: 8px 4px; width: 100%; } .choose-list .thumb { width: 40px; height: 52px; }
+.app-row .grow { min-width: 0; }
+/* un campo dentro de una fila nunca empuja a sus vecinos fuera (las fechas tienen un ancho mínimo propio) */
+.row > .input, .row > input, .field .row > .input { min-width: 0; flex: 1 1 0; }
+.row > .btn { flex: none; }
+label.field { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+/* Tocar un documento lo abre; mantener pulsado lo selecciona. La casilla solo aparece al seleccionar
+   (antes cubría la miniatura y, en la cuadrícula, casi toda la tarjeta: tocarla seleccionaba en vez de abrir). */
+@media (max-width: 760px), (hover: none) {
+  .list:not(.selecting) .doc:not(.picked) .check { display: none; }
+  .grid .doc .check { inset: 16px 16px auto auto; width: 30px; height: 30px; aspect-ratio: auto; border-radius: 50%; background: color-mix(in srgb, var(--panel) 85%, transparent); box-shadow: 0 0 0 2px var(--line2); }
+  .grid .doc.picked .check { background: none; box-shadow: none; }
+}
+.big-opt > span:not(.ico) { min-width: 0; flex: 1; } .big-opt b, .big-opt small { overflow-wrap: anywhere; }

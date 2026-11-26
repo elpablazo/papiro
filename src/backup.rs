@@ -15,8 +15,10 @@ fn copy_tree(src: &Path, dst: &Path) -> std::io::Result<(u64, u64)> {
             bytes += b;
         } else {
             let len = e.metadata()?.len();
-            // Los archivos de un documento no cambian una vez escritos: si ya está y mide lo mismo, se salta.
-            if fs::metadata(&to).map(|m| m.len()).ok() != Some(len) {
+            // Casi nada cambia una vez escrito: si ya está, mide lo mismo y no es más nuevo, se salta.
+            // (Una versión nueva reemplaza `original`: puede medir lo mismo, pero es más reciente.)
+            let newer = |m: fs::Metadata| e.metadata().and_then(|s| s.modified()).ok() > m.modified().ok();
+            if fs::metadata(&to).ok().is_none_or(|m| m.len() != len || newer(m)) {
                 let tmp = to.with_extension("copiando");
                 fs::copy(&from, &tmp)?;
                 fs::File::open(&tmp)?.sync_all()?;

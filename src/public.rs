@@ -1,6 +1,8 @@
 //! Lo que se abre sin iniciar sesión, siempre con un token largo y aleatorio en la URL:
 //! - `/s/{token}`: un documento compartido con un enlace que caduca (solo lectura, sin cuenta).
 //! - `/cal/{token}.ics`: el calendario de vencimientos de un usuario, para suscribirse desde el teléfono.
+//! - `/b/{token}`: un expediente compartido (sus documentos, uno por uno o en .zip).
+//!
 //! Los tokens se guardan solo como hash; revocarlos (o que caduquen) deja el enlace muerto al instante.
 use crate::{api, auth, db, ingest, oauth, store};
 use axum::{
@@ -44,7 +46,8 @@ const STYLE: &str = "body{margin:0;font:15px/1.5 ui-sans-serif,system-ui,-apple-
 header{position:sticky;top:0;display:flex;gap:12px;align-items:center;padding:12px 16px;background:#fffdfa;border-bottom:1px solid #e8e2d8}
 h1{font-size:17px;margin:0;line-height:1.25;overflow-wrap:anywhere}.muted{color:#6b645b;font-size:13px}.grow{flex:1;min-width:0}
 a.btn{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:11px;background:#c2410c;color:#fff;font-weight:600;text-decoration:none;white-space:nowrap}
-main{display:grid;gap:14px;justify-items:center;padding:16px}img{width:min(100%,900px);height:auto;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgb(0 0 0/.18),0 10px 30px rgb(0 0 0/.12)}
+main{display:grid;gap:14px;justify-items:center;padding:16px}.list{width:min(100%,640px);padding:6px 14px;text-align:left}
+.row{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #e8e2d8}.row:last-child{border:0}.row b{overflow-wrap:anywhere}a.btn.ghost{background:none;color:inherit;border:1px solid #d9d2c5}img{width:min(100%,900px);height:auto;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgb(0 0 0/.18),0 10px 30px rgb(0 0 0/.12)}
 .card{background:#fffdfa;border:1px solid #e8e2d8;border-radius:18px;padding:28px 24px;max-width:420px;text-align:center}
 footer{text-align:center;padding:10px 16px 28px}";
 
@@ -124,6 +127,119 @@ async fn page_img(Path((token, n)): Path<(String, u32)>) -> Response {
     }
 }
 
+// ───────────────────────── expedientes compartidos ─────────────────────────
+
+fn safe(s: &str) -> String {
+    let s: String = s.chars().map(|c| if "/\\:*?\"<>|".contains(c) || c.is_control() { '_' } else { c }).collect();
+    s.trim().trim_matches('.').chars().take(80).collect()
+}
+
+/// Escribe el .zip de un expediente: un archivo por requisito cumplido, numerado y con el nombre del
+/// requisito, más (para su dueño) una lista con lo que falta. PDF e imágenes ya vienen comprimidos: se guardan tal cual.
+pub fn write_zip(name: &str, items: &[(i64, String, Option<store::Document>)], es: bool, with_missing: bool, dest: &std::path::Path) -> Result<(), String> {
+    use std::io::Write;
+    use zip::{CompressionMethod, ZipWriter, write::SimpleFileOptions};
+    let e = |x: &dyn std::fmt::Display| x.to_string();
+    let mut z = ZipWriter::new(std::fs::File::create(dest).map_err(|x| e(&x))?);
+    let mut list = format!("{name}\n{}\n\n", "=".repeat(name.chars().count().min(60)));
+    let mut n = 0;
+    for (_, label, doc) in items {
+        match doc {
+            Some(d) => {
+                n += 1;
+                let ext = std::path::Path::new(&d.original_name).extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_else(|| "bin".into());
+                let file = format!("{n:02} - {}.{ext}", safe(label).trim());
+                let packed = ["pdf", "jpg", "jpeg", "png", "webp", "gif", "zip", "docx", "xlsx", "pptx", "odt", "ods", "odp", "heic"].contains(&ext.as_str());
+                let opts = SimpleFileOptions::default().compression_method(if packed { CompressionMethod::Stored } else { CompressionMethod::Deflated }).large_file(d.size > (1 << 31));
+                z.start_file(&file, opts).map_err(|x| e(&x))?;
+                let mut src = std::fs::File::open(store::doc_dir(d.id).join("original")).map_err(|x| format!("{}: {x}", d.title))?;
+                std::io::copy(&mut src, &mut z).map_err(|x| e(&x))?;
+                list.push_str(&format!("[x] {label}  ->  {file}\n"));
+            }
+            None if with_missing => list.push_str(&format!("[ ] {label}  ({})\n", if es { "falta" } else { "missing" })),
+            None => {}
+        }
+    }
+    if with_missing {
+        z.start_file(if es { "00 - Lista.txt" } else { "00 - Checklist.txt" }, SimpleFileOptions::default()).map_err(|x| e(&x))?;
+        z.write_all(list.as_bytes()).map_err(|x| e(&x))?;
+    }
+    z.finish().map_err(|x| e(&x))?.sync_all().map_err(|x| e(&x))?;
+    Ok(())
+}
+
+/// (expediente, dueño) de un enlace vigente.
+fn bundle_share(token: &str) -> Option<(i64, auth::AuthUser, String)> {
+    db::with(|c| {
+        c.query_row(
+            "SELECT s.id, s.bundle_id, u.id, u.username, u.role, s.expires FROM bundle_shares s JOIN users u ON u.id=s.user_id
+             WHERE s.token_hash=? AND s.expires > datetime('now')",
+            [auth::sha(token)],
+            |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?, auth::AuthUser::new(r.get(2)?, r.get(3)?, r.get(4)?), r.get::<_, String>(5)?)),
+        )
+        .optional()
+    })
+    .ok()
+    .flatten()
+    .map(|(sid, b, u, exp)| {
+        let _ = db::with(|c| c.execute("UPDATE bundle_shares SET views=views+1 WHERE id=?", [sid]));
+        (b, u, exp)
+    })
+}
+
+fn bundle_name(id: i64) -> String {
+    db::with(|c| c.query_row("SELECT name FROM bundles WHERE id=?", [id], |r| r.get(0))).unwrap_or_default()
+}
+
+async fn bundle_page(Path(token): Path<String>) -> Response {
+    let Some((b, owner, expires)) = bundle_share(&token) else { return gone() };
+    let items = api::bundle_items(&owner, b).unwrap_or_default();
+    let name = bundle_name(b);
+    let size = |n: i64| if n > 1 << 20 { format!("{:.1} MB", n as f64 / 1048576.0) } else { format!("{} KB", (n / 1024).max(1)) };
+    let rows: String = items
+        .iter()
+        .filter_map(|(_, label, d)| d.as_ref().map(|d| (label, d)))
+        .map(|(label, d)| {
+            format!(
+                "<div class=row><div class=grow><b>{}</b><div class=muted>{} · {}</div></div><a class='btn ghost' href='/b/{token}/d/{}'>👁</a><a class=btn href='/b/{token}/d/{}?download=1'>⬇</a></div>",
+                esc(label), esc(&d.original_name), size(d.size), d.id, d.id
+            )
+        })
+        .collect();
+    let count = items.iter().filter(|i| i.2.is_some()).count();
+    shell(
+        &name,
+        &format!(
+            "<header><img src=/assets/icon.svg alt='' style='width:30px;height:30px;box-shadow:none;border-radius:8px;background:none'>\
+             <div class=grow><h1>{}</h1><div class=muted>{count} documents · documentos</div></div><a class=btn href='/b/{token}/zip'>⬇ .zip</a></header>\
+             <main><div class='card list'>{rows}</div></main><footer class=muted>Shared with Papiro · expires {} UTC</footer>",
+            esc(&name),
+            esc(&expires[..16.min(expires.len())])
+        ),
+    )
+}
+
+async fn bundle_doc(Path((token, doc)): Path<(String, i64)>, Query(q): Query<FileQuery>, req: Request) -> Response {
+    let Some((b, owner, _)) = bundle_share(&token) else { return gone() };
+    let Some(d) = api::bundle_items(&owner, b).unwrap_or_default().into_iter().find_map(|(_, _, d)| d.filter(|d| d.id == doc)) else { return gone() };
+    let ascii: String = d.original_name.chars().map(|c| if c.is_ascii_alphanumeric() || "._- ".contains(c) { c } else { '_' }).collect();
+    let inline = q.download.is_none() && (d.mime == "application/pdf" || d.mime.starts_with("image/"));
+    let disposition = format!("{}; filename=\"{ascii}\"", if inline { "inline" } else { "attachment" });
+    match api::serve_file(store::doc_dir(d.id).join("original"), &d.mime, Some(disposition), req).await {
+        Ok(r) => private_headers(r),
+        Err(e) => e.into_response(),
+    }
+}
+
+async fn bundle_zip(Path(token): Path<String>, req: Request) -> Response {
+    let Some((b, owner, _)) = bundle_share(&token) else { return gone() };
+    let items = api::bundle_items(&owner, b).unwrap_or_default();
+    match api::zip_response(bundle_name(b), items, false, false, req).await {
+        Ok(r) => private_headers(r),
+        Err(e) => e.into_response(),
+    }
+}
+
 // ───────────────────────── calendario de vencimientos ─────────────────────────
 
 /// Texto de iCalendar: escapa y parte las líneas largas a 75 bytes (RFC 5545).
@@ -196,6 +312,9 @@ pub fn router() -> Router {
         .route("/s/{token}/file", get(file))
         .route("/s/{token}/pages/{n}", get(page_img))
         .route("/cal/{token}", get(calendar))
+        .route("/b/{token}", get(bundle_page))
+        .route("/b/{token}/zip", get(bundle_zip))
+        .route("/b/{token}/d/{doc}", get(bundle_doc))
 }
 
 #[cfg(test)]

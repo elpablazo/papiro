@@ -112,7 +112,7 @@ pub fn init(path: PathBuf) -> Result<Vec<i64>, String> {
 
 /// Cada entrada se aplica una sola vez, en orden y dentro de una transacción. Nunca se edita una
 /// migración ya publicada: los cambios de esquema se añaden como una entrada nueva.
-const MIGRATIONS: &[(i64, &str)] = &[(1, V1), (2, V2), (3, V3), (4, V4), (5, V5), (6, V6)];
+const MIGRATIONS: &[(i64, &str)] = &[(1, V1), (2, V2), (3, V3), (4, V4), (5, V5), (6, V6), (7, V7)];
 
 const V1: &str = r#"
 CREATE TABLE users(
@@ -243,4 +243,31 @@ CREATE TABLE shares(
 CREATE INDEX shares_doc ON shares(doc_id);
 ALTER TABLE push_subs ADD COLUMN reminders INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE users ADD COLUMN calendar_hash TEXT;
+"#;
+
+// v7: versiones de un documento, recordatorios por documento, expedientes (listas de lo que pide un
+// trámite, con enlace para compartirlos) y etiquetas que son personas.
+const V7: &str = r#"
+CREATE TABLE versions(
+  id INTEGER PRIMARY KEY, doc_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE, n INTEGER NOT NULL,
+  original_name TEXT NOT NULL, mime TEXT NOT NULL, ext TEXT NOT NULL, size INTEGER NOT NULL, pages INTEGER NOT NULL,
+  sha256 TEXT NOT NULL, has_archive INTEGER NOT NULL DEFAULT 0, since TEXT NOT NULL, replaced TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(doc_id, n));
+CREATE TABLE reminders(
+  id INTEGER PRIMARY KEY, doc_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, at TEXT NOT NULL, note TEXT NOT NULL DEFAULT '',
+  created TEXT NOT NULL DEFAULT (datetime('now')), fired TEXT);
+CREATE INDEX reminders_due ON reminders(at) WHERE fired IS NULL;
+CREATE TABLE bundles(
+  id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, name TEXT NOT NULL,
+  created TEXT NOT NULL DEFAULT (datetime('now')), updated TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE TABLE bundle_items(
+  id INTEGER PRIMARY KEY, bundle_id INTEGER NOT NULL REFERENCES bundles(id) ON DELETE CASCADE, label TEXT NOT NULL,
+  doc_id INTEGER REFERENCES documents(id) ON DELETE SET NULL, position INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX bundle_items_bundle ON bundle_items(bundle_id);
+CREATE TABLE bundle_shares(
+  id INTEGER PRIMARY KEY, bundle_id INTEGER NOT NULL REFERENCES bundles(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, token_hash TEXT UNIQUE NOT NULL, expires TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL DEFAULT (datetime('now')));
+ALTER TABLE labels ADD COLUMN is_person INTEGER NOT NULL DEFAULT 0;
 "#;

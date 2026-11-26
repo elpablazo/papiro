@@ -298,6 +298,40 @@ pub fn reminders_tick() {
     send_reminders(&today, None);
 }
 
+/// «Recuérdamelo»: a su hora, el documento vuelve a la bandeja y llega un aviso a los dispositivos de quien lo pidió.
+pub fn reminders_due() {
+    let due: Vec<(i64, i64, i64, String, String, String)> = db::with(|c| {
+        c.prepare(
+            "SELECT r.id, r.doc_id, u.id, u.username, u.role, r.note FROM reminders r JOIN users u ON u.id=r.user_id
+             WHERE r.fired IS NULL AND r.at <= strftime('%Y-%m-%d %H:%M','now','localtime') LIMIT 100",
+        )?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?)))?
+        .collect()
+    })
+    .unwrap_or_default();
+    for (rid, doc, uid, name, role, note) in due {
+        let _ = db::with(|c| c.execute("UPDATE reminders SET fired=datetime('now') WHERE id=?", [rid]));
+        let u = AuthUser::new(uid, name, role);
+        let Ok(d) = store::get_doc_brief(doc) else { continue };
+        if store::authorize(&u, doc).is_err() || d.deleted_at.is_some() {
+            continue;
+        }
+        let _ = db::with(|c| c.execute("INSERT OR IGNORE INTO document_tags(doc_id, tag_id) SELECT ?, id FROM labels WHERE kind='tag' AND is_inbox ORDER BY id LIMIT 1", [doc]));
+        store::emit("document.updated", doc);
+        let badge = store::stats(&u).map(|s| s.inbox).unwrap_or(0);
+        let devices: Vec<(i64, String, String, String, String)> = db::with(|c| {
+            c.prepare("SELECT id, endpoint, p256dh, auth, lang FROM push_subs WHERE user_id=?")?.query_map([uid], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)))?.collect()
+        })
+        .unwrap_or_default();
+        for (sid, endpoint, p256dh, auth, lang) in devices {
+            let es = lang.starts_with("es");
+            let body = if note.is_empty() { d.title.clone() } else { format!("{} · {note}", d.title) };
+            let payload = json!({"title": if es { "⏰ Recordatorio" } else { "⏰ Reminder" }, "body": body, "url": format!("/#/?doc={doc}"), "tag": format!("remind-{rid}"), "badge": badge});
+            enqueue(sid, endpoint, p256dh, auth, payload, None);
+        }
+    }
+}
+
 /// Envía el resumen de vencimientos (a todos, o solo a un usuario para probarlo). Devuelve cuántos avisos salieron.
 pub fn send_reminders(today: &str, only_user: Option<i64>) -> usize {
     let users: Vec<(i64, String, String)> = db::with(|c| {

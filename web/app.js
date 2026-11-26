@@ -180,6 +180,92 @@ const ES = {
   'Offline: you’re seeing what was last loaded': 'Sin conexión: verás lo último que se cargó',
   'Drop to add to Papiro': 'Suelta para añadir a Papiro', 'Drop to add to “{name}”': 'Suelta para añadir a «{name}»',
   'PDF, images, Word, Excel, PowerPoint, text': 'PDF, imágenes, Word, Excel, PowerPoint, texto',
+  // bundles, remind me, versions, titles, people
+  'Auto title': 'Título automático', 'To apply it to documents you already have, select them and tap “Auto title”.': 'Para aplicarla a los que ya tienes, selecciónalos y toca «Título automático».',
+  'Bundles': 'Expedientes',
+  'Remind me': 'Recuérdamelo',
+  'Add to a bundle': 'Añadir a un expediente',
+  'Apply the title template (Settings → Titles)': 'Aplicar la plantilla de títulos (Ajustes → Títulos)',
+  'Shows as an avatar and a one-tap filter': 'Se ve como avatar y filtro de un toque',
+  'Person': 'Persona',
+  'Pending reminders': 'Recordatorios pendientes',
+  'Reminder cancelled': 'Recordatorio cancelado',
+  'Titles': 'Títulos',
+  'Tomorrow': 'Mañana',
+  'In 3 days': 'En 3 días',
+  'Next week': 'La próxima semana',
+  'In a month': 'En un mes',
+  'I’ll remind you {when}': 'Te lo recuerdo el {when}',
+  'At that moment it goes back to your inbox and you get a notification.': 'A esa hora vuelve a tu bandeja y te llega una notificación.',
+  'Another date': 'Otra fecha',
+  'Note (optional): what to do': 'Nota (opcional): qué hay que hacer',
+  'New version received; it will replace the file when it’s processed': 'Versión nueva recibida; reemplazará el archivo en cuanto se procese',
+  'Only version': 'Única versión',
+  'Upload new version': 'Subir versión nueva',
+  'Current': 'Actual',
+  'Until {date}': 'Hasta el {date}',
+  'Title template saved': 'Plantilla de títulos guardada',
+  'Automatic titles': 'Títulos automáticos',
+  'Give documents consistent names, like “CFE · Bill · Nov 2026”, instead of “IMG_4821”. A part with no data is left out together with its separator.': 'Pon nombres consistentes a tus documentos, como «CFE · Recibo · Nov 2026», en vez de «IMG_4821». Si falta un dato, se omite junto con su separador.',
+  'Template': 'Plantilla',
+  'e.g. {correspondent} · {type} · {monthname} {year}': 'p. ej. {correspondent} · {type} · {monthname} {year}',
+  'Preview with your latest documents': 'Vista previa con tus últimos documentos',
+  '(unchanged)': '(sin cambio)',
+  'Apply it when filing': 'Aplicarla al archivar',
+  'When a document leaves the inbox (marked as reviewed or filed from Review) it takes this title by itself.': 'Cuando un documento sale de la bandeja (marcado como revisado o archivado desde Revisar) toma este título solo.',
+  'To rename documents you already have, select them and use “Rename”.': 'Para renombrar los que ya tienes, selecciónalos y usa «Renombrar».',
+  'Renting a place': 'Rentar un depa',
+  'ID': 'Identificación',
+  'Proof of address': 'Comprobante de domicilio',
+  'Last 3 pay slips': 'Últimos 3 recibos de nómina',
+  'Bank statements': 'Estados de cuenta',
+  'Guarantor ID': 'Identificación del aval',
+  'Loan or credit': 'Préstamo o crédito',
+  'Tax return': 'Declaración de impuestos',
+  'Proof of income': 'Comprobante de ingresos',
+  'Visa or passport': 'Visa o pasaporte',
+  'Passport': 'Pasaporte',
+  'Photo': 'Fotografía',
+  'Proof of employment': 'Constancia laboral',
+  'Itinerary': 'Itinerario',
+  'Empty': 'Vacío',
+  'New bundle': 'Nuevo expediente',
+  'A bundle gathers what a procedure asks for: you check off what you have and send it all at once.': 'Un expediente junta lo que pide un trámite: palomeas lo que ya tienes y lo mandas todo de una vez.',
+  'e.g. Renting the apartment': 'p. ej. Renta del depa',
+  'Next': 'Siguiente',
+  'Start from a checklist?': '¿Empezar con una lista?',
+  'You add the requirements yourself': 'Tú agregas los requisitos',
+  'Choose a document': 'Elige un documento',
+  'Requirement removed': 'Requisito quitado',
+  'Delete the bundle “{name}”?': '¿Borrar el expediente «{name}»?',
+  'Its documents are kept; only the checklist is deleted.': 'Sus documentos se conservan; solo se borra la lista.',
+  'Bundle deleted': 'Expediente borrado',
+  'New': 'Nuevo',
+  'No bundles yet': 'Aún no hay expedientes',
+  'Renting a place, a loan, a visa: put together the documents a procedure asks for, see what’s missing and send them all as a .zip or a link.': 'Rentar un depa, un crédito, una visa: junta los documentos que pide un trámite, ve qué falta y mándalos todos como .zip o con un enlace.',
+  '{done} of {total} ready': '{done} de {total} listos',
+  'Delete bundle': 'Borrar expediente',
+  'Add what the procedure asks for': 'Agrega lo que pide el trámite',
+  'Missing': 'Falta',
+  'Choose another document': 'Elegir otro documento',
+  'Leave it pending': 'Dejarlo pendiente',
+  'Remove requirement': 'Quitar requisito',
+  'Choose': 'Elegir',
+  'Add a requirement (e.g. Proof of address)': 'Agregar requisito (p. ej. Comprobante de domicilio)',
+  'Download .zip': 'Descargar .zip',
+  'Whoever has the link sees the documents you checked off and can download them one by one or all as a .zip, until it expires.': 'Quien tenga el enlace ve los documentos que palomeaste y puede bajarlos uno por uno o todos en un .zip, hasta que caduque.',
+  'Added to “{name}”': 'Añadido a «{name}»',
+  'And add this document to it': 'Y añadir este documento',
+  'Which requirement does it fulfil?': '¿Qué requisito cumple?',
+  'As a new requirement': 'Como requisito nuevo',
+  '{n} version': '{n} versión',
+  '{n} versions': '{n} versiones',
+  '{n} document renamed': '{n} documento renombrado',
+  '{n} documents renamed': '{n} documentos renombrados',
+  'Month': 'Mes',
+  'Year': 'Año',
+  'Current title': 'Título actual',
+  'File name': 'Nombre del archivo',
   // scanner, inbox review, sharing, offline, smart folders, reminders
   'Share a link': 'Compartir un enlace',
   'Share': 'Compartir',
@@ -326,7 +412,7 @@ const tn = (n, one, other, vars) => t(n === 1 ? one : other, { n, ...vars });
 const setLang = (l) => { localStorage.lang = l; location.reload(); };
 // Server messages arrive in English: [englishPattern, spanish] pairs, `{}` marks a dynamic part (substituted in order).
 // Filled from the server's message list.
-const SERVER_ES = [["share link created", "enlace para compartir creado"],["share link revoked", "enlace para compartir revocado"],["calendar link created", "enlace de calendario creado"],["the view needs a name", "la vista necesita un nombre"],["this token can only reach some folders; choose one of them", "este token solo llega a algunas carpetas; elige una de ellas"],["choose at least one folder, or give the token access to the whole archive", "elige al menos una carpeta, o da acceso a todo el archivo"],["this app is not registered with Papiro; connect it again from the app", "esta app no está registrada en Papiro; vuelve a conectarla desde la app"],["the return address does not match the one the app registered", "la dirección de retorno no coincide con la que registró la app"],["unsupported response_type (only code)", "response_type no admitido (solo code)"],["the app must use PKCE with S256", "la app debe usar PKCE con S256"],["the push endpoint must use https", "el endpoint push debe usar https"],["invalid push subscription keys", "claves de suscripción push inválidas"],["a token limited to some folders or apps cannot do this", "un token limitado a carpetas o de una app no puede hacer esto"],["app registered (OAuth)", "app registrada (OAuth)"],["app connected (OAuth)", "app conectada (OAuth)"],["app disconnected (OAuth)", "app desconectada (OAuth)"],["app connection denied (OAuth)", "conexión de app rechazada (OAuth)"],["{} points to an internal address, which is not allowed (set PAPIRO_WEBHOOK_ALLOW_PRIVATE=true to allow it)","{} apunta a una dirección interna; no se permite (PAPIRO_WEBHOOK_ALLOW_PRIVATE=true para permitirlo)"],["this job cannot be retried (it did not fail, or its file no longer exists)","este trabajo no se puede reintentar (no falló o su archivo ya no existe)"],["a folder cannot be moved into itself or into a folder that does not exist","una carpeta no se puede mover dentro de sí misma, ni a una que no existe"],["this is the only administrator; make someone else an administrator first","es el único administrador; nombra otro antes"],["only the uploader or an administrator can change a document's privacy","solo quien subió el documento o un administrador puede cambiar su privacidad"],["a folder name must be 1 to 80 characters long and cannot contain \"/\"","el nombre de la carpeta debe tener entre 1 y 80 caracteres y no llevar «/»"],["this document's file is not on disk; check Settings → Health","el archivo de este documento no está en disco; revisa Ajustes → Salud"],["too many attempts from your connection; wait a few minutes","demasiados intentos desde tu conexión; espera unos minutos"],["the copy does not match the original (different SHA-256)","la copia no coincide con el original (SHA-256 distinto)"],["a folder with that name already exists here","ya hay una carpeta con ese nombre en ese lugar"],["the password must be at least 8 characters long","la contraseña debe tener al menos 8 caracteres"],["the model's response was truncated (max_tokens)","la respuesta del modelo quedó truncada (max_tokens)"],[".{} requires PAPIRO_GOTENBERG_URL to be converted",".{} requiere PAPIRO_GOTENBERG_URL para convertirse"],["only an administrator can delete permanently","solo un administrador puede borrar definitivamente"],["a read-only token cannot change the password","un token de solo lectura no puede cambiar la contraseña"],["a read-only token cannot create other tokens","un token de solo lectura no puede crear otros tokens"],["the URL must start with http:// or https://","la URL debe empezar con http:// o https://"],["the model declined to process this document","el modelo declinó procesar este documento"],["action must be accept, dismiss or refresh","action debe ser accept, dismiss o refresh"],["no LLM is configured (PAPIRO_LLM_API_KEY)","no hay LLM configurado (PAPIRO_LLM_API_KEY)"],["server busy; try again in a few seconds","servidor ocupado; intenta de nuevo en unos segundos"],["{} document(s) moved to the parent folder","{} documento(s) pasaron a la carpeta superior"],["the original does not match its SHA-256","el original no coincide con su SHA-256"],["a read-only token cannot revoke tokens","un token de solo lectura no puede revocar tokens"],["invalid role (admin, editor or viewer)","rol inválido (admin, editor o viewer)"],["the original is {} bytes but should be {}","el original mide {} bytes y deberían ser {}"],["permanently deleted from the console","borrado definitivo desde la consola"],["this installation already has users","la instalación ya tiene usuarios"],["the LLM did not return valid JSON: {}","el LLM no devolvió JSON válido: {}"],["the LLM response contains no text","respuesta del LLM sin texto"],["the parent folder does not exist","la carpeta superior no existe"],["you cannot delete your own user","no puedes borrar tu propio usuario"],["your user or token is read-only","tu usuario o token es de solo lectura"],["administrator account created","cuenta de administrador creada"],["could not copy the database: {}","no se pudo copiar la base: {}"],["the job is still in progress","el trabajo sigue en curso"],["unreadable LLM response ({}): {}","respuesta ilegible del LLM ({}): {}"],["document permanently deleted","documento borrado definitivamente"],["more than {} days in the trash","más de {} días en la papelera"],["the original file is missing","falta el archivo original"],["document classified with AI","documento clasificado con IA"],["that folder does not exist","esa carpeta no existe"],["expires must be YYYY-MM-DD","expires debe ser YYYY-MM-DD"],["created must be YYYY-MM-DD","created debe ser YYYY-MM-DD"],["wrong username or password","usuario o contraseña incorrectos"],["the archive PDF is missing","falta el PDF de archivo"],["could not render the page","no se pudo renderizar la página"],["the file no longer exists","el archivo ya no existe"],["the username is required","falta el nombre de usuario"],["duplicate of document #{}","duplicado del documento #{}"],["unsupported file type: {}","tipo de archivo no soportado: {}"],["document moved to trash","documento a la papelera"],["document uploaded (MCP)","documento subido (MCP)"],["administrator required","requiere administrador"],["correspondent deleted","borrado en corresponsales"],["document type deleted","borrado en tipos de documento"],["document edited (MCP)","documento editado (MCP)"],["missing \"file\" field","falta el campo «file»"],["could not resolve {}: {}","no se pudo resolver {}: {}"],["no LLM is configured","LLM no configurado"],["suggestions accepted","sugerencias aceptadas"],["failed job dismissed","trabajo fallido descartado"],["the URL has no host","URL sin host"],["no disk space left","no queda espacio en disco"],["origin not allowed","origen no permitido"],["\"{}\" already exists","ya existe «{}»"],["not authenticated","no autenticado"],["LLM unreachable: {}","LLM inalcanzable: {}"],["document uploaded","documento subido"],["document restored","documento restaurado"],["name is required","falta name"],["unknown action: {}","acción desconocida: {}"],["LLM responded {}: {}","LLM respondió {}: {}"],["could not run {}: {}","no se pudo ejecutar {}: {}"],["{}: timed out ({} s)","{}: tiempo agotado ({} s)"],["password changed","contraseña cambiada"],["document edited","documento editado"],["integrity check","verificación de integridad"],["webhook created","webhook creado"],["webhook deleted","webhook borrado"],["folder created","carpeta creada"],["folder deleted","carpeta borrada"],["password reset","contraseña restablecida"],["token created","token creado"],["token revoked","token revocado"],["trash emptied","papelera vaciada"],["bulk edit ({})","edición masiva ({})"],["user created","usuario creado"],["role changed","rol cambiado"],["user deleted","usuario borrado"],["login failed","inicio de sesión fallido"],["tag deleted","borrado en etiquetas"],["conflict: {}","conflicto: {}"],["no details","sin detalle"],["{} documents","{} documentos"],["not found","no encontrado"],["bulk edit","edición masiva"],["logged in","sesión iniciada"],["document {}","documento {}"],["{} problems","{} problemas"],["read-only","solo lectura"],["blocked: {}","bloqueado: {}"],["console","consola"],["unknown","desconocida"],["system","sistema"]];
+const SERVER_ES = [["there is no title template yet (Settings → Titles)", "aún no hay plantilla de títulos (Ajustes → Títulos)"],["the bundle needs a name", "el expediente necesita un nombre"],["give a label or a document", "indica un requisito o un documento"],["send exactly one \"file\"", "envía exactamente un «file»"],["at must be YYYY-MM-DD or YYYY-MM-DD HH:MM", "la fecha debe ser AAAA-MM-DD o AAAA-MM-DD HH:MM"],["new version uploaded", "versión nueva subida"],["title template changed", "plantilla de títulos cambiada"],["share link created", "enlace para compartir creado"],["share link revoked", "enlace para compartir revocado"],["calendar link created", "enlace de calendario creado"],["the view needs a name", "la vista necesita un nombre"],["this token can only reach some folders; choose one of them", "este token solo llega a algunas carpetas; elige una de ellas"],["choose at least one folder, or give the token access to the whole archive", "elige al menos una carpeta, o da acceso a todo el archivo"],["this app is not registered with Papiro; connect it again from the app", "esta app no está registrada en Papiro; vuelve a conectarla desde la app"],["the return address does not match the one the app registered", "la dirección de retorno no coincide con la que registró la app"],["unsupported response_type (only code)", "response_type no admitido (solo code)"],["the app must use PKCE with S256", "la app debe usar PKCE con S256"],["the push endpoint must use https", "el endpoint push debe usar https"],["invalid push subscription keys", "claves de suscripción push inválidas"],["a token limited to some folders or apps cannot do this", "un token limitado a carpetas o de una app no puede hacer esto"],["app registered (OAuth)", "app registrada (OAuth)"],["app connected (OAuth)", "app conectada (OAuth)"],["app disconnected (OAuth)", "app desconectada (OAuth)"],["app connection denied (OAuth)", "conexión de app rechazada (OAuth)"],["{} points to an internal address, which is not allowed (set PAPIRO_WEBHOOK_ALLOW_PRIVATE=true to allow it)","{} apunta a una dirección interna; no se permite (PAPIRO_WEBHOOK_ALLOW_PRIVATE=true para permitirlo)"],["this job cannot be retried (it did not fail, or its file no longer exists)","este trabajo no se puede reintentar (no falló o su archivo ya no existe)"],["a folder cannot be moved into itself or into a folder that does not exist","una carpeta no se puede mover dentro de sí misma, ni a una que no existe"],["this is the only administrator; make someone else an administrator first","es el único administrador; nombra otro antes"],["only the uploader or an administrator can change a document's privacy","solo quien subió el documento o un administrador puede cambiar su privacidad"],["a folder name must be 1 to 80 characters long and cannot contain \"/\"","el nombre de la carpeta debe tener entre 1 y 80 caracteres y no llevar «/»"],["this document's file is not on disk; check Settings → Health","el archivo de este documento no está en disco; revisa Ajustes → Salud"],["too many attempts from your connection; wait a few minutes","demasiados intentos desde tu conexión; espera unos minutos"],["the copy does not match the original (different SHA-256)","la copia no coincide con el original (SHA-256 distinto)"],["a folder with that name already exists here","ya hay una carpeta con ese nombre en ese lugar"],["the password must be at least 8 characters long","la contraseña debe tener al menos 8 caracteres"],["the model's response was truncated (max_tokens)","la respuesta del modelo quedó truncada (max_tokens)"],[".{} requires PAPIRO_GOTENBERG_URL to be converted",".{} requiere PAPIRO_GOTENBERG_URL para convertirse"],["only an administrator can delete permanently","solo un administrador puede borrar definitivamente"],["a read-only token cannot change the password","un token de solo lectura no puede cambiar la contraseña"],["a read-only token cannot create other tokens","un token de solo lectura no puede crear otros tokens"],["the URL must start with http:// or https://","la URL debe empezar con http:// o https://"],["the model declined to process this document","el modelo declinó procesar este documento"],["action must be accept, dismiss or refresh","action debe ser accept, dismiss o refresh"],["no LLM is configured (PAPIRO_LLM_API_KEY)","no hay LLM configurado (PAPIRO_LLM_API_KEY)"],["server busy; try again in a few seconds","servidor ocupado; intenta de nuevo en unos segundos"],["{} document(s) moved to the parent folder","{} documento(s) pasaron a la carpeta superior"],["the original does not match its SHA-256","el original no coincide con su SHA-256"],["a read-only token cannot revoke tokens","un token de solo lectura no puede revocar tokens"],["invalid role (admin, editor or viewer)","rol inválido (admin, editor o viewer)"],["the original is {} bytes but should be {}","el original mide {} bytes y deberían ser {}"],["permanently deleted from the console","borrado definitivo desde la consola"],["this installation already has users","la instalación ya tiene usuarios"],["the LLM did not return valid JSON: {}","el LLM no devolvió JSON válido: {}"],["the LLM response contains no text","respuesta del LLM sin texto"],["the parent folder does not exist","la carpeta superior no existe"],["you cannot delete your own user","no puedes borrar tu propio usuario"],["your user or token is read-only","tu usuario o token es de solo lectura"],["administrator account created","cuenta de administrador creada"],["could not copy the database: {}","no se pudo copiar la base: {}"],["the job is still in progress","el trabajo sigue en curso"],["unreadable LLM response ({}): {}","respuesta ilegible del LLM ({}): {}"],["document permanently deleted","documento borrado definitivamente"],["more than {} days in the trash","más de {} días en la papelera"],["the original file is missing","falta el archivo original"],["document classified with AI","documento clasificado con IA"],["that folder does not exist","esa carpeta no existe"],["expires must be YYYY-MM-DD","expires debe ser YYYY-MM-DD"],["created must be YYYY-MM-DD","created debe ser YYYY-MM-DD"],["wrong username or password","usuario o contraseña incorrectos"],["the archive PDF is missing","falta el PDF de archivo"],["could not render the page","no se pudo renderizar la página"],["the file no longer exists","el archivo ya no existe"],["the username is required","falta el nombre de usuario"],["duplicate of document #{}","duplicado del documento #{}"],["unsupported file type: {}","tipo de archivo no soportado: {}"],["document moved to trash","documento a la papelera"],["document uploaded (MCP)","documento subido (MCP)"],["administrator required","requiere administrador"],["correspondent deleted","borrado en corresponsales"],["document type deleted","borrado en tipos de documento"],["document edited (MCP)","documento editado (MCP)"],["missing \"file\" field","falta el campo «file»"],["could not resolve {}: {}","no se pudo resolver {}: {}"],["no LLM is configured","LLM no configurado"],["suggestions accepted","sugerencias aceptadas"],["failed job dismissed","trabajo fallido descartado"],["the URL has no host","URL sin host"],["no disk space left","no queda espacio en disco"],["origin not allowed","origen no permitido"],["\"{}\" already exists","ya existe «{}»"],["not authenticated","no autenticado"],["LLM unreachable: {}","LLM inalcanzable: {}"],["document uploaded","documento subido"],["document restored","documento restaurado"],["name is required","falta name"],["unknown action: {}","acción desconocida: {}"],["LLM responded {}: {}","LLM respondió {}: {}"],["could not run {}: {}","no se pudo ejecutar {}: {}"],["{}: timed out ({} s)","{}: tiempo agotado ({} s)"],["password changed","contraseña cambiada"],["document edited","documento editado"],["integrity check","verificación de integridad"],["webhook created","webhook creado"],["webhook deleted","webhook borrado"],["folder created","carpeta creada"],["folder deleted","carpeta borrada"],["password reset","contraseña restablecida"],["token created","token creado"],["token revoked","token revocado"],["trash emptied","papelera vaciada"],["bulk edit ({})","edición masiva ({})"],["user created","usuario creado"],["role changed","rol cambiado"],["user deleted","usuario borrado"],["login failed","inicio de sesión fallido"],["tag deleted","borrado en etiquetas"],["conflict: {}","conflicto: {}"],["no details","sin detalle"],["{} documents","{} documentos"],["not found","no encontrado"],["bulk edit","edición masiva"],["logged in","sesión iniciada"],["document {}","documento {}"],["{} problems","{} problemas"],["read-only","solo lectura"],["blocked: {}","bloqueado: {}"],["console","consola"],["unknown","desconocida"],["system","sistema"]];
 const SERVER_RE = SERVER_ES.map(([pat, es]) => [new RegExp(`^${pat.split('{}').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(.+?)')}$`, 's'), es]);
 function srv(m) {
   if (LANG !== 'es' || typeof m !== 'string') return m;
@@ -373,6 +459,10 @@ const fmtMoney = (n) => n.toLocaleString(LOCALE, { minimumFractionDigits: 2, max
 function dueLabel(d) {
   const n = Math.round((new Date(d + 'T12:00') - new Date(new Date().toDateString() + ' 12:00')) / 864e5);
   return n < 0 ? ['bad', t('Overdue')] : n === 0 ? ['bad', t('Due today')] : n <= 60 ? ['warn', tn(n, 'Due in {n} day', 'Due in {n} days')] : null;
+}
+/** Esc cierra la hoja o el menú que está encima (y nada más). */
+function useEsc(onClose) {
+  useEffect(() => { const k = (e) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } }; addEventListener('keydown', k, true); return () => removeEventListener('keydown', k, true); }, []);
 }
 /** Un campo de texto que crece con su contenido (Safari no entiende field-sizing). */
 const autosize = (el) => {
@@ -509,7 +599,7 @@ function gestures() {
       if (t.clientY - sheet.getBoundingClientRect().top < 64) g = { kind: 'sheet', el: sheet, x: t.clientX, y: t.clientY, t: performance.now() };
       return;
     }
-    if (s.sheet || s.jobsOpen || s.menu || s.shareDoc || s.scan || s.review || s.picked.size) return (g = null);
+    if (s.sheet || s.jobsOpen || s.menu || s.shareDoc || s.remindDoc || s.bundleDoc || s.bundles || s.scan || s.review || s.picked.size) return (g = null);
     const r = s.route, list = document.querySelector('.list');
     if (t.clientX < 28 && !browserEdge && (r.doc || (r.view === 'all' && r.f && !filteredRoute(r)))) {
       const el = document.querySelector(r.doc ? '.detail' : '.list');
@@ -563,7 +653,7 @@ function gestures() {
       const commit = x.dy > 90 || (fast(x.dy) && x.dy > 30);
       settle([x.el], 240);
       x.el.style.transform = commit ? 'translateY(110%)' : '';
-      if (commit) setTimeout(() => store.set({ sheet: null, jobsOpen: false, shareDoc: null }), 200);
+      if (commit) setTimeout(() => store.set({ sheet: null, jobsOpen: false, shareDoc: null, remindDoc: null, bundleDoc: null }), 200);
     } else {
       x.el.classList.remove('dragging');
       if (!x.armed) { settle([x.el]); x.el.style.transform = ''; x.el.style.opacity = 0; return; }
@@ -958,6 +1048,7 @@ function Sidebar() {
     <div class="side-body scroll">
       ${view('inbox', 'inbox', t('Inbox'), s.stats.inbox)}${view('all', 'files', t('All documents'), s.stats.documents)}
       ${(s.stats.expiring > 0 || r.view === 'expiring') && view('expiring', 'clock', t('Due dates'), s.stats.expiring)}${view('trash', 'trash', t('Trash'), s.stats.trash)}
+      <button class="nav" onClick=${() => store.set({ bundles: 'list', menu: false })}><${Icon} n="files" /><span class="name">${t('Bundles')}</span></button>
       <h4>${t('Folders')}${canWrite() && html`<button title=${t('New folder')} onClick=${() => newFolder()}><${Icon} n="plus" /></button>`}</h4>
       ${roots.map((f) => html`<${FolderNode} f=${f} depth=${0} key=${f.id} />`)}
       ${!roots.length && s.meta && html`<button class="nav hint" disabled=${!canWrite()} onClick=${() => newFolder()}><${Icon} n="folder" /><span class="name">${canWrite() ? t('Create your first folder') : t('No folders yet')}</span></button>`}
@@ -1040,7 +1131,7 @@ function DocRow({ d, i }) {
     <div class="body"><div class="title">${d.is_private && html`<${Icon} n="lock" />`}${d.title}${suggestions(d).pend.length > 0 && html`<span class="hint-dot" title=${t('Has suggestions')}><${Icon} n="spark" /></span>`}</div>
       ${d.snippet ? html`<div class="snip"><${Snippet} text=${d.snippet} /></div>`
         : html`<div class="sub">${folder && html`<${Icon} n="folder" />`}${[folder?.name, corr?.name, type?.name, d.pages > 1 && tn(d.pages, '{n} page', '{n} pages')].filter(Boolean).join(' · ') || d.original_name}</div>`}
-      ${d.tags.length > 0 && html`<div class="tags">${d.tags.map((t) => labelOf('tag', t)).filter(Boolean).map((l) => html`<${Tag} l=${l} key=${l.id} />`)}</div>`}
+      ${d.tags.length > 0 && html`<div class="tags">${d.tags.map((x) => labelOf('tag', x)).filter(Boolean).sort((a, b) => b.is_person - a.is_person).map((l) => l.is_person ? html`<${Avatar} l=${l} key=${l.id} size=${20} />` : html`<${Tag} l=${l} key=${l.id} />`)}</div>`}
     </div><div class="date">${fmtDate(d.created)}${d.expires && dueLabel(d.expires) && html`<span class=${`due ${dueLabel(d.expires)[0]}`}>${dueLabel(d.expires)[1]}</span>`}${d.amount != null && html`<span class="amt">${fmtMoney(d.amount)}</span>`}</div></div>`;
 }
 let anchor = 0;
@@ -1099,9 +1190,10 @@ function Main() {
           <span class="hint"><kbd>/</kbd><kbd>⌘K</kbd></span></div>
         <button class="avatar only-narrow" title=${t('{user}: settings', { user: s.user.username })} onClick=${() => store.set({ modal: 'settings:account' })}>${s.user.username[0]}</button></div>
       <div class="filters">
-        ${r.tags.map((id) => labelOf('tag', id)).filter(Boolean).map((l) => html`<${Tag} l=${l} onRemove=${() => nav({ tags: r.tags.filter((x) => x !== l.id) })} />`)}
+        ${r.tags.map((id) => labelOf('tag', id)).filter((l) => l && !l.is_person).map((l) => html`<${Tag} l=${l} onRemove=${() => nav({ tags: r.tags.filter((x) => x !== l.id) })} />`)}
         ${corr && html`<button class="chip on" onClick=${() => nav({ c: null })}><${Icon} n="user" /><span>${corr.name}</span>×</button>`}
         ${type && html`<button class="chip on" onClick=${() => nav({ t: null })}><${Icon} n="type" /><span>${type.name}</span>×</button>`}
+        <${PeopleChips} />
         ${filter('tag', 'tag', 'tag', t('Tag'), r.tags, (tags) => nav({ tags }), true)}
         ${filter('c', 'correspondent', 'user', t('Correspondent'), r.c, (c) => nav({ c }))}
         ${filter('t', 'doctype', 'type', t('Type'), r.t, (x) => nav({ t: x }))}
@@ -1193,6 +1285,7 @@ function Detail({ id }) {
           <button class=${tab === 'text' || (!pdf && tab === 'doc') ? 'on' : ''} onClick=${() => setTab(pdf ? 'text' : 'doc')}>${t('Text')}</button>
           <button class=${cls('only-narrow', tab === 'meta' && 'on')} onClick=${() => setTab('meta')}>${t('Details')}</button></div>
         <span class="grow" />
+        ${!trashed && html`<button class="btn ghost sm bar-btn" title=${t('Remind me')} onClick=${() => store.set({ remindDoc: d })}><${Icon} n="clock" /><span class="only-wide">${t('Remind me')}</span></button>`}
         ${!ro && !trashed && html`<button class="btn ghost sm bar-btn" title=${t('Share a link')} onClick=${() => store.set({ shareDoc: d })}><${Icon} n="share" /><span class="only-wide">${t('Share')}</span></button>`}
         <${MenuButton} items=${files} icon="down" title=${t('Download')} right cls="btn ghost sm bar-btn"><span class="only-wide">${t('Download')}</span><//></div>
       ${view === 'text' || !pdf ? html`<div class="textview scroll">${d.content ? text() : html`<span class="muted">${t('This document has no extracted text.')}</span>`}</div>`
@@ -1234,6 +1327,8 @@ function Detail({ id }) {
       <div class="section"><h5>${t('File')}</h5><div class="facts">
         <div><b>${d.original_name}</b></div><div>${fmtSize(d.size)} · ${tn(d.pages, '{n} page', '{n} pages')} · ${d.mime}</div>
         <div>${t('Added {date}', { date: fmtDate(d.added) })}</div><div class="faint" title=${t('SHA-256 of the original')}>${d.sha256.slice(0, 16)}…</div></div>
+        ${!trashed && html`<${Versions} d=${d} ro=${ro} />`}
+        ${!trashed && html`<button class="btn sm" style="justify-self:start" onClick=${() => store.set({ bundleDoc: d })}><${Icon} n="files" />${t('Add to a bundle')}</button>`}
         ${!ro && (!trashed || isAdmin()) && html`<button class="btn danger sm" style="justify-self:start" onClick=${del}><${Icon} n="trash" />${trashed ? t('Delete permanently') : t('Move to trash')}</button>`}</div>
     </div></section>`;
 }
@@ -1255,6 +1350,7 @@ function BulkBar() {
       ${btn('c', 'user', t('Correspondent'), 'correspondent', (v, l) => bulk(ids, { correspondent_id: l.id }, t('Correspondent: {name}', { name: l.name }), restoreField([...ids], 'correspondent_id')))}
       ${btn('t', 'type', t('Type'), 'doctype', (v, l) => bulk(ids, { doctype_id: l.id }, t('Type: {name}', { name: l.name }), restoreField([...ids], 'doctype_id')))}
       ${inboxIds().length > 0 && html`<button class="btn sm" onClick=${() => markReviewed(ids)}><${Icon} n="check" />${t('Reviewed')}</button>`}
+      <button class="btn sm" title=${t('Apply the title template (Settings → Titles)')} onClick=${() => retitle(ids)}><${Icon} n="edit" />${t('Auto title')}</button>
       <button class="btn sm" onClick=${() => trashDocs(ids)}><${Icon} n="trash" />${t('Trash')}</button>`}
     <span class="sep" /><button class="btn icon sm" title=${t('Clear selection (Esc)')} onClick=${() => store.set({ picked: new Set() })}><${Icon} n="x" /></button></div>`;
 }
@@ -1295,13 +1391,14 @@ function Labels({ kind, path, title, blurb }) {
   const add = async (e) => { e.preventDefault(); if (await attempt(api('/' + path, { json: { name } }))) { setName(''); loadMeta(); } };
   return html`<h2>${title}</h2><p>${blurb}</p>
     <form class="row" style="margin-bottom:12px" onSubmit=${add}><input class="input" placeholder=${t('New name…')} value=${name} onInput=${(e) => setName(e.target.value)} required /><button class="btn primary">${t('Add')}</button></form>
-    <table class="table"><tr><th></th><th>${t('Name')}</th><th>${t('Assign if the text contains')}</th><th>${t('Rule')}</th>${kind === 'tag' && html`<th title=${t('Added to every new document')}>${t('short|Inbox')}</th>`}<th>Docs</th><th></th></tr>
+    <table class="table"><tr><th></th><th>${t('Name')}</th><th>${t('Assign if the text contains')}</th><th>${t('Rule')}</th>${kind === 'tag' && html`<th title=${t('Added to every new document')}>${t('short|Inbox')}</th><th title=${t('Shows as an avatar and a one-tap filter')}>${t('Person')}</th>`}<th>Docs</th><th></th></tr>
     ${s.labels[kind].map((l) => html`<tr key=${l.id}>
       <td><input type="color" value=${l.color} onChange=${(e) => patch(l, { color: e.target.value })} /></td>
       <td><input class="input" defaultValue=${l.name} onBlur=${(e) => e.target.value.trim() && e.target.value !== l.name && patch(l, { name: e.target.value.trim() })} /></td>
       <td><input class="input" defaultValue=${l.match} placeholder=${t('e.g. ACME electricity')} onBlur=${(e) => e.target.value !== l.match && patch(l, { match: e.target.value, algo: l.algo === 'none' && e.target.value ? 'any' : l.algo })} /></td>
       <td><select class="input" value=${ALGOS.some(([v]) => v === l.algo) ? l.algo : 'all'} onChange=${(e) => patch(l, { algo: e.target.value })}>${ALGOS.map(([v, l]) => html`<option value=${v}>${l}</option>`)}</select></td>
-      ${kind === 'tag' && html`<td style="text-align:center"><input type="checkbox" checked=${l.is_inbox} onChange=${(e) => patch(l, { is_inbox: e.target.checked })} /></td>`}
+      ${kind === 'tag' && html`<td style="text-align:center"><input type="checkbox" checked=${l.is_inbox} onChange=${(e) => patch(l, { is_inbox: e.target.checked })} /></td>
+        <td style="text-align:center"><input type="checkbox" checked=${l.is_person} onChange=${(e) => patch(l, { is_person: e.target.checked })} /></td>`}
       <td class="muted">${l.document_count}</td>
       <td><button class="btn icon ghost sm" title=${t('Delete')} onClick=${async () => await ask({ title: t('Delete “{name}”?', { name: l.name }), text: t('The documents are kept; they only lose this assignment.'), ok: t('Delete'), danger: true }) && attempt(api(`/${path}/${l.id}`, { method: 'DELETE' })).then(refresh)}><${Icon} n="trash" /></button></td></tr>`)}</table>`;
 }
@@ -1406,7 +1503,17 @@ function Notifications() {
     ${cal ? html`<div class="code share-url">${cal}</div><div class="row wrap"><a class="btn primary" href=${cal.replace(/^https?:/, 'webcal:')}><${Icon} n="cal" />${t('Add to my calendar')}</a>
         <button class="btn" onClick=${copyCal}>${t('Copy link')}</button></div><p class="faint" style="margin-top:8px">${t('Keep this link private: it shows your due dates to whoever has it.')}</p>`
       : html`<div class="row wrap"><button class="btn" disabled=${busy} onClick=${newCal}><${Icon} n="cal" />${st?.calendar ? t('Create a new link (revokes the old one)') : t('Create calendar link')}</button>
-        ${st?.calendar && html`<button class="btn ghost danger" disabled=${busy} onClick=${offCal}>${t('Turn off')}</button>`}</div>`}`;
+        ${st?.calendar && html`<button class="btn ghost danger" disabled=${busy} onClick=${offCal}>${t('Turn off')}</button>`}</div>`}
+    <${Upcoming} />`;
+}
+/** Recordatorios pendientes de todos tus documentos. */
+function Upcoming() {
+  const [list, setList] = useState([]);
+  const load = () => api('/reminders').then(setList).catch(() => {}); useEffect(() => { load(); }, []);
+  if (!list.length) return null;
+  return html`<h2 style="margin-top:28px">${t('Pending reminders')}</h2>${list.map((r) => html`<div class="app-row" key=${r.id} style="margin-bottom:6px"><${Icon} n="clock" />
+    <button class="grow linkish" style="text-align:left" onClick=${() => { store.set({ modal: null }); nav({ doc: r.doc_id }); }}><b>${r.title}</b><small>${fmtWhen(r.at)}${r.note ? ' · ' + r.note : ''}</small></button>
+    <button class="btn ghost sm danger" onClick=${() => attempt(api(`/reminders/${r.id}`, { method: 'DELETE' }), t('Reminder cancelled')).then(load)}>${t('Cancel')}</button></div>`)}`;
 }
 
 function Tokens() {
@@ -1521,13 +1628,13 @@ function ApiDocs() {
 function Settings({ tab }) {
   const [tb, setT] = useState(tab || 'tags'), s = useStore();
   useEffect(() => { document.querySelector('.modal aside .nav.on')?.scrollIntoView({ inline: 'center', block: 'nearest' }); }, [tb]);
-  const tabs = [['tags', 'tag', t('Tags')], ['correspondents', 'user', t('Correspondents')], ['doctypes', 'type', t('Types')], ['notifications', 'bell', t('Notifications')], ['tokens', 'key', t('Tokens & MCP')], ...(isAdmin() ? [['webhooks', 'hook', 'Webhooks'], ['health', 'activity', t('Health')], ['audit', 'rows', t('Audit log')]] : []), ['api', 'code', 'API'], ['account', 'settings', t('Account')]];
+  const tabs = [['tags', 'tag', t('Tags')], ['correspondents', 'user', t('Correspondents')], ['doctypes', 'type', t('Types')], ['notifications', 'bell', t('Notifications')], ['titles', 'edit', t('Titles')], ['tokens', 'key', t('Tokens & MCP')], ...(isAdmin() ? [['webhooks', 'hook', 'Webhooks'], ['health', 'activity', t('Health')], ['audit', 'rows', t('Audit log')]] : []), ['api', 'code', 'API'], ['account', 'settings', t('Account')]];
   return html`<div class="veil full" onMouseDown=${(e) => e.target === e.currentTarget && store.set({ modal: null })}><div class="modal">
     <aside><button class="btn icon ghost close" title=${t('Close')} onClick=${() => store.set({ modal: null })}><${Icon} n="back" /></button><h3>${t('Settings')}</h3>${tabs.map(([k, icon, label]) => html`<button class=${cls('nav', tb === k && 'on')} onClick=${() => setT(k)}><${Icon} n=${icon} /><span class="name">${label}</span></button>`)}</aside>
     <section class="scroll">${tb === 'tags' ? html`<${Labels} kind="tag" path="tags" title=${t('Tags')} blurb=${t('Tags marked as “Inbox” are added automatically to every new document; remove them once you’ve reviewed it.')} />`
       : tb === 'correspondents' ? html`<${Labels} kind="correspondent" path="correspondents" title=${t('Correspondents')} blurb=${t('Who issues or sends the document: companies, banks, agencies, people.')} />`
       : tb === 'doctypes' ? html`<${Labels} kind="doctype" path="doctypes" title=${t('Document types')} blurb=${t('Invoice, contract, receipt, policy… Rules assign the type on ingestion.')} />`
-      : tb === 'tokens' ? html`<${Tokens} />` : tb === 'notifications' ? html`<${Notifications} />` : tb === 'webhooks' ? html`<${Webhooks} />` : tb === 'health' ? html`<${Health} />` : tb === 'audit' ? html`<${Audit} />` : tb === 'api' ? html`<${ApiDocs} />` : html`<${Account} />`}</section></div></div>`;
+      : tb === 'tokens' ? html`<${Tokens} />` : tb === 'notifications' ? html`<${Notifications} />` : tb === 'titles' ? html`<${Titles} />` : tb === 'webhooks' ? html`<${Webhooks} />` : tb === 'health' ? html`<${Health} />` : tb === 'audit' ? html`<${Audit} />` : tb === 'api' ? html`<${ApiDocs} />` : html`<${Account} />`}</section></div></div>`;
 }
 function Help() {
   const keys = [['/', t('Search')], ['⌘K · Ctrl K', t('Command palette')], ['J · ↓', t('Next document')], ['K · ↑', t('Previous document')], ['↵ · O', t('Open preview')], ['Esc', t('Close / clear selection')],
@@ -1838,6 +1945,7 @@ function Pages({ id, n }) {
 
 // ───────────── compartir con un enlace que caduca ─────────────
 function ShareSheet({ d, onClose }) {
+  useEsc(onClose);
   const [list, setList] = useState([]), [days, setDays] = useState(7), [url, setUrl] = useState(null), [busy, setBusy] = useState(false);
   const load = () => api(`/documents/${d.id}/shares`).then(setList).catch(() => {}); useEffect(() => { load(); }, []);
   const create = async () => { setBusy(true); const r = await attempt(api(`/documents/${d.id}/shares`, { json: { days } })); setBusy(false); if (r) { setUrl(r.url); load(); buzz(); } };
@@ -1947,17 +2055,223 @@ function carryEnd() {
 }
 addEventListener('touchmove', carryMove, { passive: false }); addEventListener('touchend', carryEnd); addEventListener('touchcancel', carryEnd);
 
+// ───────────── personas: etiquetas que son alguien (o algo: la casa, el perro) ─────────────
+const persons = () => S().labels.tag.filter((l) => l.is_person);
+/** Inicial (o el emoji con que empieza el nombre) en un círculo de su color. */
+function Avatar({ l, size = 22 }) {
+  const first = [...(l.name.trim() || '?')][0];
+  return html`<span class="avatar-dot" style=${`--c:${l.color};width:${size}px;height:${size}px;font-size:${Math.round(size * 0.5)}px`} title=${l.name}>${/\p{Extended_Pictographic}/u.test(first) ? first : first.toUpperCase()}</span>`;
+}
+/** Filtro de un toque: tocar a alguien muestra solo lo suyo; tocarlo otra vez, todo. */
+function PeopleChips() {
+  const s = useStore(), r = s.route, ps = persons();
+  if (!ps.length) return null;
+  const pick = (id) => { const others = r.tags.filter((x) => !ps.some((p) => p.id === x)); nav({ tags: r.tags.includes(id) ? others : [...others, id] }); };
+  return ps.map((p) => html`<button class=${cls('chip person', r.tags.includes(p.id) && 'on')} key=${p.id} onClick=${() => pick(p.id)}><${Avatar} l=${p} size=${20} /><span>${p.name}</span></button>`);
+}
+
+// ───────────── recuérdamelo ─────────────
+const pad2 = (n) => String(n).padStart(2, '0');
+const localStamp = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const fmtWhen = (at) => new Date(at.replace(' ', 'T')).toLocaleString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+function RemindSheet({ d, onClose }) {
+  useEsc(onClose);
+  const [list, setList] = useState([]), [note, setNote] = useState(''), [custom, setCustom] = useState(''), [busy, setBusy] = useState(false);
+  const load = () => api(`/documents/${d.id}/reminders`).then(setList).catch(() => {}); useEffect(() => { load(); }, []);
+  const at9 = (days) => { const x = new Date(); x.setDate(x.getDate() + days); x.setHours(9, 0, 0, 0); return x; };
+  const nextMonday = () => { const x = at9(1); while (x.getDay() !== 1) x.setDate(x.getDate() + 1); return x; };
+  const quick = [[t('Tomorrow'), at9(1)], [t('In 3 days'), at9(3)], [t('Next week'), nextMonday()], [t('In a month'), (() => { const x = at9(0); x.setMonth(x.getMonth() + 1); return x; })()]];
+  const save = async (when) => {
+    setBusy(true);
+    const r = await attempt(api(`/documents/${d.id}/reminders`, { json: { at: typeof when === 'string' ? when.replace('T', ' ') : localStamp(when), note } }));
+    setBusy(false);
+    if (r) { buzz(); toast(t('I’ll remind you {when}', { when: fmtWhen(r.at) })); onClose(); }
+  };
+  return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}><div class="sheet"><div class="grabber" />
+    <h3 class="sheet-title"><small>${t('Remind me')}</small><span class="clamp">${d.title}</span></h3>
+    <p class="hint" style="padding-top:0">${t('At that moment it goes back to your inbox and you get a notification.')}</p>
+    <div class="quick">${quick.map(([label, when]) => html`<button class="big-opt sm" disabled=${busy} onClick=${() => save(when)}><b>${label}</b><small>${fmtWhen(localStamp(when))}</small></button>`)}</div>
+    <label class="field">${t('Another date')}<div class="row"><input class="input" type="datetime-local" value=${custom} onInput=${(e) => setCustom(e.target.value)} />
+      <button class="btn primary" disabled=${!custom || busy} onClick=${() => save(custom)}>${t('Save')}</button></div></label>
+    <input class="input" placeholder=${t('Note (optional): what to do')} value=${note} maxlength="300" onInput=${(e) => setNote(e.target.value)} />
+    ${list.length > 0 && html`<h5 class="sub-h" style="margin:8px 6px 0">${t('Pending reminders')}</h5>${list.map((r) => html`<div class="app-row" key=${r.id}><${Icon} n="clock" /><div class="grow"><b>${fmtWhen(r.at)}</b>${r.note && html`<small>${r.note}</small>`}</div>
+      <button class="btn ghost sm danger" onClick=${() => attempt(api(`/reminders/${r.id}`, { method: 'DELETE' }), t('Reminder cancelled')).then(load)}>${t('Cancel')}</button></div>`)}`}
+  </div></div>`;
+}
+
+// ───────────── versiones ─────────────
+function Versions({ d, ro }) {
+  const [list, setList] = useState([]), [busy, setBusy] = useState(false);
+  const load = () => api(`/documents/${d.id}/versions`).then(setList).catch(() => {}); useEffect(() => { load(); }, [d.id, d.sha256]);
+  const pick = () => {
+    const i = Object.assign(document.createElement('input'), { type: 'file' });
+    i.onchange = async () => {
+      const f = i.files[0]; if (!f) return;
+      const body = new FormData(); body.append('file', f, f.name); setBusy(true);
+      const r = await attempt(api(`/documents/${d.id}/versions`, { body }));
+      setBusy(false);
+      if (r) toast(t('New version received; it will replace the file when it’s processed'));
+    };
+    i.click();
+  };
+  return html`<div class="versions"><div class="row"><b class="grow">${list.length ? tn(list.length + 1, '{n} version', '{n} versions') : t('Only version')}</b>
+      ${!ro && html`<button class="btn sm" disabled=${busy} onClick=${pick}>${busy ? html`<span class="spinner" />` : html`<${Icon} n="upload" />`}${t('Upload new version')}</button>`}</div>
+    ${list.length > 0 && html`<div class="vlist"><div class="vrow current"><span class="vn">v${list.length + 1}</span><span class="grow"><b>${d.original_name}</b><small>${t('Current')} · ${fmtSize(d.size)}</small></span></div>
+      ${list.map((v) => html`<div class="vrow" key=${v.n}><span class="vn">v${v.n}</span><span class="grow"><b>${v.original_name}</b><small>${t('Until {date}', { date: fmtDate(v.replaced) })} · ${fmtSize(v.size)}</small></span>
+        <a class="btn icon ghost sm" title=${t('Download')} href=${`/api/documents/${d.id}/versions/${v.n}/file`}><${Icon} n="down" /></a></div>`)}</div>`}</div>`;
+}
+
+// ───────────── títulos automáticos ─────────────
+const TOKENS = [['correspondent', 'Correspondent'], ['type', 'Type'], ['person', 'Person'], ['folder', 'Folder'], ['monthname', 'Month'], ['year', 'Year'], ['date', 'Date'], ['amount', 'Amount'], ['title', 'Current title'], ['file', 'File name']];
+function Titles() {
+  const [cfg, setCfg] = useState(null), [prev, setPrev] = useState([]), input = useRef();
+  useEffect(() => { api('/settings/titles').then((c) => setCfg({ ...c, lang: c.lang || LANG })); }, []);
+  const preview = useMemo(() => debounce((tpl) => tpl.trim() ? api(`/settings/titles/preview?template=${encodeURIComponent(tpl)}&lang=${LANG}`).then(setPrev).catch(() => {}) : setPrev([]), 250), []);
+  useEffect(() => { cfg && preview(cfg.template); }, [cfg?.template]);
+  if (!cfg) return html`<span class="spinner" />`;
+  const insert = (tok) => { const el = input.current, at = el.selectionStart ?? cfg.template.length, sep = cfg.template && !/[\s·\-–]$/.test(cfg.template.slice(0, at)) ? ' · ' : ''; const v = cfg.template.slice(0, at) + sep + `{${tok}}` + cfg.template.slice(at); setCfg({ ...cfg, template: v }); setTimeout(() => el.focus()); };
+  const save = () => attempt(api('/settings/titles', { method: 'PUT', json: { ...cfg, lang: LANG } }), t('Title template saved'));
+  return html`<h2>${t('Automatic titles')}</h2><p>${t('Give documents consistent names, like “CFE · Bill · Nov 2026”, instead of “IMG_4821”. A part with no data is left out together with its separator.')}</p>
+    <label class="field">${t('Template')}<input class="input" ref=${input} placeholder=${t('e.g. {correspondent} · {type} · {monthname} {year}')} value=${cfg.template} onInput=${(e) => setCfg({ ...cfg, template: e.target.value })} /></label>
+    <div class="tokens">${TOKENS.map(([k, l]) => html`<button class="chip" onClick=${() => insert(k)}><${Icon} n="plus" />${t(l)}</button>`)}</div>
+    ${prev.length > 0 && html`<h5 class="sub-h">${t('Preview with your latest documents')}</h5><div class="preview">${prev.map((p) => html`<div key=${p.id}><span class="faint">${p.before}</span><${Icon} n="chev" /><b>${p.after || t('(unchanged)')}</b></div>`)}</div>`}
+    <label class=${cls('choice', cfg.auto && 'on')} style="margin-top:14px"><input type="checkbox" checked=${cfg.auto} onChange=${(e) => setCfg({ ...cfg, auto: e.target.checked })} />
+      <span><b>${t('Apply it when filing')}</b><small>${t('When a document leaves the inbox (marked as reviewed or filed from Review) it takes this title by itself.')}</small></span></label>
+    <div class="row wrap" style="margin-top:14px"><button class="btn primary" onClick=${save}>${t('Save')}</button>
+      <span class="faint">${t('To apply it to documents you already have, select them and tap “Auto title”.')}</span></div>`;
+}
+async function retitle(ids) {
+  const undo = restoreField([...ids], 'title');
+  const ok = await bulk(ids, { action: 'retitle' }, tn(ids.size ?? ids.length, '{n} document renamed', '{n} documents renamed'), () => undo());
+  return ok;
+}
+
+// ───────────── expedientes: lo que pide un trámite, juntos ─────────────
+const BUNDLE_TEMPLATES = () => [
+  [t('Renting a place'), [t('ID'), t('Proof of address'), t('Last 3 pay slips'), t('Bank statements'), t('Guarantor ID')]],
+  [t('Loan or credit'), [t('ID'), t('Proof of address'), t('Bank statements'), t('Tax return'), t('Proof of income')]],
+  [t('Visa or passport'), [t('Passport'), t('Photo'), t('Bank statements'), t('Proof of employment'), t('Itinerary')]],
+  [t('Empty'), []],
+];
+async function newBundle() {
+  const name = await ask({ title: t('New bundle'), text: t('A bundle gathers what a procedure asks for: you check off what you have and send it all at once.'), input: true, placeholder: t('e.g. Renting the apartment'), ok: t('Next') });
+  if (!name) return null;
+  const tpl = await new Promise((resolve) => store.set({ pickTemplate: resolve }));
+  const b = await attempt(api('/bundles', { json: { name, items: tpl || [] } }));
+  if (b) store.set({ bundles: b.id });
+  return b;
+}
+function TemplatePick() {
+  const s = useStore(), done = (v) => { s.pickTemplate(v); store.set({ pickTemplate: null }); };
+  return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && done([])}><div class="sheet"><div class="grabber" />
+    <h3>${t('Start from a checklist?')}</h3>
+    ${BUNDLE_TEMPLATES().map(([name, items]) => html`<button class="big-opt" onClick=${() => done(items)}><span class="ico"><${Icon} n=${items.length ? 'check' : 'plus'} /></span>
+      <span><b>${name}</b><small>${items.length ? items.join(' · ') : t('You add the requirements yourself')}</small></span></button>`)}</div></div>`;
+}
+/** Buscar un documento para un requisito. */
+function DocChooser({ title, onPick, onClose }) {
+  useEsc(onClose);
+  const [q, setQ] = useState(''), [items, setItems] = useState([]);
+  const search = useMemo(() => debounce((q) => api(`/documents?limit=30${q ? '&q=' + encodeURIComponent(q) : ''}`).then((r) => setItems(r.items)).catch(() => {}), 160), []);
+  useEffect(() => { search(q); }, [q]);
+  return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}><div class="sheet chooser"><div class="grabber" />
+    <h3 class="sheet-title"><small>${t('Choose a document')}</small><span class="clamp">${title}</span></h3>
+    <div class="search"><${Icon} n="search" /><input type="search" placeholder=${t('Search documents…')} value=${q} onInput=${(e) => setQ(e.target.value)} /></div>
+    <div class="choose-list scroll">${items.map((d) => html`<button class="app-row" key=${d.id} onClick=${() => onPick(d)}>
+        ${d.has_thumb ? html`<img class="thumb" src=${`/api/documents/${d.id}/thumb?v=2`} alt="" />` : html`<div class="thumb">${d.original_name.split('.').pop()}</div>`}
+        <span class="grow" style="text-align:left"><b>${d.title}</b><small>${fmtDate(d.created)}${d.folder_id && folderOf(d.folder_id) ? ' · ' + folderOf(d.folder_id).name : ''}</small></span></button>`)}
+      ${!items.length && html`<p class="faint" style="padding:12px 6px">${t('No results')}</p>`}</div></div></div>`;
+}
+function Bundles() {
+  const s = useStore(), [list, setList] = useState(null), [b, setB] = useState(null), [choose, setChoose] = useState(null), [label, setLabel] = useState(''), [share, setShare] = useState(false);
+  const id = typeof s.bundles === 'number' ? s.bundles : null;
+  const close = () => store.set({ bundles: null });
+  const loadList = () => api('/bundles').then(setList).catch(() => setList([]));
+  const load = () => id && api(`/bundles/${id}`).then(setB).catch(() => store.set({ bundles: 'list' }));
+  useEffect(() => { setB(null); id ? load() : loadList(); }, [id]);
+  const patchItem = async (item, json) => { const nb = await attempt(api(`/bundle-items/${item.id}`, { method: 'PATCH', json })); nb && setB(nb); };
+  const addItem = async (e) => { e.preventDefault(); if (!label.trim()) return; const nb = await attempt(api(`/bundles/${id}/items`, { json: { label } })); if (nb) { setB(nb); setLabel(''); } };
+  const removeItem = async (item) => { const nb = await attempt(api(`/bundle-items/${item.id}`, { method: 'DELETE' })); if (nb) { setB(nb); undoable(t('Requirement removed'), () => api(`/bundles/${id}/items`, { json: { label: item.label, doc_id: item.document?.id ?? null } }).then(load)); } };
+  const rename = async () => { const name = await ask({ title: t('Rename'), input: true, value: b.name, ok: t('Save') }); if (name) { const nb = await attempt(api(`/bundles/${id}`, { method: 'PATCH', json: { name } })); nb && setB(nb); } };
+  const remove = async () => { if (await ask({ title: t('Delete the bundle “{name}”?', { name: b.name }), text: t('Its documents are kept; only the checklist is deleted.'), ok: t('Delete'), danger: true })) { await attempt(api(`/bundles/${id}`, { method: 'DELETE' }), t('Bundle deleted')); store.set({ bundles: 'list' }); } };
+  const open = (d) => { close(); nav({ doc: d.id }); };
+  if (!id) return html`<div class="fullpage"><div class="scan-bar light"><button class="btn icon ghost" title=${t('Close')} onClick=${close}><${Icon} n="back" /></button><b class="grow">${t('Bundles')}</b>
+      <button class="btn primary sm" onClick=${newBundle}><${Icon} n="plus" />${t('New')}</button></div>
+    <div class="fp-body scroll">${!list ? html`<span class="spinner" />` : !list.length ? html`<div class="empty"><div><div class="big"><${Icon} n="files" /></div><h3>${t('No bundles yet')}</h3>
+        <div>${t('Renting a place, a loan, a visa: put together the documents a procedure asks for, see what’s missing and send them all as a .zip or a link.')}</div>
+        <button class="btn primary" onClick=${newBundle}><${Icon} n="plus" />${t('New bundle')}</button></div></div>`
+      : list.map((x) => html`<button class="bundle-card" key=${x.id} onClick=${() => store.set({ bundles: x.id })}><span class="grow"><b>${x.name}</b>
+          <small>${x.total ? t('{done} of {total} ready', { done: x.done, total: x.total }) : t('Empty')} · ${fmtDate(x.updated)}</small>
+          <span class="bar"><i style=${`width:${x.total ? (x.done / x.total) * 100 : 0}%`} /></span></span><${Icon} n="chev" /></button>`)}</div></div>`;
+  if (!b) return html`<div class="fullpage"><div class="scan-bar light"><button class="btn icon ghost" onClick=${() => store.set({ bundles: 'list' })}><${Icon} n="back" /></button></div><div class="fp-body"><span class="spinner" /></div></div>`;
+  const done = b.items.filter((i) => i.document).length, lang = LANG;
+  return html`<div class="fullpage"><div class="scan-bar light"><button class="btn icon ghost" title=${t('Bundles')} onClick=${() => store.set({ bundles: 'list' })}><${Icon} n="back" /></button>
+      <b class="grow" onClick=${rename}>${b.name}</b><${MenuButton} items=${[['edit', t('Rename'), rename], ['trash', t('Delete bundle'), remove, true]]} title=${t('Options')} right cls="btn icon ghost" /></div>
+    <div class="fp-body scroll">
+      <div class="progress"><b>${b.items.length ? t('{done} of {total} ready', { done, total: b.items.length }) : t('Add what the procedure asks for')}</b><span class="bar"><i style=${`width:${b.items.length ? (done / b.items.length) * 100 : 0}%`} /></span></div>
+      <div class="checklist">${b.items.map((it) => html`<div class=${cls('check-row', it.document && 'ok')} key=${it.id}>
+          <span class="tick">${it.document ? html`<${Icon} n="check" />` : ''}</span>
+          <div class="grow"><b>${it.label}</b>${it.document ? html`<button class="linkish" onClick=${() => open(it.document)}>${it.document.title}</button>` : html`<small>${t('Missing')}</small>`}</div>
+          ${it.document ? html`<${MenuButton} items=${[['files', t('Choose another document'), () => setChoose(it)], ['x', t('Leave it pending'), () => patchItem(it, { doc_id: null })], ['trash', t('Remove requirement'), () => removeItem(it), true]]} title=${t('Options')} right />`
+            : html`<button class="btn sm" onClick=${() => setChoose(it)}>${t('Choose')}</button>`}</div>`)}</div>
+      <form class="row add-req" onSubmit=${addItem}><input class="input" placeholder=${t('Add a requirement (e.g. Proof of address)')} value=${label} onInput=${(e) => setLabel(e.target.value)} /><button class="btn" disabled=${!label.trim()}><${Icon} n="plus" /></button></form>
+      ${b.shares.length > 0 && html`<h5 class="sub-h">${t('Active links')}</h5>${b.shares.map((x) => html`<div class="app-row" key=${x.id}><div class="grow"><b>${t('Expires {date}', { date: fmtDate(x.expires) })}</b>
+        <small>${tn(x.views, 'Opened {n} time', 'Opened {n} times')}</small></div><button class="btn ghost sm danger" onClick=${() => attempt(api(`/bundle-shares/${x.id}`, { method: 'DELETE' }), t('Link revoked')).then(load)}>${t('Revoke')}</button></div>`)}`}
+    </div>
+    <div class="fp-foot"><a class=${cls('btn', !done && 'disabled')} href=${done ? `/api/bundles/${id}/zip?lang=${lang}` : null} onClick=${(e) => !done && e.preventDefault()}><${Icon} n="down" />${t('Download .zip')}</a>
+      <button class="btn primary" disabled=${!done} onClick=${() => setShare(true)}><${Icon} n="share" />${t('Share a link')}</button></div>
+    ${choose && html`<${DocChooser} title=${choose.label} onClose=${() => setChoose(null)} onPick=${(d) => { setChoose(null); patchItem(choose, { doc_id: d.id }); buzz(); }} />`}
+    ${share && html`<${LinkSheet} title=${b.name} create=${(days) => api(`/bundles/${id}/shares`, { json: { days } })} onClose=${() => { setShare(false); load(); }}
+      text=${t('Whoever has the link sees the documents you checked off and can download them one by one or all as a .zip, until it expires.')} />`}</div>`;
+}
+/** Crear un enlace que caduca (expedientes). */
+function LinkSheet({ title, text, create, onClose }) {
+  useEsc(onClose);
+  const [days, setDays] = useState(7), [url, setUrl] = useState(null), [busy, setBusy] = useState(false);
+  const go = async () => { setBusy(true); const r = await attempt(create(days)); setBusy(false); if (r) { setUrl(r.url); buzz(); } };
+  const copy = async () => { try { await navigator.clipboard.writeText(url); toast(t('Link copied')); } catch { toast(url, 'warn', 9000); } };
+  return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}><div class="sheet"><div class="grabber" />
+    <h3 class="sheet-title"><small>${t('Share a link')}</small><span class="clamp">${title}</span></h3><p class="hint" style="padding-top:0">${text}</p>
+    ${url ? html`<div class="code share-url">${url}</div><div class="row wrap">${'share' in navigator && html`<button class="btn primary" onClick=${() => navigator.share({ title, url }).catch(() => {})}><${Icon} n="share" />${t('Send…')}</button>`}
+        <button class=${cls('btn', !('share' in navigator) && 'primary')} onClick=${copy}><${Icon} n="check" />${t('Copy link')}</button></div>`
+      : html`<div class="seg" style="justify-self:start">${[[1, t('1 day')], [7, t('7 days')], [30, t('30 days')]].map(([v, l]) => html`<button class=${days === v ? 'on' : ''} onClick=${() => setDays(v)}>${l}</button>`)}</div>
+        <button class="btn primary big" disabled=${busy} onClick=${go}>${busy ? html`<span class="spinner" />` : html`<${Icon} n="share" />`}${t('Create link')}</button>`}</div></div>`;
+}
+/** Desde un documento: añadirlo a un expediente (a un requisito pendiente, o como requisito nuevo). */
+function AddToBundle({ d, onClose }) {
+  useEsc(onClose);
+  const [list, setList] = useState(null), [b, setB] = useState(null);
+  useEffect(() => { api('/bundles').then(setList).catch(() => setList([])); }, []);
+  useEffect(() => { b?.id && !b.items && api(`/bundles/${b.id}`).then(setB); }, [b?.id]);
+  const attach = async (item) => {
+    const r = item ? await attempt(api(`/bundle-items/${item.id}`, { method: 'PATCH', json: { doc_id: d.id } })) : await attempt(api(`/bundles/${b.id}/items`, { json: { doc_id: d.id } }));
+    if (r) { buzz(); toast(t('Added to “{name}”', { name: b.name })); onClose(); }
+  };
+  return html`<div class="veil bottom" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}><div class="sheet"><div class="grabber" />
+    <h3 class="sheet-title"><small>${t('Add to a bundle')}</small><span class="clamp">${b ? b.name : d.title}</span></h3>
+    ${!list ? html`<span class="spinner" />` : !b ? html`${list.map((x) => html`<button class="big-opt" key=${x.id} onClick=${() => setB(x)}><span class="ico"><${Icon} n="files" /></span>
+          <span><b>${x.name}</b><small>${t('{done} of {total} ready', { done: x.done, total: x.total })}</small></span></button>`)}
+        <button class="big-opt" onClick=${async () => { onClose(); const nb = await newBundle(); nb && api(`/bundles/${nb.id}/items`, { json: { doc_id: d.id } }); }}><span class="ico"><${Icon} n="plus" /></span><span><b>${t('New bundle')}</b><small>${t('And add this document to it')}</small></span></button>`
+      : !b.items ? html`<span class="spinner" />` : html`<p class="hint" style="padding-top:0">${t('Which requirement does it fulfil?')}</p>
+        ${b.items.filter((i) => !i.document).map((i) => html`<button class="big-opt" key=${i.id} onClick=${() => attach(i)}><span class="ico"><${Icon} n="check" /></span><span><b>${i.label}</b><small>${t('Missing')}</small></span></button>`)}
+        <button class="big-opt" onClick=${() => attach(null)}><span class="ico"><${Icon} n="plus" /></span><span><b>${t('As a new requirement')}</b><small>${d.title}</small></span></button>`}
+  </div></div>`;
+}
+
 // ───────────── raíz y teclado ─────────────
 let gPending = 0;
 function onKey(e) {
   const s = S(), el = e.target, typing = /INPUT|TEXTAREA|SELECT/.test(el.tagName) || el.isContentEditable, mod = e.metaKey || e.ctrlKey;
   if (s.dialog) { if (e.key === 'Escape') { s.dialog.resolve(null); store.set({ dialog: null }); } return; }
   // El escáner y la revisión de la bandeja tienen su propio teclado.
-  if (s.review) return;
+  if (s.review || (s.bundles && e.key !== 'Escape')) return;
   if (s.scan) { if (e.key === 'Escape') store.set({ scan: false }); return; }
   if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); return store.set({ palette: !s.palette }); }
   if (e.key === 'Escape') {
+    if (s.pickTemplate) { s.pickTemplate([]); return store.set({ pickTemplate: null }); }
+    if (s.remindDoc || s.bundleDoc) return store.set({ remindDoc: null, bundleDoc: null });
     if (s.palette || s.modal || s.jobsOpen || s.sheet || s.menu || s.shareDoc) return store.set({ palette: false, modal: null, jobsOpen: false, sheet: null, menu: false, shareDoc: null });
+    if (s.bundles) return store.set({ bundles: typeof s.bundles === 'number' ? 'list' : null });
     if (typing) return el.blur();
     if (s.picked.size) return store.set({ picked: new Set() });
     if (s.route.doc) return nav({ doc: null });
@@ -2004,7 +2318,7 @@ function App() {
     <${Sidebar} /><${Main} />${s.route.doc && html`<${Detail} id=${s.route.doc} key=${s.route.doc} />`}</div>
     ${s.menu && html`<div class="scrim only-narrow" onClick=${() => store.set({ menu: false })} />`}
     ${!s.route.doc && html`<${Tabbar} />`}
-    ${s.picked.size > 0 && canWrite() && html`<${BulkBar} />`}${s.jobsOpen && html`<${Jobs} />`}${s.sheet === 'upload' && html`<${UploadSheet} />`}${s.palette && html`<${Palette} />`}${s.scan && html`<${Scanner} />`}${s.shareDoc && html`<${ShareSheet} d=${s.shareDoc} key=${s.shareDoc.id} onClose=${() => store.set({ shareDoc: null })} />`}${s.review && html`<${Review} />`}
+    ${s.picked.size > 0 && canWrite() && html`<${BulkBar} />`}${s.jobsOpen && html`<${Jobs} />`}${s.sheet === 'upload' && html`<${UploadSheet} />`}${s.palette && html`<${Palette} />`}${s.scan && html`<${Scanner} />`}${s.bundles && html`<${Bundles} />`}${s.remindDoc && html`<${RemindSheet} d=${s.remindDoc} key=${'r' + s.remindDoc.id} onClose=${() => store.set({ remindDoc: null })} />`}${s.bundleDoc && html`<${AddToBundle} d=${s.bundleDoc} onClose=${() => store.set({ bundleDoc: null })} />`}${s.pickTemplate && html`<${TemplatePick} />`}${s.shareDoc && html`<${ShareSheet} d=${s.shareDoc} key=${s.shareDoc.id} onClose=${() => store.set({ shareDoc: null })} />`}${s.review && html`<${Review} />`}
     ${modal === 'settings' && html`<${Settings} tab=${tab} />`}${modal === 'help' && html`<${Help} />`}${s.dialog && html`<${Dialog} d=${s.dialog} key=${s.dialog.id} />`}
     ${drag && html`<div class="drop"><div>${folder ? t('Drop to add to “{name}”', { name: folder.name }) : t('Drop to add to Papiro')}<small>${t('PDF, images, Word, Excel, PowerPoint, text')}</small></div></div>`}<${Toasts} />`;
 }

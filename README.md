@@ -130,6 +130,11 @@ Papiro is faster partly **because it does less**: no PDF/A, no page cleaning or 
 - **Inbox review, card by card.** Swipe right to accept the suggestions and file it, left for later, up to edit.
 - **Smart folders.** Save any search or filter; it shows up as a folder that is always up to date.
 - **Share a link that expires.** One document, read-only, no account needed, revocable, with a view counter.
+- **Bundles for paperwork.** Renting a place, a loan, a visa: a checklist of what the procedure asks for, the documents that fulfil each item, what's still missing, and one .zip or one expiring link with everything.
+- **Remind me.** "Remind me tomorrow / next week / on March 3": the document comes back to the inbox and you get a notification.
+- **Versions.** Upload this year's policy or the renewed contract onto the same document: title, folder, tags and notes stay; every previous file is still there to download.
+- **Automatic titles.** A template like `{correspondent} · {type} · {monthname} {year}` names documents consistently when you file them, or on demand for a selection.
+- **People.** Mark tags as people (or the house, the dog): they show as avatars on each document and as one-tap filters.
 - **Undo instead of "are you sure?".** Move, tag, file or trash, and undo from the notice. On the phone, long-press a document and drag it onto a folder.
 - **Offline copies.** Keep your ID, insurance or prescription on the phone and open it without signing in to the server.
 - **Due-date reminders.** One daily push with what is due today, tomorrow, in 7 and in 30 days, and a calendar feed (`.ics`) for Apple, Google or Outlook.
@@ -273,7 +278,7 @@ src/auth.rs     users, sessions, tokens, roles, throttling
 src/mcp.rs      MCP server
 src/oauth.rs    OAuth 2.1 sign-in for MCP clients (PKCE, dynamic registration, folder-limited grants)
 src/push.rs     Web Push notifications (VAPID, RFC 8291 encryption) and daily due-date reminders
-src/public.rs   pages that open without signing in: share links and the calendar feed
+src/public.rs   pages that open without signing in: share links, shared bundles (.zip) and the calendar feed
 src/import.rs   Paperless-ngx importer
 src/backup.rs   backup, restore and export
 web/            UI: Preact + htm, no build step, embedded in the binary

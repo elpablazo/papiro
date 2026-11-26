@@ -72,6 +72,7 @@ pub struct ErrorBody {
         (name = "webhooks", description = "Signed HTTP notifications when a document changes"),
         (name = "notifications", description = "Push notifications to the browser or the installed app"),
         (name = "sharing", description = "Temporary links to a document, smart folders and the due-date calendar"),
+        (name = "bundles", description = "Bundles: the checklist of documents a procedure asks for, exported as a .zip or a link"),
         (name = "account", description = "Session, users and API tokens"),
         (name = "system", description = "Health, integrity and audit log (administrators)")
     ),
@@ -131,6 +132,20 @@ pub fn router() -> (axum::Router, utoipa::openapi::OpenApi) {
         .routes(routes!(auth_password))
         .routes(routes!(list_tokens, create_token))
         .routes(routes!(delete_token))
+        .routes(routes!(list_versions, upload_version))
+        .routes(routes!(version_file))
+        .routes(routes!(list_reminders, create_reminder))
+        .routes(routes!(upcoming_reminders))
+        .routes(routes!(delete_reminder))
+        .routes(routes!(get_titles, put_titles))
+        .routes(routes!(preview_titles))
+        .routes(routes!(list_bundles, create_bundle))
+        .routes(routes!(get_bundle, update_bundle, delete_bundle))
+        .routes(routes!(add_bundle_item))
+        .routes(routes!(update_bundle_item, delete_bundle_item))
+        .routes(routes!(bundle_zip))
+        .routes(routes!(create_bundle_share))
+        .routes(routes!(delete_bundle_share))
         .routes(routes!(list_views, create_view))
         .routes(routes!(delete_view))
         .routes(routes!(list_shares, create_share))
@@ -1416,5 +1431,453 @@ async fn delete_calendar(u: AuthUser) -> Res<StatusCode> {
         return Err(forbidden("a token limited to some folders or apps cannot do this"));
     }
     db::with(|c| c.execute("UPDATE users SET calendar_hash=NULL WHERE id=?", [u.id])).map_err(store::Error::from)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ───────────────────────── versiones ─────────────────────────
+
+#[derive(Serialize, ToSchema)]
+struct Version {
+    /// Version number (1 = the first file this document had)
+    n: i64,
+    original_name: String,
+    mime: String,
+    size: i64,
+    pages: i64,
+    /// When this version became the current one
+    since: String,
+    /// When a newer version replaced it
+    replaced: String,
+}
+
+/// Previous versions of a document
+///
+/// The current file is the document itself; this lists the ones it replaced, newest first.
+#[utoipa::path(get, path = "/api/documents/{id}/versions", tag = "documents", params(("id" = i64, Path,)), responses((status = 200, body = Vec<Version>)))]
+async fn list_versions(u: AuthUser, Path(id): Path<i64>) -> Res<Json<Vec<Version>>> {
+    store::authorize(&u, id)?;
+    Ok(Json(db::with(|c| {
+        c.prepare_cached("SELECT n, original_name, mime, size, pages, since, replaced FROM versions WHERE doc_id=? ORDER BY n DESC")?
+            .query_map([id], |r| Ok(Version { n: r.get(0)?, original_name: r.get(1)?, mime: r.get(2)?, size: r.get(3)?, pages: r.get(4)?, since: r.get(5)?, replaced: r.get(6)? }))?
+            .collect::<rusqlite::Result<Vec<_>>>()
+    }).map_err(store::Error::from)?))
+}
+
+/// Upload a new version
+///
+/// Replaces the document's file (a renewed contract, this year's policy) and keeps everything else: title, folder,
+/// tags, notes, links. The previous file stays downloadable from `GET /api/documents/{id}/versions/{n}/file`.
+#[utoipa::path(post, path = "/api/documents/{id}/versions", tag = "documents", params(("id" = i64, Path,), UploadQuery),
+    request_body(content = UploadForm, content_type = "multipart/form-data"),
+    responses((status = 202, body = UploadResult), (status = 201, body = UploadResult), (status = 415, body = ErrorBody)))]
+async fn upload_version(Editor(u): Editor, Path(id): Path<i64>, Query(q): Query<UploadQuery>, mut mp: Multipart) -> Res<(StatusCode, Json<UploadResult>)> {
+    store::authorize(&u, id)?;
+    let mut staged: Vec<(std::path::PathBuf, String)> = vec![];
+    let received = receive_upload(&mut mp, &mut staged).await;
+    if received.is_err() || staged.len() != 1 {
+        for (p, _) in &staged {
+            let _ = tokio::fs::remove_file(p).await;
+        }
+        return Err(received.err().unwrap_or_else(|| bad("send exactly one \"file\"")));
+    }
+    let (path, filename) = &staged[0];
+    let mut rx = store::bus().subscribe();
+    let job = ingest::enqueue(path, filename, if u.token { "api" } else { "upload" }, &json!({"replace": id}), Some(u.id))?;
+    store::audit(Some(&u), "new version uploaded", &format!("document {id}"), filename);
+    let mut j = ingest::job(job)?;
+    if q.wait != Some(true) {
+        return Ok((StatusCode::ACCEPTED, Json(UploadResult { jobs: vec![j], documents: vec![] })));
+    }
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(cfg().cmd_timeout * 2);
+    while (j.status == "queued" || j.status == "running") && tokio::time::Instant::now() < deadline {
+        let _ = tokio::time::timeout(Duration::from_secs(1), rx.recv()).await;
+        j = ingest::job(job)?;
+    }
+    let documents = j.doc_id.and_then(|d| store::get_doc_brief(d).ok()).into_iter().collect();
+    Ok((StatusCode::CREATED, Json(UploadResult { jobs: vec![j], documents })))
+}
+
+/// Download a previous version
+#[utoipa::path(get, path = "/api/documents/{id}/versions/{n}/file", tag = "documents", params(("id" = i64, Path,), ("n" = i64, Path,)),
+    responses((status = 200, description = "File contents", content_type = "application/octet-stream", body = Vec<u8>), (status = 404, body = ErrorBody)))]
+async fn version_file(u: AuthUser, Path((id, n)): Path<(i64, i64)>, req: Request) -> Res<Response> {
+    store::authorize(&u, id)?;
+    let (name, mime): (String, String) =
+        db::with(|c| c.query_row("SELECT original_name, mime FROM versions WHERE doc_id=? AND n=?", [id, n], |r| Ok((r.get(0)?, r.get(1)?)))).map_err(store::Error::from)?;
+    let stem = std::path::Path::new(&name).file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+    let ext = std::path::Path::new(&name).extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
+    let ascii: String = format!("{stem} (v{n}){ext}").chars().map(|c| if c.is_ascii_alphanumeric() || "._- ()".contains(c) { c } else { '_' }).collect();
+    serve_file(store::doc_dir(id).join("versions").join(n.to_string()).join("original"), &mime, Some(format!("attachment; filename=\"{ascii}\"")), req).await
+}
+
+// ───────────────────────── recordatorios ─────────────────────────
+
+#[derive(Serialize, ToSchema)]
+struct Reminder {
+    id: i64,
+    doc_id: i64,
+    /// Local date and time, `YYYY-MM-DD HH:MM`
+    at: String,
+    note: String,
+    /// Document title (in the upcoming list)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    title: Option<String>,
+}
+
+#[derive(Deserialize, ToSchema)]
+struct ReminderInput {
+    /// `YYYY-MM-DD` (at 9:00) or `YYYY-MM-DD HH:MM`, local time
+    at: String,
+    #[serde(default)]
+    note: String,
+}
+
+fn reminders(where_sql: &str, args: impl rusqlite::Params) -> store::Result<Vec<Reminder>> {
+    Ok(db::with(|c| {
+        c.prepare(&format!("SELECT r.id, r.doc_id, r.at, r.note, d.title FROM reminders r JOIN documents d ON d.id=r.doc_id WHERE r.fired IS NULL AND {where_sql} ORDER BY r.at"))?
+            .query_map(args, |r| Ok(Reminder { id: r.get(0)?, doc_id: r.get(1)?, at: r.get(2)?, note: r.get(3)?, title: Some(r.get(4)?) }))?
+            .collect()
+    })?)
+}
+
+/// Your pending reminders on a document
+#[utoipa::path(get, path = "/api/documents/{id}/reminders", tag = "documents", params(("id" = i64, Path,)), responses((status = 200, body = Vec<Reminder>)))]
+async fn list_reminders(u: AuthUser, Path(id): Path<i64>) -> Res<Json<Vec<Reminder>>> {
+    store::authorize(&u, id)?;
+    Ok(Json(reminders("r.doc_id=?1 AND r.user_id=?2", params![id, u.id])?))
+}
+
+/// Remind me about this document
+///
+/// At that moment the document goes back to the inbox and a notification reaches your devices.
+#[utoipa::path(post, path = "/api/documents/{id}/reminders", tag = "documents", params(("id" = i64, Path,)), request_body = ReminderInput,
+    responses((status = 201, body = Reminder), (status = 400, body = ErrorBody)))]
+async fn create_reminder(u: AuthUser, Path(id): Path<i64>, Json(i): Json<ReminderInput>) -> Res<(StatusCode, Json<Reminder>)> {
+    store::authorize(&u, id)?;
+    let at = i.at.trim().replace('T', " ");
+    let at = if at.len() == 10 { format!("{at} 09:00") } else { at.chars().take(16).collect() };
+    let valid = at.len() == 16 && store::valid_date(&at[..10]) && at[11..13].parse::<u8>().is_ok_and(|h| h < 24) && &at[13..14] == ":" && at[14..16].parse::<u8>().is_ok_and(|m| m < 60);
+    if !valid {
+        return Err(bad("at must be YYYY-MM-DD or YYYY-MM-DD HH:MM"));
+    }
+    let note: String = i.note.trim().chars().take(300).collect();
+    let rid = db::with(|c| {
+        c.execute("INSERT INTO reminders(doc_id, user_id, at, note) VALUES(?,?,?,?)", params![id, u.id, at, note])?;
+        Ok(c.last_insert_rowid())
+    }).map_err(store::Error::from)?;
+    Ok((StatusCode::CREATED, Json(Reminder { id: rid, doc_id: id, at, note, title: None })))
+}
+
+/// Your upcoming reminders
+#[utoipa::path(get, path = "/api/reminders", tag = "documents", responses((status = 200, body = Vec<Reminder>)))]
+async fn upcoming_reminders(u: AuthUser) -> Res<Json<Vec<Reminder>>> {
+    Ok(Json(reminders("r.user_id=?1 AND d.deleted_at IS NULL", [u.id])?))
+}
+
+/// Cancel a reminder
+#[utoipa::path(delete, path = "/api/reminders/{id}", tag = "documents", params(("id" = i64, Path,)), responses((status = 204)))]
+async fn delete_reminder(u: AuthUser, Path(id): Path<i64>) -> Res<StatusCode> {
+    db::with(|c| c.execute("DELETE FROM reminders WHERE id=? AND user_id=?", [id, u.id])).map_err(store::Error::from)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ───────────────────────── títulos automáticos ─────────────────────────
+
+/// Title template
+#[utoipa::path(get, path = "/api/settings/titles", tag = "documents", responses((status = 200, body = store::Titles)))]
+async fn get_titles(_u: AuthUser) -> Json<store::Titles> {
+    Json(store::titles())
+}
+
+/// Save the title template
+#[utoipa::path(put, path = "/api/settings/titles", tag = "documents", request_body = store::Titles, responses((status = 200, body = store::Titles)))]
+async fn put_titles(Editor(u): Editor, Json(t): Json<store::Titles>) -> Res<Json<store::Titles>> {
+    if u.limited() {
+        return Err(forbidden("a token limited to some folders or apps cannot do this"));
+    }
+    let t = store::Titles { template: t.template.trim().chars().take(200).collect(), ..t };
+    store::set_titles(&t);
+    store::audit(Some(&u), "title template changed", &t.template, if t.auto { "automatic" } else { "" });
+    Ok(Json(t))
+}
+
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+struct TitlePreviewQuery {
+    template: String,
+    lang: Option<String>,
+}
+
+#[derive(Serialize, ToSchema)]
+struct TitlePreview {
+    id: i64,
+    before: String,
+    after: Option<String>,
+}
+
+/// Preview a template on your most recent documents
+#[utoipa::path(get, path = "/api/settings/titles/preview", tag = "documents", params(TitlePreviewQuery), responses((status = 200, body = Vec<TitlePreview>)))]
+async fn preview_titles(u: AuthUser, Query(q): Query<TitlePreviewQuery>) -> Res<Json<Vec<TitlePreview>>> {
+    let t = store::Titles { template: q.template, auto: false, lang: q.lang.unwrap_or_else(|| "en".into()) };
+    let docs = store::search(&SearchParams { sort: Some("added".into()), limit: Some(5), ..Default::default() }, &u)?;
+    Ok(Json(docs.items.iter().map(|d| TitlePreview { id: d.id, before: d.title.clone(), after: store::render_title(d, &t) }).collect()))
+}
+
+// ───────────────────────── expedientes ─────────────────────────
+
+#[derive(Serialize, ToSchema)]
+struct BundleSummary {
+    id: i64,
+    name: String,
+    /// Checklist items
+    total: i64,
+    /// Items that already have a document
+    done: i64,
+    updated: String,
+}
+
+#[derive(Serialize, ToSchema)]
+struct BundleItem {
+    id: i64,
+    label: String,
+    document: Option<Document>,
+}
+
+#[derive(Serialize, ToSchema)]
+struct Bundle {
+    id: i64,
+    name: String,
+    items: Vec<BundleItem>,
+    shares: Vec<Share>,
+}
+
+#[derive(Deserialize, ToSchema)]
+struct BundleInput {
+    name: Option<String>,
+    /// Checklist to start with (one label per item)
+    #[serde(default)]
+    items: Vec<String>,
+}
+
+#[derive(Deserialize, ToSchema)]
+struct BundleItemInput {
+    label: Option<String>,
+    /// Document that fulfils it; null leaves it pending
+    #[serde(default, deserialize_with = "nullable")]
+    #[schema(value_type = Option<i64>)]
+    doc_id: Option<Option<i64>>,
+}
+
+fn nullable<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Option<i64>>, D::Error> {
+    Ok(Some(Option::deserialize(d)?))
+}
+
+fn own_bundle(u: &AuthUser, id: i64) -> Res<String> {
+    db::with(|c| c.query_row("SELECT name FROM bundles WHERE id=? AND user_id=?", [id, u.id], |r| r.get(0)))
+        .map_err(|_| store::Error::NotFound.into())
+}
+fn touch_bundle(id: i64) {
+    let _ = db::with(|c| c.execute("UPDATE bundles SET updated=datetime('now') WHERE id=?", [id]));
+}
+
+/// The bundle's items with their documents (only those the user can see and that aren't in the trash).
+pub(crate) fn bundle_items(u: &AuthUser, id: i64) -> store::Result<Vec<(i64, String, Option<Document>)>> {
+    let rows: Vec<(i64, String, Option<i64>)> = db::with(|c| {
+        c.prepare_cached("SELECT id, label, doc_id FROM bundle_items WHERE bundle_id=? ORDER BY position, id")?
+            .query_map([id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+            .collect()
+    })?;
+    Ok(rows
+        .into_iter()
+        .map(|(i, label, doc)| {
+            let d = doc.filter(|d| store::authorize(u, *d).is_ok()).and_then(|d| store::get_doc_brief(d).ok()).filter(|d| d.deleted_at.is_none());
+            (i, label, d)
+        })
+        .collect())
+}
+
+fn bundle(u: &AuthUser, id: i64) -> Res<Bundle> {
+    let name = own_bundle(u, id)?;
+    let items = bundle_items(u, id)?.into_iter().map(|(id, label, document)| BundleItem { id, label, document }).collect();
+    let shares = db::with(|c| {
+        c.prepare_cached("SELECT id, created, expires, views FROM bundle_shares WHERE bundle_id=? AND expires > datetime('now') ORDER BY id DESC")?
+            .query_map([id], |r| Ok(Share { id: r.get(0)?, created: r.get(1)?, expires: r.get(2)?, views: r.get(3)?, url: None }))?
+            .collect::<rusqlite::Result<Vec<_>>>()
+    }).map_err(store::Error::from)?;
+    Ok(Bundle { id, name, items, shares })
+}
+
+/// Your bundles
+#[utoipa::path(get, path = "/api/bundles", tag = "bundles", responses((status = 200, body = Vec<BundleSummary>)))]
+async fn list_bundles(u: AuthUser) -> Res<Json<Vec<BundleSummary>>> {
+    Ok(Json(db::with(|c| {
+        c.prepare_cached(
+            "SELECT b.id, b.name, (SELECT count(*) FROM bundle_items i WHERE i.bundle_id=b.id),
+               (SELECT count(*) FROM bundle_items i JOIN documents d ON d.id=i.doc_id WHERE i.bundle_id=b.id AND d.deleted_at IS NULL), b.updated
+             FROM bundles b WHERE b.user_id=? ORDER BY b.updated DESC",
+        )?
+        .query_map([u.id], |r| Ok(BundleSummary { id: r.get(0)?, name: r.get(1)?, total: r.get(2)?, done: r.get(3)?, updated: r.get(4)? }))?
+        .collect::<rusqlite::Result<Vec<_>>>()
+    }).map_err(store::Error::from)?))
+}
+
+/// Create a bundle
+#[utoipa::path(post, path = "/api/bundles", tag = "bundles", request_body = BundleInput, responses((status = 201, body = Bundle)))]
+async fn create_bundle(u: AuthUser, Json(b): Json<BundleInput>) -> Res<(StatusCode, Json<Bundle>)> {
+    let name: String = b.name.as_deref().unwrap_or("").trim().chars().take(80).collect();
+    if name.is_empty() {
+        return Err(bad("the bundle needs a name"));
+    }
+    let id = db::write(|c| {
+        c.execute("INSERT INTO bundles(user_id, name) VALUES(?,?)", params![u.id, name])?;
+        let id = c.last_insert_rowid();
+        for (i, l) in b.items.iter().map(|l| l.trim()).filter(|l| !l.is_empty()).enumerate() {
+            c.execute("INSERT INTO bundle_items(bundle_id, label, position) VALUES(?,?,?)", params![id, l.chars().take(120).collect::<String>(), i as i64])?;
+        }
+        Ok(id)
+    }).map_err(store::Error::from)?;
+    Ok((StatusCode::CREATED, Json(bundle(&u, id)?)))
+}
+
+/// A bundle with its checklist and active links
+#[utoipa::path(get, path = "/api/bundles/{id}", tag = "bundles", params(("id" = i64, Path,)), responses((status = 200, body = Bundle), (status = 404, body = ErrorBody)))]
+async fn get_bundle(u: AuthUser, Path(id): Path<i64>) -> Res<Json<Bundle>> {
+    Ok(Json(bundle(&u, id)?))
+}
+
+/// Rename a bundle
+#[utoipa::path(patch, path = "/api/bundles/{id}", tag = "bundles", params(("id" = i64, Path,)), request_body = BundleInput, responses((status = 200, body = Bundle)))]
+async fn update_bundle(u: AuthUser, Path(id): Path<i64>, Json(b): Json<BundleInput>) -> Res<Json<Bundle>> {
+    own_bundle(&u, id)?;
+    if let Some(n) = b.name.as_deref().map(str::trim).filter(|n| !n.is_empty()) {
+        db::with(|c| c.execute("UPDATE bundles SET name=?, updated=datetime('now') WHERE id=?", params![n.chars().take(80).collect::<String>(), id])).map_err(store::Error::from)?;
+    }
+    Ok(Json(bundle(&u, id)?))
+}
+
+/// Delete a bundle (its documents are kept)
+#[utoipa::path(delete, path = "/api/bundles/{id}", tag = "bundles", params(("id" = i64, Path,)), responses((status = 204)))]
+async fn delete_bundle(u: AuthUser, Path(id): Path<i64>) -> Res<StatusCode> {
+    own_bundle(&u, id)?;
+    db::with(|c| c.execute("DELETE FROM bundles WHERE id=?", [id])).map_err(store::Error::from)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Add an item to a bundle's checklist
+#[utoipa::path(post, path = "/api/bundles/{id}/items", tag = "bundles", params(("id" = i64, Path,)), request_body = BundleItemInput, responses((status = 200, body = Bundle)))]
+async fn add_bundle_item(u: AuthUser, Path(id): Path<i64>, Json(i): Json<BundleItemInput>) -> Res<Json<Bundle>> {
+    own_bundle(&u, id)?;
+    let doc = i.doc_id.flatten();
+    if let Some(d) = doc {
+        store::authorize(&u, d)?;
+    }
+    let label = match (i.label.as_deref().map(str::trim).filter(|l| !l.is_empty()), doc) {
+        (Some(l), _) => l.chars().take(120).collect(),
+        (None, Some(d)) => store::get_doc_brief(d)?.title,
+        _ => return Err(bad("give a label or a document")),
+    };
+    db::with(|c| {
+        c.execute(
+            "INSERT INTO bundle_items(bundle_id, label, doc_id, position) VALUES(?1,?2,?3,(SELECT coalesce(max(position),0)+1 FROM bundle_items WHERE bundle_id=?1))",
+            params![id, label, doc],
+        )
+    }).map_err(store::Error::from)?;
+    touch_bundle(id);
+    Ok(Json(bundle(&u, id)?))
+}
+
+fn item_bundle(u: &AuthUser, item: i64) -> Res<i64> {
+    let b: i64 = db::with(|c| c.query_row("SELECT bundle_id FROM bundle_items WHERE id=?", [item], |r| r.get(0))).map_err(store::Error::from)?;
+    own_bundle(u, b)?;
+    Ok(b)
+}
+
+/// Rename an item or attach/detach its document
+#[utoipa::path(patch, path = "/api/bundle-items/{id}", tag = "bundles", params(("id" = i64, Path,)), request_body = BundleItemInput, responses((status = 200, body = Bundle)))]
+async fn update_bundle_item(u: AuthUser, Path(item): Path<i64>, Json(i): Json<BundleItemInput>) -> Res<Json<Bundle>> {
+    let b = item_bundle(&u, item)?;
+    if let Some(Some(d)) = i.doc_id {
+        store::authorize(&u, d)?;
+    }
+    db::with(|c| {
+        if let Some(l) = i.label.as_deref().map(str::trim).filter(|l| !l.is_empty()) {
+            c.execute("UPDATE bundle_items SET label=? WHERE id=?", params![l.chars().take(120).collect::<String>(), item])?;
+        }
+        if let Some(d) = i.doc_id {
+            c.execute("UPDATE bundle_items SET doc_id=? WHERE id=?", params![d, item])?;
+        }
+        Ok(())
+    }).map_err(store::Error::from)?;
+    touch_bundle(b);
+    Ok(Json(bundle(&u, b)?))
+}
+
+/// Remove an item from a bundle
+#[utoipa::path(delete, path = "/api/bundle-items/{id}", tag = "bundles", params(("id" = i64, Path,)), responses((status = 200, body = Bundle)))]
+async fn delete_bundle_item(u: AuthUser, Path(item): Path<i64>) -> Res<Json<Bundle>> {
+    let b = item_bundle(&u, item)?;
+    db::with(|c| c.execute("DELETE FROM bundle_items WHERE id=?", [item])).map_err(store::Error::from)?;
+    touch_bundle(b);
+    Ok(Json(bundle(&u, b)?))
+}
+
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+struct ZipQuery {
+    /// Language of the checklist file inside: en | es
+    lang: Option<String>,
+}
+
+/// Download a bundle as a .zip
+///
+/// One file per item that has a document (numbered in checklist order, named after the item), plus a
+/// checklist text file that marks what is still missing.
+#[utoipa::path(get, path = "/api/bundles/{id}/zip", tag = "bundles", params(("id" = i64, Path,), ZipQuery),
+    responses((status = 200, description = "ZIP file", content_type = "application/zip", body = Vec<u8>)))]
+async fn bundle_zip(u: AuthUser, Path(id): Path<i64>, Query(q): Query<ZipQuery>, req: Request) -> Res<Response> {
+    let name = own_bundle(&u, id)?;
+    let items = bundle_items(&u, id)?;
+    zip_response(name, items, q.lang.unwrap_or_default().starts_with("es"), true, req).await
+}
+
+/// Arma el .zip en un archivo temporal y lo envía por partes (no ocupa RAM aunque pese cientos de MB).
+pub(crate) async fn zip_response(name: String, items: Vec<(i64, String, Option<Document>)>, es: bool, with_missing: bool, req: Request) -> Res<Response> {
+    let path = cfg().data.join("tmp").join(format!("zip-{}.zip", random_hex(8)));
+    let (n, p) = (name.clone(), path.clone());
+    tokio::task::spawn_blocking(move || crate::public::write_zip(&n, &items, es, with_missing, &p)).await.map_err(bad)?.map_err(|e| ApiError(StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    let ascii: String = name.chars().map(|c| if c.is_ascii_alphanumeric() || "._- ".contains(c) { c } else { '_' }).collect();
+    let res = serve_file(path.clone(), "application/zip", Some(format!("attachment; filename=\"{}.zip\"", ascii.trim())), req).await;
+    // El archivo ya está abierto por la respuesta: se puede borrar del disco (se libera al terminar el envío).
+    let _ = tokio::fs::remove_file(&path).await;
+    res
+}
+
+/// Share a bundle with a link that expires
+///
+/// Whoever has the link sees the bundle's documents and can download them one by one or all as a .zip.
+#[utoipa::path(post, path = "/api/bundles/{id}/shares", tag = "bundles", params(("id" = i64, Path,)), request_body = ShareInput, responses((status = 201, body = Share)))]
+async fn create_bundle_share(Editor(u): Editor, headers: HeaderMap, Path(id): Path<i64>, Json(i): Json<ShareInput>) -> Res<(StatusCode, Json<Share>)> {
+    if u.limited() {
+        return Err(forbidden("a token limited to some folders or apps cannot do this"));
+    }
+    let name = own_bundle(&u, id)?;
+    let days = i.days.unwrap_or(7).clamp(1, 90);
+    let token = random_hex(24);
+    let sid = db::with(|c| {
+        c.execute("INSERT INTO bundle_shares(bundle_id, user_id, token_hash, expires) VALUES(?,?,?, datetime('now', '+' || ? || ' days'))", params![id, u.id, auth::sha(&token), days])?;
+        Ok(c.last_insert_rowid())
+    }).map_err(store::Error::from)?;
+    store::audit(Some(&u), "share link created", &name, &format!("bundle, {days} days"));
+    let mut s = bundle(&u, id)?.shares.into_iter().find(|s| s.id == sid).ok_or(store::Error::NotFound)?;
+    s.url = Some(format!("{}/b/{token}", crate::oauth::origin(&headers)));
+    Ok((StatusCode::CREATED, Json(s)))
+}
+
+/// Revoke a bundle link
+#[utoipa::path(delete, path = "/api/bundle-shares/{id}", tag = "bundles", params(("id" = i64, Path,)), responses((status = 204)))]
+async fn delete_bundle_share(u: AuthUser, Path(id): Path<i64>) -> Res<StatusCode> {
+    let b: i64 = db::with(|c| c.query_row("SELECT bundle_id FROM bundle_shares WHERE id=?", [id], |r| r.get(0))).map_err(store::Error::from)?;
+    own_bundle(&u, b)?;
+    db::with(|c| c.execute("DELETE FROM bundle_shares WHERE id=?", [id])).map_err(store::Error::from)?;
     Ok(StatusCode::NO_CONTENT)
 }

@@ -61,6 +61,8 @@ pub struct Label {
     pub color: String,
     /// Tags only: assigned to every new document
     pub is_inbox: bool,
+    /// Tags only: the tag is a person (or a pet, a house…) and shows as an avatar
+    pub is_person: bool,
     pub parent_id: Option<i64>,
     /// Text of the automatic assignment rule
     #[serde(rename = "match")]
@@ -76,6 +78,7 @@ pub struct LabelInput {
     pub name: Option<String>,
     pub color: Option<String>,
     pub is_inbox: Option<bool>,
+    pub is_person: Option<bool>,
     #[serde(default, deserialize_with = "dbl")]
     #[schema(value_type = Option<i64>)]
     pub parent_id: Option<Option<i64>>,
@@ -96,6 +99,7 @@ fn label_row(r: &Row) -> rusqlite::Result<Label> {
         algo: r.get(6)?,
         insensitive: r.get(7)?,
         document_count: r.get(8)?,
+        is_person: r.get(9)?,
     })
 }
 
@@ -106,7 +110,7 @@ fn label_sql(kind: &str, filter: &str) -> String {
         _ => "SELECT count(*) FROM documents d WHERE d.doctype_id=l.id AND d.deleted_at IS NULL",
     };
     format!(
-        "SELECT l.id, l.name, l.color, l.is_inbox, l.parent_id, l.match, l.algo, l.insensitive, ({count})
+        "SELECT l.id, l.name, l.color, l.is_inbox, l.parent_id, l.match, l.algo, l.insensitive, ({count}), l.is_person
          FROM labels l WHERE l.kind=?1 {filter} ORDER BY l.name COLLATE NOCASE"
     )
 }
@@ -127,7 +131,7 @@ pub fn create_label(kind: &str, i: &LabelInput) -> Result<Label> {
     let color = i.color.clone().unwrap_or_else(|| PALETTE[name.bytes().map(|b| b as usize).sum::<usize>() % 10].into());
     let id = db::with(|c| {
         c.execute(
-            "INSERT INTO labels(kind,name,color,is_inbox,parent_id,match,algo,insensitive) VALUES(?,?,?,?,?,?,?,?)",
+            "INSERT INTO labels(kind,name,color,is_inbox,parent_id,match,algo,insensitive,is_person) VALUES(?,?,?,?,?,?,?,?,?)",
             params![
                 kind,
                 name,
@@ -136,7 +140,8 @@ pub fn create_label(kind: &str, i: &LabelInput) -> Result<Label> {
                 i.parent_id.flatten(),
                 i.matching.clone().unwrap_or_default(),
                 i.algo.clone().unwrap_or_else(|| "none".into()),
-                i.insensitive.unwrap_or(true)
+                i.insensitive.unwrap_or(true),
+                i.is_person.unwrap_or(false) && kind == "tag"
             ],
         )?;
         Ok(c.last_insert_rowid())
@@ -163,9 +168,9 @@ pub fn update_label(kind: &str, id: i64, i: &LabelInput) -> Result<Label> {
     db::with(|c| {
         let n = c.execute(
             "UPDATE labels SET name=coalesce(?3,name), color=coalesce(?4,color), is_inbox=coalesce(?5,is_inbox),
-               match=coalesce(?6,match), algo=coalesce(?7,algo), insensitive=coalesce(?8,insensitive)
+               match=coalesce(?6,match), algo=coalesce(?7,algo), insensitive=coalesce(?8,insensitive), is_person=coalesce(?9,is_person)
              WHERE kind=?1 AND id=?2",
-            params![kind, id, i.name, i.color, i.is_inbox, i.matching, i.algo, i.insensitive],
+            params![kind, id, i.name, i.color, i.is_inbox, i.matching, i.algo, i.insensitive, i.is_person.map(|p| p && kind == "tag")],
         )?;
         if n == 0 {
             return Err(rusqlite::Error::QueryReturnedNoRows);
@@ -362,7 +367,7 @@ pub struct Note {
     pub created: String,
 }
 
-#[derive(Serialize, ToSchema, Clone, Debug)]
+#[derive(Serialize, ToSchema, Clone, Debug, Default)]
 pub struct Document {
     pub id: i64,
     pub title: String,
@@ -777,7 +782,123 @@ pub fn update_doc(id: i64, p: &DocPatch) -> Result<Document> {
     check_patch(p)?;
     db::write(|c| apply_patch(c, id, p))?;
     emit("document.updated", id);
+    auto_title(id, p);
     get_doc(id)
+}
+
+// ───────────────────────── títulos automáticos ─────────────────────────
+
+#[derive(Serialize, Deserialize, ToSchema, Clone, Default)]
+pub struct Titles {
+    /// e.g. `{correspondent} · {type} · {monthname} {year}`. Tokens: {correspondent} {type} {folder} {person}
+    /// {date} {year} {month} {monthname} {day} {amount} {title} {file}
+    pub template: String,
+    /// Apply it by itself when a document leaves the inbox
+    pub auto: bool,
+    /// Language of {monthname}: en | es
+    pub lang: String,
+}
+
+pub fn titles() -> Titles {
+    meta_get("titles").and_then(|v| serde_json::from_str(&v).ok()).unwrap_or_default()
+}
+pub fn set_titles(t: &Titles) {
+    meta_set("titles", &serde_json::to_string(t).unwrap_or_default());
+}
+
+const MONTHS: [[&str; 12]; 2] = [
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+];
+
+/// El título que daría la plantilla. Un dato que falta se omite junto con el separador que lo precede.
+pub fn render_title(d: &Document, t: &Titles) -> Option<String> {
+    let name = |id: Option<i64>| id.and_then(|i| db::with(|c| c.query_row("SELECT name FROM labels WHERE id=?", [i], |r| r.get::<_, String>(0))).ok()).unwrap_or_default();
+    let folder = d.folder_id.and_then(|f| db::with(|c| c.query_row("SELECT name FROM folders WHERE id=?", [f], |r| r.get::<_, String>(0))).ok()).unwrap_or_default();
+    let person = if !t.template.contains("{person}") { String::new() } else { db::with(|c| {
+        c.query_row("SELECT group_concat(l.name, ', ') FROM document_tags t JOIN labels l ON l.id=t.tag_id WHERE t.doc_id=? AND l.is_person", [d.id], |r| r.get::<_, Option<String>>(0))
+    })
+    .ok()
+    .flatten()
+    .unwrap_or_default() };
+    let (y, m, day) = (d.created.get(0..4).unwrap_or(""), d.created.get(5..7).unwrap_or(""), d.created.get(8..10).unwrap_or(""));
+    let mi = m.parse::<usize>().ok().filter(|m| (1..=12).contains(m)).map(|m| m - 1);
+    let stem = std::path::Path::new(&d.original_name).file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+    let value = |tok: &str| -> Option<String> {
+        Some(match tok {
+            "correspondent" => name(d.correspondent_id),
+            "type" => name(d.doctype_id),
+            "folder" => folder.clone(),
+            "person" => person.clone(),
+            "date" => d.created.clone(),
+            "year" => y.into(),
+            "month" => m.into(),
+            "day" => day.into(),
+            "monthname" => mi.map(|i| MONTHS[usize::from(t.lang.starts_with("es"))][i].to_string()).unwrap_or_default(),
+            "amount" => d.amount.map(|a| format!("{a:.2}")).unwrap_or_default(),
+            "title" => d.title.clone(),
+            "file" => stem.clone(),
+            _ => return None,
+        })
+    };
+    let sep = |s: &str| s.chars().all(|c| c.is_whitespace() || "·-–—_|/,:".contains(c));
+    let mut out = String::new();
+    let mut rest = t.template.as_str();
+    while let Some(open) = rest.find('{') {
+        let Some(close) = rest[open..].find('}') else { break };
+        let (lit, tok) = (&rest[..open], &rest[open + 1..open + close]);
+        match value(tok) {
+            Some(v) if v.trim().is_empty() => {
+                // sin dato: el separador anterior sobra (a menos que sea texto fijo de verdad)
+                if !sep(lit) {
+                    out.push_str(lit);
+                }
+            }
+            Some(v) => {
+                if !(out.is_empty() && sep(lit)) {
+                    out.push_str(lit);
+                }
+                out.push_str(v.trim());
+            }
+            None => out.push_str(&rest[..open + close + 1]),
+        }
+        rest = &rest[open + close + 1..];
+    }
+    if !sep(rest) || out.is_empty() {
+        out.push_str(rest);
+    }
+    let out = out.trim_matches(|c: char| c.is_whitespace() || "·-–—_|/,:".contains(c)).to_string();
+    (!out.is_empty()).then(|| out.chars().take(200).collect())
+}
+
+pub fn retitle(id: i64, t: &Titles) -> Result<bool> {
+    let d = get_doc_brief(id)?;
+    match render_title(&d, t).filter(|n| *n != d.title) {
+        Some(title) => {
+            db::write(|c| c.execute("UPDATE documents SET title=?, modified=datetime('now') WHERE id=?", params![title, id]))?;
+            emit("document.updated", id);
+            Ok(true)
+        }
+        None => Ok(false),
+    }
+}
+
+/// Al salir de la bandeja (se quitó su etiqueta de entrada), el documento toma el título de la plantilla.
+fn auto_title(id: i64, p: &DocPatch) {
+    if p.remove_tags.as_ref().is_none_or(|r| r.is_empty()) {
+        return;
+    }
+    let t = titles();
+    if !t.auto || t.template.trim().is_empty() {
+        return;
+    }
+    let in_inbox: bool = db::with(|c| {
+        c.query_row("SELECT EXISTS(SELECT 1 FROM document_tags t JOIN labels l ON l.id=t.tag_id WHERE t.doc_id=? AND l.is_inbox)", [id], |r| r.get(0))
+    })
+    .unwrap_or(true);
+    if !in_inbox {
+        let _ = retitle(id, &t);
+    }
 }
 
 pub fn valid_date(d: &str) -> bool {
@@ -788,7 +909,7 @@ pub fn valid_date(d: &str) -> bool {
 #[derive(Deserialize, ToSchema, Debug)]
 pub struct BulkEdit {
     pub ids: Vec<i64>,
-    /// Optional: trash | restore | purge (purge is for administrators only)
+    /// Optional: trash | restore | purge (purge is for administrators only) | retitle (apply the title template)
     pub action: Option<String>,
     #[serde(flatten)]
     pub patch: DocPatch,
@@ -799,11 +920,19 @@ pub fn bulk(b: &BulkEdit) -> Result<usize> {
         Some("trash") => b.ids.iter().try_for_each(|id| trash(*id, true))?,
         Some("restore") => b.ids.iter().try_for_each(|id| trash(*id, false))?,
         Some("purge") => b.ids.iter().try_for_each(|id| purge(*id))?,
+        Some("retitle") => {
+            let t = titles();
+            if t.template.trim().is_empty() {
+                return Err(Error::Bad("there is no title template yet (Settings → Titles)".into()));
+            }
+            b.ids.iter().try_for_each(|id| retitle(*id, &t).map(|_| ()))?
+        }
         Some(a) => return Err(Error::Bad(format!("unknown action: {a}"))),
         None => {
             check_patch(&b.patch)?;
             db::write(|c| b.ids.iter().try_for_each(|id| apply_patch(c, *id, &b.patch)))?;
             b.ids.iter().for_each(|id| emit("document.updated", *id));
+            b.ids.iter().for_each(|id| auto_title(*id, &b.patch));
         }
     }
     Ok(b.ids.len())
@@ -1057,7 +1186,7 @@ pub fn stats(u: &AuthUser) -> Result<Stats> {
 /// los que vencen exactamente dentro de esos días (0 = hoy).
 pub fn due(u: &AuthUser, days: Option<&[i64]>) -> Result<Vec<(i64, String, String, i64)>> {
     let filter = match days {
-        Some(d) if d.is_empty() => return Ok(vec![]),
+        Some([]) => return Ok(vec![]),
         Some(d) => format!("AND left IN ({})", d.iter().map(i64::to_string).collect::<Vec<_>>().join(",")),
         None => String::new(),
     };
@@ -1160,5 +1289,25 @@ mod tests {
         assert!(webhook_target_ok("http://[::1]:9000/hook").is_err());
         assert!(webhook_target_ok("http://169.254.169.254/latest/meta-data").is_err());
         assert!(webhook_target_ok("http://usuario:clave@192.168.1.1/x").is_err());
+    }
+}
+
+#[cfg(test)]
+mod title_tests {
+    use super::*;
+
+    fn doc(created: &str, amount: Option<f64>) -> Document {
+        Document { created: created.into(), amount, title: "IMG_4821".into(), original_name: "IMG_4821.jpg".into(), ..Default::default() }
+    }
+
+    #[test]
+    fn missing_parts_and_their_separators_disappear() {
+        let t = |tpl: &str| Titles { template: tpl.into(), auto: true, lang: "es".into() };
+        // sin corresponsal ni tipo (no hay base de datos en esta prueba): solo queda la fecha
+        assert_eq!(render_title(&doc("2026-11-12", None), &t("{correspondent} · {type} · {monthname} {year}")).as_deref(), Some("Nov 2026"));
+        assert_eq!(render_title(&doc("2026-01-05", Some(450.0)), &t("Recibo {amount} - {date}")).as_deref(), Some("Recibo 450.00 - 2026-01-05"));
+        assert_eq!(render_title(&doc("2026-08-05", None), &t("{type}")), None);
+        assert_eq!(render_title(&doc("2026-08-05", None), &t("{file} ({year})")).as_deref(), Some("IMG_4821 (2026)"));
+        assert_eq!(render_title(&doc("2026-08-05", None), &t("{unknown} {month}")).as_deref(), Some("{unknown} 08"));
     }
 }

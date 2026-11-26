@@ -281,7 +281,8 @@ fn worker() {
             "queued" => std::thread::sleep(Duration::from_secs(2)),
             _ => {}
         }
-        if let (Ok(doc), true, None) = (&res, cfg().llm.as_ref().is_some_and(|l| l.auto), finished_before) {
+        let is_version = meta["replace"].as_i64().is_some();
+        if let (Ok(doc), true, None, false) = (&res, cfg().llm.as_ref().is_some_and(|l| l.auto), finished_before, is_version) {
             if let Err(e) = crate::llm::enrich(*doc) {
                 eprintln!("llm: document {doc}: {e}");
             }
@@ -306,8 +307,12 @@ fn worker() {
             err.as_deref().map(|e| format!(" — {}", e.lines().next().unwrap_or(""))).unwrap_or_default()
         );
         if let (Ok(doc), None) = (res, finished_before) {
-            store::emit("document.created", doc);
-            crate::push::document_created(doc, j.user_id, &j.source);
+            if is_version {
+                store::emit("document.updated", doc);
+            } else {
+                store::emit("document.created", doc);
+                crate::push::document_created(doc, j.user_id, &j.source);
+            }
         }
         notify_job(j.id);
         if status == "queued" {
@@ -759,7 +764,11 @@ fn process(j: &Claimed, path: &Path, meta: &Value, work: &Path) -> R<i64> {
     }
     let filename = j.filename.as_str();
     let sha = sha256_file(path)?;
+    let replace = meta["replace"].as_i64().filter(|d| store::exists(*d));
     if let Some(id) = existing(&sha)? {
+        if Some(id) == replace {
+            return Err(JobErr::Duplicate(id)); // la «versión nueva» es igual a la actual
+        }
         if Some(id) == j.doc_id {
             return Ok(id); // este mismo trabajo ya lo había guardado antes de un reinicio
         }
@@ -782,6 +791,9 @@ fn process(j: &Claimed, path: &Path, meta: &Value, work: &Path) -> R<i64> {
         }
     };
     let thumb = ex.thumb_src.as_ref().and_then(|pdf| make_thumb(pdf, &work.join("thumb")));
+    if let Some(doc) = replace {
+        return new_version(j, doc, path, &sha, filename, &ext, mime, &ex, thumb.as_deref());
+    }
 
     let stem = Path::new(filename).file_stem().map(|x| x.to_string_lossy().to_string()).unwrap_or_else(|| filename.into());
     let title = meta["title"].as_str().filter(|t| !t.trim().is_empty()).map(String::from).unwrap_or(stem);
@@ -844,6 +856,77 @@ fn process(j: &Claimed, path: &Path, meta: &Value, work: &Path) -> R<i64> {
         Err(store::Error::Conflict(_)) => Err(JobErr::Duplicate(existing(&sha)?.unwrap_or(0))),
         Err(e) => Err(e.into()),
     }
+}
+
+/// Una versión nueva de un documento que ya existe: conserva título, carpeta, etiquetas, notas y
+/// enlaces; el archivo anterior pasa a `versions/N/` (se puede descargar) y su fila a `versions`.
+/// Los archivos se mueven dentro de la transacción: si algo falla, se deshacen los movimientos.
+#[allow(clippy::too_many_arguments)]
+fn new_version(j: &Claimed, doc: i64, path: &Path, sha: &str, filename: &str, ext: &str, mime: &str, ex: &Extracted, thumb: Option<&Path>) -> R<i64> {
+    let stage = tmp().join(format!("stage-{}", j.id));
+    let _ = fs::remove_dir_all(&stage);
+    fs::create_dir_all(&stage)?;
+    copy_verified(path, &stage.join("original"), sha)?;
+    if let Some(a) = &ex.archive {
+        fs::rename(a, stage.join("archive.pdf"))?;
+    }
+    if let Some(t) = thumb {
+        fs::rename(t, stage.join("thumb.jpg"))?;
+    }
+    sync_path(&stage);
+    let size = fs::metadata(path)?.len() as i64;
+    let dir = store::doc_dir(doc);
+    db::write(|c| {
+        let n: i64 = c.query_row("SELECT coalesce(max(n), 0) + 1 FROM versions WHERE doc_id=?", [doc], |r| r.get(0))?;
+        c.execute(
+            "INSERT INTO versions(doc_id, n, original_name, mime, ext, size, pages, sha256, has_archive, since)
+             SELECT id, ?2, original_name, mime, ext, size, pages, sha256, has_archive,
+                    coalesce((SELECT max(replaced) FROM versions WHERE doc_id=?1), added) FROM documents WHERE id=?1",
+            params![doc, n],
+        )?;
+        c.execute(
+            "UPDATE documents SET content=?, original_name=?, mime=?, ext=?, size=?, pages=?, sha256=?, has_archive=?, has_thumb=?, modified=datetime('now') WHERE id=?",
+            params![ex.content, filename, mime, ext, size, ex.pages, sha, ex.archive.is_some(), thumb.is_some() || ex.thumb_src.is_some(), doc],
+        )?;
+        c.execute("UPDATE jobs SET doc_id=? WHERE id=?", [doc, j.id])?;
+        // archivos: lo actual a versions/N, lo nuevo a su sitio; ante un fallo, todo vuelve a como estaba
+        let old = dir.join("versions").join(n.to_string());
+        fs::create_dir_all(&old).map_err(io_err)?;
+        let mut done: Vec<(PathBuf, PathBuf)> = vec![];
+        let mut step = |from: PathBuf, to: PathBuf| -> rusqlite::Result<()> {
+            if from.exists() {
+                fs::rename(&from, &to).map_err(io_err)?;
+                done.push((to, from));
+            }
+            Ok(())
+        };
+        let moved = (|| {
+            step(dir.join("original"), old.join("original"))?;
+            step(dir.join("archive.pdf"), old.join("archive.pdf"))?;
+            step(dir.join("thumb.jpg"), old.join("thumb.jpg"))?;
+            for f in ["original", "archive.pdf", "thumb.jpg"] {
+                step(stage.join(f), dir.join(f))?;
+            }
+            Ok(())
+        })();
+        if let Err(e) = moved {
+            for (to, from) in done.iter().rev() {
+                let _ = fs::rename(to, from);
+            }
+            return Err(e);
+        }
+        sync_path(&dir);
+        sync_path(&old);
+        Ok(())
+    })
+    .map_err(store::Error::from)?;
+    let _ = fs::remove_dir_all(&stage);
+    // La versión nueva puede traer otra fecha de vencimiento o importe: se vuelven a buscar.
+    let _ = db::with(|c| c.execute("UPDATE documents SET expires=NULL WHERE id=? AND expires < date('now','localtime')", [doc]));
+    if let Err(e) = crate::suggest::analyze(doc, false) {
+        eprintln!("analysis of document {doc}: {e}");
+    }
+    Ok(doc)
 }
 
 /// Miniatura JPEG de la primera página de un PDF; `base` va sin extensión.
@@ -932,7 +1015,7 @@ mod tests {
     use super::*;
 
     fn label(algo: &str, m: &str) -> store::Label {
-        store::Label { id: 1, name: "x".into(), color: "".into(), is_inbox: false, parent_id: None, matching: m.into(), algo: algo.into(), insensitive: true, document_count: 0 }
+        store::Label { id: 1, name: "x".into(), color: "".into(), is_inbox: false, is_person: false, parent_id: None, matching: m.into(), algo: algo.into(), insensitive: true, document_count: 0 }
     }
 
     #[test]
